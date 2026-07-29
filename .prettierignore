@@ -1,0 +1,14 @@
+# Generated
+pnpm-lock.yaml
+dist/
+node_modules/
+src/db/migrations/
+
+# Subagent scratch — git-ignored working files
+.superpowers/
+
+# Hand-authored prose. Prettier reflows markdown tables and hard-wrapped
+# paragraphs, which churns the spec and plan documents for no benefit.
+docs/
+tasks/
+*.md
