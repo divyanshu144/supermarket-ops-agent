@@ -7,6 +7,10 @@ src/db/migrations/
 # Subagent scratch — git-ignored working files
 .superpowers/
 
+# Claude Code local harness settings — not tracked in git (globally
+# gitignored), regenerated per-session, never part of the codebase.
+.claude/
+
 # Hand-authored prose. Prettier reflows markdown tables and hard-wrapped
 # paragraphs, which churns the spec and plan documents for no benefit.
 docs/
