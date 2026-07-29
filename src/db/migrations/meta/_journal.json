@@ -8,6 +8,13 @@
       "when": 1785333784239,
       "tag": "0000_romantic_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785337052915,
+      "tag": "0001_bored_mercury",
+      "breakpoints": true
     }
   ]
 }
