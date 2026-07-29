@@ -133,7 +133,9 @@ export const billItems = pgTable('bill_items', {
     .references(() => bills.id, { onDelete: 'cascade' }),
   productId: uuid('product_id')
     .notNull()
-    .references(() => products.id),
+    // Cascade so a store can be torn down cleanly. Products are never deleted in normal
+    // operation — corrections go through stock_movements, never a delete.
+    .references(() => products.id, { onDelete: 'cascade' }),
   qtyBase: bigint('qty_base', { mode: 'number' }).notNull(),
   // Snapshotted at add time so a bill built across turns does not shift if the product changes.
   unitPricePaise: bigint('unit_price_paise', { mode: 'number' }).notNull(),
@@ -164,7 +166,9 @@ export const khataEntries = pgTable('khata_entries', {
     .references(() => khataAccounts.id, { onDelete: 'cascade' }),
   kind: khataKindEnum('kind').notNull(),
   amountPaise: bigint('amount_paise', { mode: 'number' }).notNull(),
-  billId: uuid('bill_id').references(() => bills.id),
+  // SET NULL, not CASCADE: the ledger entry is the record of money owed and must outlive the
+  // bill it came from. Losing a charge because a bill was removed would corrupt the balance.
+  billId: uuid('bill_id').references(() => bills.id, { onDelete: 'set null' }),
   note: text('note'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
@@ -177,10 +181,10 @@ export const stockMovements = pgTable('stock_movements', {
     .references(() => stores.id, { onDelete: 'cascade' }),
   productId: uuid('product_id')
     .notNull()
-    .references(() => products.id),
+    .references(() => products.id, { onDelete: 'cascade' }),
   kind: movementKindEnum('kind').notNull(),
   qtyBaseDelta: bigint('qty_base_delta', { mode: 'number' }).notNull(),
-  billId: uuid('bill_id').references(() => bills.id),
+  billId: uuid('bill_id').references(() => bills.id, { onDelete: 'cascade' }),
   unitCostPaise: bigint('unit_cost_paise', { mode: 'number' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

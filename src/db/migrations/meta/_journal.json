@@ -15,6 +15,13 @@
       "when": 1785337052915,
       "tag": "0001_bored_mercury",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785338438382,
+      "tag": "0002_brief_iceman",
+      "breakpoints": true
     }
   ]
 }

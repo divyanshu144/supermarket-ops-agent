@@ -1,5 +1,6 @@
 import { db } from '../db/client.js';
 import { stores } from '../db/schema.js';
+import { seedStore } from '../seed/index.js';
 
 const DEFAULT_NAME = 'Sharma Kirana Store';
 const DEFAULT_GSTIN = '27AAAAA0000A1Z5';
@@ -19,5 +20,10 @@ export async function provisionStore(chatId: bigint): Promise<{ id: bigint; crea
     .onConflictDoNothing()
     .returning({ id: stores.id });
 
-  return { id: chatId, created: inserted.length > 0 };
+  if (inserted.length === 0) return { id: chatId, created: false };
+
+  // Seed only on creation. A fresh store with no sales history would produce an empty
+  // analysis deck, and the deck is one of the two headline artifacts.
+  await seedStore(chatId);
+  return { id: chatId, created: true };
 }
