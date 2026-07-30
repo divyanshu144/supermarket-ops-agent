@@ -73,3 +73,14 @@ _(empty — record the problem, the root cause, and the fix as they come up)_
   returning zero rows *is* the oversell guard.
 - **Lock rows in deterministic order** (sorted by product id) so concurrent bills over
   overlapping products cannot deadlock.
+
+### Verified empirically 2026-07-30 (Milestone 0)
+
+| # | Finding | Evidence |
+|---|---|---|
+| AD-26 | **Skills load behind the strict allowlist.** The gate is the built-in `Skill` tool, NOT `Read` — so the filesystem stays denied and spec §9 needs no reshaping. Requires `settingSources: ['project']`; with `[]` skills silently never load and every test still passes. | `runtime.smoke.ts`, reproduced at all three effort levels |
+| AD-27 | **Effort does not measurably drive latency** for a simple query. low 14.2s / medium 12.4s / high 9.5s — ordering inverted from expectation, so at n=1 per level this is variance, not signal. Floor is ~10–14s. Keeping `medium`. | effort sweep, one sample per level |
+| AD-28 | **`ToolSearch` runs before `get_stock` on every turn**, despite only two tools being registered. Prime suspect for the latency floor, and the thing to investigate before the demo — not `effort`. | `toolsUsed` in all six smoke runs |
+| AD-29 | **The allowlist genuinely blocks the filesystem.** Four direct attempts (read `.env`, run `ls -la`, list files, write a file) all refused with **zero tool calls** and no credential leaked. §4 is now empirically supported, not just designed for. | `security.probe.ts` |
+| AD-30 | **Tools must never return raw DB rows.** `JSON.stringify` throws outright on BigInt, so `get_stock` errored on every call in production while unit tests passed. Present a shaped view — which also stops leaking cost price and internal ids to the model. | live smoke run; regression test in `inventory.test.ts` |
+| AD-31 | **Pin `packageManager`.** Unpinned, container corepack pulled pnpm 11 against a pnpm-9 lockfile and the image would not build at all. | docker build failure |

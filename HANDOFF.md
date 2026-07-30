@@ -1,63 +1,93 @@
 # HANDOFF
 
-Written so a cold-start session can resume. Update at every checkpoint: task complete ·
-milestone done · user signals stop · blocker · context ~70% · 30+ min since last update.
+Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-07-29, end of design phase
+**Last updated:** 2026-07-30, after Milestone 0 + 1
+
+---
+
+## 🚩 DEFERRED: Railway deployment (Task 8)
+
+**Deliberately postponed by the user on 2026-07-30. Everything is prepared; only auth is missing.**
+
+The brief requires **a live bot the reviewers can message, kept running while they review, with
+the `@handle` in the README**. That is a graded deliverable and it is currently NOT satisfied —
+the bot only runs locally.
+
+Ready and committed: `Dockerfile`, `railway.json` (`numReplicas: 1`, `overlapSeconds: 0`),
+`.dockerignore`. The image **builds and its contents are verified** — entry point, all three
+migrations, `.claude/skills/`, no dev binaries in the runtime layer.
+
+To finish, in order:
+
+1. Auth — `railway login` from a real terminal (the `!` prefix has no TTY), **or** an account
+   token from railway.com/account/tokens as `RAILWAY_TOKEN`.
+2. `railway init && railway add --database postgres`
+3. Set vars: `TELEGRAM_BOT_TOKEN`, `ANTHROPIC_API_KEY`, `AGENT_EFFORT`, `NODE_ENV=production`
+4. `railway up`
+5. **Run migrations against Railway's Postgres** — it starts empty and the bot cannot serve a
+   single message until they are applied: `DATABASE_URL=<railway url> pnpm db:migrate`
+6. **Stop the local bot first.** Two processes long-polling one token cause 409 conflicts and
+   dropped updates — the same failure `numReplicas: 1` exists to prevent.
+7. Confirm one replica in the dashboard, then message the bot and check `railway logs` for 409s.
 
 ---
 
 ## Current State
 
-Design phase complete. **No implementation code exists yet** — no `package.json`, no `src/`.
-The repo currently holds documents only.
+Branch `feat/milestone-0-walking-skeleton`, 15 commits. **Gate green: fmt, lint, typecheck,
+110 tests.**
 
-- `Assignment.md` — the BigMantra brief (note: this file was *replaced* mid-session; the
-  original Newpage RAG brief is gone. The kirana agent brief is the real one.)
-- `claude_onboarding.md` — the operating manual this project was bootstrapped from
-- `CLAUDE.md` — project operating manual, all stack decisions now locked
-- `docs/specs/2026-07-29-supermarket-ops-agent-design.md` — **the design spec, awaiting approval**
-- `tasks/todo.md`, `tasks/lessons.md`, `tasks/agent_memory.md` — tracking, seeded
-- Git initialised on `main`. **Nothing committed yet.** No remote.
+**Milestone 0 and 1 are complete except the deploy.** A real Telegram message travels
+adapter → agent → Postgres → grounded reply. Verified live, not just unit-tested.
+
+Bot handle: **@divagentBot** ("SuperOps") — runs locally via `pnpm tsx src/index.ts`.
+
+### Verified live (not just tested)
+
+- Grounded answer through `get_stock` to real Postgres: "Sugar (loose) — 18 kg. ₹52/kg, GST 0%"
+- **Skills load behind the allowlist** — gate is the built-in `Skill` tool, **not** `Read`.
+  Requires `settingSources: ['project']`; with `[]` they silently never load.
+- `CHECK (quantity_base >= 0)` confirmed in Postgres via `psql`
+- Docker image builds; migrations and skills present inside it
+
+### Bugs found by running, that passing tests missed
+
+1. `get_stock` returned raw rows; `JSON.stringify` throws on the BigInt `storeId`, so every
+   call errored in production. Fixed via a presented view that also stops leaking cost price.
+2. `settingSources: []` silently disabled every skill.
+3. Missing FK cascades on `bill_items` / `stock_movements` (caught by the seed test).
+   `khata_entries.bill_id` is **SET NULL** on purpose — the ledger must outlive the bill.
+4. `packageManager` unpinned: container corepack pulled pnpm 11 against a pnpm-9 lockfile and
+   the image would not build. Pinned to `pnpm@9.15.4`.
 
 ## Next Action
 
-Spec has been through one review round; all eight findings applied (see `tasks/agent_memory.md`
-AD-15 … AD-25). **Blocked on final go-ahead.** Once given:
-
-1. Invoke `writing-plans` to turn the spec into a step-by-step implementation plan in
-   `docs/plans/`.
-2. Branch off `main` (never commit on `main` — CLAUDE.md §6).
-3. Execute **Milestone 0 — the walking skeleton**: minimal schema, one tool, allowlist on,
-   deployed to Railway, real Telegram message reaching Postgres. Plus the three §14
-   verifications, of which **skill loading vs. the disabled `Read` tool is the highest risk** —
-   it can invalidate the whole §9 layer and must be tested before four more skills get written.
-
-If the user has already approved and this file is stale, check `tasks/todo.md` for the first
-unchecked item.
-
-## In-Flight Files
-
-None. No edits in progress.
+1. **Run the security probe** (`pnpm tsx src/agent/security.probe.ts`) — written but never
+   executed; two attempts hit API 529s. Until it passes, spec §4's claim that a Telegram user
+   cannot reach the filesystem is designed-for and unit-tested but **not empirically proven**.
+   `ToolSearch` appeared in `toolsUsed` despite not being allowlisted, which is exactly why
+   this needs running rather than assuming.
+2. **Measure `low` and `high` effort.** Only `medium` is measured, at 15.1s for a simple stock
+   query — slow for a demo where a reviewer sends twenty messages. Lever is `effort`; never
+   disable thinking (on Opus 5 that can emit tool calls as plain text that silently never run).
+3. **Re-plan Milestones 2–5** — the plan covered 0 and 1 only, pending Task 9's outcomes, which
+   are now known. §9 stands unchanged, so the skills design needs no rework.
+4. Then Milestone 2: the remaining tool families and the §4 invariant tests.
 
 ## Open Questions
 
-None blocking. Deferred to implementation and recorded in spec §14:
-
-- Exact synthetic sales-history distribution (data, not architecture)
-- Invoice visual template (correctness first, styling if time allows)
-- Whether `void_bill` ships (first thing cut if Milestone 4 is at risk)
+- Final `AGENT_EFFORT` value, pending the sweep.
+- Whether `void_bill` ships (first cut if time runs short).
 
 ## Verification Baseline
 
-**No gate exists yet.** The toolchain is not scaffolded, so
-`pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test` does not run. Do not cite it as
-passing until Milestone 1 creates `package.json` and the configs. First real baseline will be
-recorded here once Milestone 1 completes.
+`pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test` — **green, 110 tests, 12 files.**
+Requires Docker Postgres up (`pnpm db:up`) and a `.env`; `POSTGRES_PORT=5434` locally because
+5432 was occupied.
 
-## Constraints Worth Re-reading
+## Constraints
 
-- **2 days, fixed deadline.** Scope is §3 capabilities + §4 hard parts. Zero §7 stretch items.
-- Milestone 3 (end-to-end conversation) must complete on day one.
+- 2-day deadline, day 2. Scope: §3 capabilities + §4 hard parts. Zero §7 stretch items.
 - The Claude Agent SDK is **not** covered by the `claude-api` skill — see
-  `code.claude.com/docs/en/agent-sdk`.
+  `code.claude.com/docs/en/agent-sdk`. Bindings verified against installed 0.3.220.
