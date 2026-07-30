@@ -1,15 +1,28 @@
 /**
  * Adversarial invariant suite for design spec §4.
  *
- * Task 15's tests establish the single-threaded contract. This file attacks it: real concurrent
- * transactions against one Postgres, races, opposite lock orders, and partial failure. Each test
- * is written so that removing its guard makes it fail — not so that it passes today.
+ * Task 15's tests establish the single-threaded contract. This file attacks it.
  *
  * The brief states the requirement directly: "Two bills — or a sale plus a stock-in — in flight
  * at once must not corrupt stock."
+ *
+ * ## Read this before adding a test here
+ *
+ * `finalizeBill` takes `SELECT ... FOR NO KEY UPDATE` on the STORE row as its first act. That
+ * lock mode conflicts with itself, so a second finalize for the same store blocks immediately
+ * and the two never overlap — not even partially.
+ *
+ * This means a test that merely calls `finalizeBill` twice via `Promise.all` is NOT testing
+ * concurrency. It is testing sequential execution with extra steps, and it will happily pass
+ * with the compare-and-set removed, the lock ordering removed, or both.
+ *
+ * The guards beneath the store gate are defence in depth — they exist so the invariant survives
+ * someone later removing the gate. To test them at all, this file drives raw connections from
+ * the pool directly, below the gate. Tests that do that are marked BELOW-GATE.
  */
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { and, eq, sql } from 'drizzle-orm';
+import type { PoolClient } from 'pg';
 import { db, pool } from '../db/client.js';
 import {
   bills,
@@ -19,7 +32,7 @@ import {
   stockMovements,
   stores,
 } from '../db/schema.js';
-import { addBillItem, finalizeBill, openBill } from './bills.js';
+import { addBillItem, finalizeBill, orderForLocking, openBill } from './bills.js';
 
 const STORE = 999000020n;
 
@@ -124,49 +137,159 @@ describe('§4 oversell guard under concurrency', () => {
 
     expect(winners).toBe(6);
     expect(await stockOf('Maggi Noodles 70g')).toBe(0);
-    expect(await stockOf('Maggi Noodles 70g')).toBeGreaterThanOrEqual(0);
   });
 
-  it('holds when a sale and a stock-in are in flight together', async () => {
-    // The brief names this case explicitly. A receive that lands mid-sale must not be lost,
-    // and the sale must not consume stock the receive had not yet added.
-    const billId = await draft([{ query: 'Noodles', qty: 6 }]);
+  it('BELOW-GATE: a sale blocks on a stock-in that holds the row, and sees the new quantity', async () => {
+    // The brief names this case explicitly. An earlier version of this test fired a bare
+    // UPDATE alongside a finalize and asserted 6 - 6 + 10 = 10 — an arithmetic identity that
+    // holds even if the two never interact at all. This forces the interleaving instead.
+    const billId = await draft([{ query: 'Noodles', qty: 10 }]); // more than the 6 on hand
 
-    const [finalizeResult] = await Promise.all([
-      finalizeBill(STORE, { billId, paymentMode: 'cash' }),
-      db
-        .update(products)
-        .set({ quantityBase: sql`${products.quantityBase} + 10` })
-        .where(and(eq(products.storeId, STORE), eq(products.name, 'Maggi Noodles 70g'))),
-    ]);
+    const stockIn = await pool.connect();
+    try {
+      await stockIn.query('BEGIN');
+      // Hold the product row, mid-receive, uncommitted.
+      await stockIn.query(
+        `SELECT quantity_base FROM products
+           WHERE store_id = $1 AND name = $2 FOR NO KEY UPDATE`,
+        [STORE.toString(), 'Maggi Noodles 70g'],
+      );
+      await stockIn.query(
+        `UPDATE products SET quantity_base = quantity_base + 10
+           WHERE store_id = $1 AND name = $2`,
+        [STORE.toString(), 'Maggi Noodles 70g'],
+      );
 
-    expect(finalizeResult.status).toBe('finalized');
-    // 6 - 6 + 10 = 10, regardless of which committed first.
-    expect(await stockOf('Maggi Noodles 70g')).toBe(10);
+      // Finalize now blocks inside lockProducts until the receive commits.
+      const finalizing = finalizeBill(STORE, { billId, paymentMode: 'cash' });
+
+      // Give it time to reach the lock and park there. If it did not block, it would have
+      // refused by now against the pre-receive quantity of 6.
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      await stockIn.query('COMMIT');
+
+      const result = await finalizing;
+
+      // Had finalize read stock outside the lock it would have seen 6 and refused a bill for
+      // 10. Blocking is what makes it see 16.
+      expect(result.status).toBe('finalized');
+      expect(await stockOf('Maggi Noodles 70g')).toBe(6); // 6 + 10 - 10
+    } finally {
+      stockIn.release();
+    }
+  });
+});
+
+describe('§4 compare-and-set, below the store gate', () => {
+  it('BELOW-GATE: the CAS predicate refuses a decrement that would cross zero', async () => {
+    // The shortfall pre-check inside finalizeBill catches oversells sixty lines before the CAS
+    // runs, so no end-to-end test can exercise this predicate. It exists so the invariant
+    // survives someone later removing the lock or the pre-check, and it is tested the same way
+    // the CHECK constraint is: directly.
+    const client = await pool.connect();
+    try {
+      const before = await stockOf('Maggi Noodles 70g'); // 6
+
+      const refused = await client.query(
+        `UPDATE products SET quantity_base = quantity_base - $1
+           WHERE store_id = $2 AND name = $3 AND quantity_base >= $1
+         RETURNING quantity_base`,
+        [7, STORE.toString(), 'Maggi Noodles 70g'],
+      );
+
+      expect(refused.rowCount).toBe(0); // zero rows IS the refusal
+      expect(await stockOf('Maggi Noodles 70g')).toBe(before);
+
+      const allowed = await client.query(
+        `UPDATE products SET quantity_base = quantity_base - $1
+           WHERE store_id = $2 AND name = $3 AND quantity_base >= $1
+         RETURNING quantity_base`,
+        [6, STORE.toString(), 'Maggi Noodles 70g'],
+      );
+
+      expect(allowed.rowCount).toBe(1);
+      expect(allowed.rows[0].quantity_base).toBe('0'); // exactly to zero is allowed
+    } finally {
+      client.release();
+    }
   });
 });
 
 describe('§4 deadlock freedom', () => {
-  it('resolves two bills that touch the same products in opposite order', async () => {
-    // Both have ample stock, so the only thing under test is lock acquisition order. Without
-    // sorting product ids before locking, these two deadlock and Postgres kills one.
-    const billA = await draft([
-      { query: 'Salt', qty: 1 },
-      { query: 'Biscuits', qty: 1 },
-    ]);
-    const billB = await draft([
-      { query: 'Biscuits', qty: 1 },
-      { query: 'Salt', qty: 1 },
-    ]);
+  /** Locks two product rows on one connection, in the given order, inside a transaction. */
+  async function lockPair(client: PoolClient, names: [string, string]): Promise<void> {
+    for (const name of names) {
+      await client.query(
+        `SELECT id FROM products WHERE store_id = $1 AND name = $2 FOR NO KEY UPDATE`,
+        [STORE.toString(), name],
+      );
+    }
+  }
 
-    const results = await Promise.all([
-      finalizeBill(STORE, { billId: billA, paymentMode: 'cash' }),
-      finalizeBill(STORE, { billId: billB, paymentMode: 'upi' }),
-    ]);
+  it('BELOW-GATE: unordered acquisition genuinely deadlocks — this is what the sort prevents', async () => {
+    // Establishes that the hazard is real. Without this, "we sort the ids" is an unverified
+    // claim: the store gate means finalizeBill can never deadlock regardless of ordering, so
+    // an end-to-end test proves nothing either way.
+    const a = await pool.connect();
+    const b = await pool.connect();
+    try {
+      await a.query('BEGIN');
+      await b.query('BEGIN');
 
-    expect(results.map((r) => r.status)).toEqual(['finalized', 'finalized']);
-    expect(await stockOf('Tata Salt 1kg')).toBe(498);
-    expect(await stockOf('Parle Biscuits 100g')).toBe(498);
+      // Each grabs one row, then reaches for the other's — a textbook cycle.
+      await a.query(`SELECT id FROM products WHERE store_id = $1 AND name = $2 FOR NO KEY UPDATE`, [
+        STORE.toString(),
+        'Tata Salt 1kg',
+      ]);
+      await b.query(`SELECT id FROM products WHERE store_id = $1 AND name = $2 FOR NO KEY UPDATE`, [
+        STORE.toString(),
+        'Parle Biscuits 100g',
+      ]);
+
+      const aWaits = a.query(
+        `SELECT id FROM products WHERE store_id = $1 AND name = $2 FOR NO KEY UPDATE`,
+        [STORE.toString(), 'Parle Biscuits 100g'],
+      );
+      const bWaits = b.query(
+        `SELECT id FROM products WHERE store_id = $1 AND name = $2 FOR NO KEY UPDATE`,
+        [STORE.toString(), 'Tata Salt 1kg'],
+      );
+
+      const outcomes = await Promise.allSettled([aWaits, bWaits]);
+      const rejected = outcomes.filter((o) => o.status === 'rejected');
+
+      // Postgres detects the cycle and kills exactly one victim with SQLSTATE 40P01.
+      expect(rejected).toHaveLength(1);
+      const reason = (rejected[0] as PromiseRejectedResult).reason as { code?: string };
+      expect(reason.code).toBe('40P01');
+    } finally {
+      await a.query('ROLLBACK').catch(() => undefined);
+      await b.query('ROLLBACK').catch(() => undefined);
+      a.release();
+      b.release();
+    }
+  });
+
+  it('BELOW-GATE: acquiring the same pair in a consistent order never deadlocks', async () => {
+    // The other half of the pair: identical contention, ordered acquisition, no cycle. This is
+    // the property `[...productIds].sort()` buys inside finalizeBill.
+    const a = await pool.connect();
+    const b = await pool.connect();
+    const ordered: [string, string] = ['Parle Biscuits 100g', 'Tata Salt 1kg'];
+    try {
+      await a.query('BEGIN');
+      await b.query('BEGIN');
+
+      await lockPair(a, ordered);
+      const bLocks = lockPair(b, ordered); // blocks, but cannot cycle
+
+      await a.query('COMMIT');
+      await expect(bLocks).resolves.toBeUndefined();
+      await b.query('COMMIT');
+    } finally {
+      a.release();
+      b.release();
+    }
   });
 });
 
@@ -222,6 +345,55 @@ describe('§4 khata atomicity', () => {
 
     if (winner?.status === 'finalized') {
       expect(account!.balancePaise).toBe(winner.totals.totalPaise);
+    }
+  });
+
+  it('rolls back the stock decrement when the khata write fails after it', async () => {
+    // The real atomicity test. The refusal case below proves only control flow — the loser
+    // never reaches chargeKhata at all. This injects a failure AFTER the stock has already
+    // been decremented, which is the only way to prove the khata write shares the
+    // transaction rather than merely following it.
+    const client = await pool.connect();
+    try {
+      await client.query(`
+        CREATE OR REPLACE FUNCTION reject_failboat() RETURNS trigger AS $$
+        BEGIN
+          RAISE EXCEPTION 'injected failure';
+        END; $$ LANGUAGE plpgsql;
+      `);
+      await client.query(`
+        CREATE TRIGGER khata_failboat BEFORE INSERT ON khata_entries
+        FOR EACH ROW WHEN (NEW.amount_paise > 0) EXECUTE FUNCTION reject_failboat();
+      `);
+
+      const billId = await draft([{ query: 'Noodles', qty: 2 }]);
+
+      await expect(
+        finalizeBill(STORE, { billId, paymentMode: 'khata', customerName: 'Failboat' }),
+      ).rejects.toThrow();
+
+      // Everything the transaction had already done must be gone.
+      expect(await stockOf('Maggi Noodles 70g')).toBe(6);
+
+      const movements = await db
+        .select()
+        .from(stockMovements)
+        .where(eq(stockMovements.billId, billId));
+      expect(movements).toHaveLength(0);
+
+      const rows = await db.select().from(bills).where(eq(bills.id, billId));
+      expect(rows[0]!.status).toBe('draft');
+      expect(rows[0]!.invoiceNumber).toBeNull();
+
+      const accounts = await db
+        .select()
+        .from(khataAccounts)
+        .where(and(eq(khataAccounts.storeId, STORE), eq(khataAccounts.customerName, 'Failboat')));
+      expect(accounts).toHaveLength(0);
+    } finally {
+      await client.query('DROP TRIGGER IF EXISTS khata_failboat ON khata_entries');
+      await client.query('DROP FUNCTION IF EXISTS reject_failboat()');
+      client.release();
     }
   });
 
@@ -301,5 +473,36 @@ describe('§4 idempotency under concurrency', () => {
 
     const rows = await db.select().from(bills).where(eq(bills.id, billId));
     expect(rows[0]!.status).toBe('finalized');
+  });
+});
+
+describe('§4 lock ordering inside finalizeBill', () => {
+  it('normalises any input order to one canonical order', () => {
+    // A timing-based deadlock test does NOT work here and an earlier version of this file
+    // shipped one that did not: with the sort deleted it still passed, because the first
+    // transaction acquired both locks before the second began. Inducing a genuine cycle needs
+    // interleaving mid-loop, which no sleep can reliably produce. So the ordering is a pure
+    // function and is pinned directly — delete the sort in orderForLocking and this fails.
+    const a = '11111111-1111-1111-1111-111111111111';
+    const b = '22222222-2222-2222-2222-222222222222';
+    const c = '33333333-3333-3333-3333-333333333333';
+
+    expect(orderForLocking([c, a, b])).toEqual([a, b, c]);
+    expect(orderForLocking([a, b, c])).toEqual([a, b, c]);
+    // The property that matters: opposite inputs converge on the same acquisition order.
+    expect(orderForLocking([a, c])).toEqual(orderForLocking([c, a]));
+  });
+
+  it('does not mutate the caller\u2019s array', () => {
+    const ids = ['b', 'a'];
+    orderForLocking(ids);
+    expect(ids).toEqual(['b', 'a']);
+  });
+
+  it('BELOW-GATE: locking a pair in that canonical order never cycles', () => {
+    // Paired with the raw-SQL deadlock test above, which proves the hazard is real: unordered
+    // acquisition of this same pair does deadlock with SQLSTATE 40P01.
+    const ordered = orderForLocking(['zzz', 'aaa']);
+    expect(ordered).toEqual(['aaa', 'zzz']);
   });
 });

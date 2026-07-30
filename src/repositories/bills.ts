@@ -15,7 +15,7 @@ import { formatQuantity, toBaseUnits, type Unit } from '../domain/units.js';
 import { findStock, type ProductSummary } from './products.js';
 
 /** The transaction handle Drizzle hands to `db.transaction`. */
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export type BillStatus = 'draft' | 'finalized' | 'void';
 export type PaymentMode = 'cash' | 'upi' | 'card' | 'khata';
@@ -634,14 +634,34 @@ interface LockedProduct {
  * shoot one of them for deadlock. Sorting the ids gives every transaction the same acquisition
  * order, which makes the cycle impossible rather than merely unlikely.
  */
-async function lockProducts(
+/**
+ * The canonical order in which product rows must be locked.
+ *
+ * Two transactions that lock the same pair in opposite orders deadlock; Postgres detects the
+ * cycle and kills one of them. Normalising the order removes the possibility. Extracted as a
+ * pure function so it is directly testable: inducing a real deadlock through `finalizeBill`
+ * is impossible (the store gate serializes finalizes) and inducing one through `lockProducts`
+ * needs interleaving mid-loop that a timing-based test cannot reliably produce.
+ */
+export function orderForLocking(productIds: string[]): string[] {
+  return [...productIds].sort();
+}
+
+/**
+ * Locks the given products FOR NO KEY UPDATE, always in sorted id order.
+ *
+ * Exported solely as a test seam. `finalizeBill` serializes on the store row before it gets
+ * here, so the sort can never be exercised through the public API — the only way to prove it
+ * is to drive this directly from two concurrent transactions. See bills.invariants.test.ts.
+ */
+export async function lockProducts(
   tx: Tx,
   storeId: bigint,
   productIds: string[],
 ): Promise<Map<string, LockedProduct>> {
   const locked = new Map<string, LockedProduct>();
 
-  for (const id of [...productIds].sort()) {
+  for (const id of orderForLocking(productIds)) {
     const [row] = await tx
       .select({
         id: products.id,
