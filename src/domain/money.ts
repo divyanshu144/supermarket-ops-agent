@@ -23,8 +23,17 @@ export function roundToNearestRupee(paise: number): {
   return { totalPaise, roundOffPaise: totalPaise - paise };
 }
 
+/**
+ * Formats paise as rupees.
+ *
+ * The sign is taken off before splitting, because both `Math.floor` and `%` misbehave on
+ * negatives: a naive implementation renders -40050 as "₹-401.-50". Negative amounts are real
+ * here — a customer who overpays their khata ends up in credit.
+ */
 export function formatPaise(paise: number): string {
-  const rupees = Math.floor(paise / 100);
-  const remainder = String(paise % 100).padStart(2, '0');
-  return `₹${rupees}.${remainder}`;
+  const sign = paise < 0 ? '-' : '';
+  const absolute = Math.abs(paise);
+  const rupees = Math.floor(absolute / 100);
+  const remainder = String(absolute % 100).padStart(2, '0');
+  return `${sign}₹${rupees}.${remainder}`;
 }

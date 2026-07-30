@@ -53,4 +53,22 @@ describe('formatPaise', () => {
   ])('formatPaise(%i) === %s', (paise, expected) => {
     expect(formatPaise(paise)).toBe(expected);
   });
+
+  it.each([
+    [-12345, '-₹123.45'],
+    [-40050, '-₹400.50'],
+    [-5, '-₹0.05'],
+    [-100, '-₹1.00'],
+  ])('formatPaise(%i) === %s', (paise, expected) => {
+    // A naive floor/modulo split renders -40050 as "₹-401.-50". Negative balances are real:
+    // a customer who overpays their khata is in credit.
+    expect(formatPaise(paise)).toBe(expected);
+  });
+
+  it('never emits a stray minus after the decimal point', () => {
+    for (let p = -500; p <= 500; p++) {
+      const formatted = formatPaise(p);
+      expect(formatted.split('.')[1]).toMatch(/^\d{2}$/);
+    }
+  });
 });
