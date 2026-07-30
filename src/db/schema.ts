@@ -123,25 +123,45 @@ export const bills = pgTable(
       .on(t.storeId, t.invoiceNumber)
       .where(sql`${t.invoiceNumber} IS NOT NULL`),
     index('bills_store_created_idx').on(t.storeId, t.createdAt),
+    // A finalized bill without an invoice number is not a valid tax document. The repository
+    // assumes this when it replays an already-finalized bill; the constraint is what makes that
+    // an guarantee rather than a hope.
+    check(
+      'bills_finalized_has_invoice',
+      sql`${t.status} <> 'finalized' OR ${t.invoiceNumber} IS NOT NULL`,
+    ),
   ],
 );
 
-export const billItems = pgTable('bill_items', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  billId: uuid('bill_id')
-    .notNull()
-    .references(() => bills.id, { onDelete: 'cascade' }),
-  productId: uuid('product_id')
-    .notNull()
-    // Cascade so a store can be torn down cleanly. Products are never deleted in normal
-    // operation — corrections go through stock_movements, never a delete.
-    .references(() => products.id, { onDelete: 'cascade' }),
-  qtyBase: bigint('qty_base', { mode: 'number' }).notNull(),
-  // Snapshotted at add time so a bill built across turns does not shift if the product changes.
-  unitPricePaise: bigint('unit_price_paise', { mode: 'number' }).notNull(),
-  gstRateBps: integer('gst_rate_bps').notNull(),
-  hsnCode: text('hsn_code').notNull(),
-});
+export const billItems = pgTable(
+  'bill_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    billId: uuid('bill_id')
+      .notNull()
+      .references(() => bills.id, { onDelete: 'cascade' }),
+    productId: uuid('product_id')
+      .notNull()
+      // Cascade so a store can be torn down cleanly. Products are never deleted in normal
+      // operation — corrections go through stock_movements, never a delete.
+      .references(() => products.id, { onDelete: 'cascade' }),
+    /**
+     * Position of the line on the bill, 1-based per bill.
+     *
+     * The primary key is a random uuid, so it carries no order at all: without this column
+     * "which line came first" is unanswerable, and two lines of the same product at different
+     * snapshotted prices would collapse unpredictably on edit and reorder themselves between
+     * renders of the same invoice.
+     */
+    lineNo: integer('line_no').notNull(),
+    qtyBase: bigint('qty_base', { mode: 'number' }).notNull(),
+    // Snapshotted at add time so a bill built across turns does not shift if the product changes.
+    unitPricePaise: bigint('unit_price_paise', { mode: 'number' }).notNull(),
+    gstRateBps: integer('gst_rate_bps').notNull(),
+    hsnCode: text('hsn_code').notNull(),
+  },
+  (t) => [uniqueIndex('bill_items_bill_line_uq').on(t.billId, t.lineNo)],
+);
 
 export const khataAccounts = pgTable(
   'khata_accounts',

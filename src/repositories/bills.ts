@@ -32,6 +32,8 @@ export interface BillTotals {
 
 export interface BillLineView {
   itemId: string;
+  /** 1-based position on the bill; the only stable ordering there is. */
+  lineNo: number;
   productId: string;
   name: string;
   brand: string | null;
@@ -107,6 +109,9 @@ export type FinalizeResult =
       shortfalls: Array<{ name: string; wanted: string; available: string }>;
     }
   | { status: 'below_cost'; lines: Array<{ name: string; price: string; cost: string }> }
+  // No override counterpart to below_cost's `allowBelowCost`: selling under cost is the owner's
+  // money to lose, selling over MRP is the customer's and is not the owner's to give away.
+  | { status: 'above_mrp'; lines: Array<{ name: string; price: string; mrp: string }> }
   | { status: 'unknown_customer'; customerName: string }
   | { status: 'bill_not_found'; billId: string }
   | { status: 'empty_bill'; billId: string }
@@ -184,6 +189,7 @@ function resolveQtyBase(
 
 interface LineRow {
   itemId: string;
+  lineNo: number;
   productId: string;
   qtyBase: number;
   unitPricePaise: number;
@@ -197,6 +203,7 @@ interface LineRow {
 
 const LINE_COLUMNS = {
   itemId: billItems.id,
+  lineNo: billItems.lineNo,
   productId: billItems.productId,
   qtyBase: billItems.qtyBase,
   unitPricePaise: billItems.unitPricePaise,
@@ -218,6 +225,7 @@ function viewLine(line: LineRow): BillLineView {
   });
   return {
     itemId: line.itemId,
+    lineNo: line.lineNo,
     productId: line.productId,
     name: line.name,
     brand: line.brand,
@@ -256,13 +264,19 @@ function totalsFromLines(lines: BillLineView[]): BillTotals {
   return { subtotalPaise, cgstPaise, sgstPaise, roundOffPaise, totalPaise };
 }
 
+/**
+ * Lines in the order they were rung up.
+ *
+ * Ordered by `line_no` and nothing else: the shopkeeper reads the bill back in the order they
+ * built it, and an invoice PDF regenerated tomorrow must lay out identically to today's.
+ */
 async function selectLines(exec: Tx, billId: string): Promise<LineRow[]> {
   const rows = await exec
     .select(LINE_COLUMNS)
     .from(billItems)
     .innerJoin(products, eq(billItems.productId, products.id))
     .where(eq(billItems.billId, billId))
-    .orderBy(asc(products.name), asc(billItems.id));
+    .orderBy(asc(billItems.lineNo));
 
   return rows.map((r) => ({ ...r, unit: r.unit as Unit }));
 }
@@ -450,8 +464,16 @@ export async function addBillItem(
     const lock = await lockDraft(tx, storeId, billId);
     if (!lock.ok) return lock.refusal;
 
+    // Safe as a read-modify-write because `lockDraft` holds the bill row, which is also what the
+    // (bill_id, line_no) unique index would otherwise have to catch.
+    const [last] = await tx
+      .select({ max: sql<number>`coalesce(max(${billItems.lineNo}), 0)` })
+      .from(billItems)
+      .where(eq(billItems.billId, billId));
+
     await tx.insert(billItems).values({
       billId,
+      lineNo: Number(last?.max ?? 0) + 1,
       productId: product.id,
       qtyBase: qty.qtyBase,
       unitPricePaise: input.unitPriceOverridePaise ?? product.mrpPaise,
@@ -470,6 +492,10 @@ export async function addBillItem(
  *
  * "make the sugar 3 kg" is a statement about the bill, not about one particular line, so if the
  * product was rung up twice the lines collapse into the single requested quantity.
+ *
+ * The FIRST line survives, by `line_no`. The two lines can legitimately differ — a price override
+ * on one, or an MRP edit between the two adds — so which one survives decides the bill total, and
+ * that must not depend on the order Postgres happened to return random uuids in.
  */
 export async function updateBillItem(
   storeId: bigint,
@@ -495,7 +521,7 @@ export async function updateBillItem(
       .select({ id: billItems.id })
       .from(billItems)
       .where(and(eq(billItems.billId, billId), eq(billItems.productId, product.id)))
-      .orderBy(asc(billItems.id));
+      .orderBy(asc(billItems.lineNo));
 
     const [keep, ...duplicates] = existing;
     if (!keep) return { status: 'item_not_on_bill', query: input.productQuery };
@@ -597,6 +623,7 @@ interface LockedProduct {
   unit: Unit;
   quantityBase: number;
   costPricePaise: number;
+  mrpPaise: number;
 }
 
 /**
@@ -622,6 +649,7 @@ async function lockProducts(
         unit: products.unit,
         quantityBase: products.quantityBase,
         costPricePaise: products.costPricePaise,
+        mrpPaise: products.mrpPaise,
       })
       .from(products)
       .where(and(eq(products.id, id), eq(products.storeId, storeId)))
@@ -702,7 +730,21 @@ export async function finalizeBill(
     const wanted = wantedPerProduct(lines);
     const locked = await lockProducts(tx, storeId, [...wanted.keys()]);
 
-    // 7. Below cost, across ALL lines, before anything is written.
+    // 7. Above MRP, across ALL lines. Refused outright, with no override argument: MRP in India
+    //    is the maximum price at which the goods may legally be sold, which is the same fact that
+    //    makes GST back-calculated rather than added on top. Selling under cost is the owner's
+    //    money to lose; selling over MRP is the customer's, and is not theirs to give away.
+    const aboveMrp = lines
+      .filter((line) => line.unitPricePaise > locked.get(line.productId)!.mrpPaise)
+      .map((line) => ({
+        name: line.name,
+        price: formatPaise(line.unitPricePaise),
+        mrp: formatPaise(locked.get(line.productId)!.mrpPaise),
+      }));
+
+    if (aboveMrp.length > 0) return { status: 'above_mrp', lines: aboveMrp };
+
+    // 8. Below cost, across ALL lines, before anything is written.
     const belowCost = lines
       .filter((line) => line.unitPricePaise < locked.get(line.productId)!.costPricePaise)
       .map((line) => ({

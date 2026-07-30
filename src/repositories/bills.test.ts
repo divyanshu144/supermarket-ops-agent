@@ -645,3 +645,125 @@ describe('findBills', () => {
     expect(await findBills(STORE, { since: new Date(Date.now() + 60_000) })).toEqual([]);
   });
 });
+
+describe('fix round 1 — regression guards', () => {
+  it('refuses a line priced above MRP, with no override available', async () => {
+    // MRP is the maximum price at which the goods may legally be sold. Unlike below-cost,
+    // which is the owner's money to lose, this one has no override argument at all.
+    const { billId } = await openBill(STORE);
+    const added = await addBillItem(STORE, {
+      billId,
+      productQuery: 'Maggi Noodles',
+      qty: 1,
+      unit: 'packet',
+      unitPriceOverridePaise: 200_000, // ₹2000 for a ₹14 packet
+    });
+    expect(added.status).toBe('added');
+
+    const result = await finalizeBill(STORE, { billId, paymentMode: 'cash' });
+
+    expect(result.status).toBe('above_mrp');
+    if (result.status === 'above_mrp') {
+      expect(result.lines).toHaveLength(1);
+      expect(result.lines[0]!.price).toBe('₹2000.00');
+      expect(result.lines[0]!.mrp).toBe('₹14.00');
+    }
+    // Refused before any write.
+    expect(await stockOf('Maggi Noodles 70g')).toBe(6);
+  });
+
+  it('allows a line priced exactly at MRP', async () => {
+    const { billId } = await openBill(STORE);
+    await addBillItem(STORE, {
+      billId,
+      productQuery: 'Maggi Noodles',
+      qty: 1,
+      unit: 'packet',
+      unitPriceOverridePaise: 1400, // exactly MRP — the boundary must not refuse
+    });
+
+    const result = await finalizeBill(STORE, { billId, paymentMode: 'cash' });
+    expect(result.status).toBe('finalized');
+  });
+
+  it('decrements once by the aggregate but records one movement per line', async () => {
+    // The riskiest invariant in this file: the decrement is aggregated per product while
+    // movements stay per line. If those ever stop reconciling, the audit trail silently
+    // disagrees with the stock figure.
+    const billId = await draftWith([
+      { query: 'Maggi Noodles', qty: 2, unit: 'packet' },
+      { query: 'Maggi Noodles', qty: 2, unit: 'packet' },
+    ]);
+
+    const result = await finalizeBill(STORE, { billId, paymentMode: 'cash' });
+    expect(result.status).toBe('finalized');
+
+    expect(await stockOf('Maggi Noodles 70g')).toBe(2); // 6 - 4, decremented once
+
+    const movements = await db
+      .select()
+      .from(stockMovements)
+      .where(eq(stockMovements.billId, billId));
+
+    expect(movements).toHaveLength(2); // one per line
+    expect(movements.reduce((sum, m) => sum + m.qtyBaseDelta, 0)).toBe(-4); // and they reconcile
+  });
+
+  it('collapses duplicate lines deterministically, keeping the first line', async () => {
+    // Before line_no existed this ordered by a random uuid, so with two lines at different
+    // snapshotted prices the survivor — and therefore the bill total — was a coin flip.
+    const { billId } = await openBill(STORE);
+
+    await addBillItem(STORE, {
+      billId,
+      productQuery: 'Maggi Noodles',
+      qty: 2,
+      unit: 'packet',
+    }); // line 1 @ MRP 1400
+
+    await addBillItem(STORE, {
+      billId,
+      productQuery: 'Maggi Noodles',
+      qty: 1,
+      unit: 'packet',
+      unitPriceOverridePaise: 1300,
+    }); // line 2 @ discounted 1300
+
+    await updateBillItem(STORE, {
+      billId,
+      productQuery: 'Maggi Noodles',
+      qty: 3,
+      unit: 'packet',
+    });
+
+    const rows = await db
+      .select()
+      .from(billItems)
+      .where(eq(billItems.billId, billId))
+      .orderBy(billItems.lineNo);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.lineNo).toBe(1);
+    // Deterministically the FIRST line's snapshot, never the second's.
+    expect(rows[0]!.unitPricePaise).toBe(1400);
+    expect(rows[0]!.qtyBase).toBe(3);
+  });
+
+  it('renders bill lines in a stable order across repeated reads', async () => {
+    // selectLines used to end on a random uuid, so the invoice PDF would reshuffle its own
+    // lines between two renders of the same bill.
+    const billId = await draftWith([
+      { query: 'Maggi Noodles', qty: 1, unit: 'packet' },
+      { query: 'Maggi Ketchup', qty: 1, unit: 'packet' },
+      { query: 'Sugar', qty: 1, unit: 'kg' },
+    ]);
+
+    const first = await getBill(STORE, billId);
+    const second = await getBill(STORE, billId);
+    const third = await getBill(STORE, billId);
+
+    const names = (b: typeof first) => b!.items.map((l) => l.name);
+    expect(names(second)).toEqual(names(first));
+    expect(names(third)).toEqual(names(first));
+  });
+});

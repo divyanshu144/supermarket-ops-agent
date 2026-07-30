@@ -267,6 +267,12 @@ Tools return refusals as **data** the model must relay, never silently comply an
 
 - **Below cost.** `add_bill_item` accepts an optional `unit_price_override`; finalize refuses if
   any line price is under cost price, and requires an explicit override argument to proceed.
+- **Above MRP.** Finalize refuses if any line's effective unit price exceeds the product's MRP,
+  and there is **no override flag**. Added 2026-07-30 after review caught the asymmetry: the
+  entire reason GST is back-calculated here is that charging above the printed Maximum Retail
+  Price is illegal in India, so a guard that protects the shopkeeper's margin while leaving the
+  customer exposed was inconsistent. Below-cost is a business judgement the owner may override;
+  above-MRP is not the owner's to permit.
 - **No stock deletion.** There is no delete tool. Corrections go through `adjust_stock`, which
   writes a signed `stock_movements` row and leaves the audit trail intact.
 - **Phantom khata.** `settle_khata` on an unknown customer refuses. Settling more than the

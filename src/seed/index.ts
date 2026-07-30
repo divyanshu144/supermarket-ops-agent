@@ -109,8 +109,9 @@ export async function seedStore(storeId: bigint, now: Date = new Date()): Promis
         .returning();
 
       await db.insert(billItems).values(
-        lines.map((l) => ({
+        lines.map((l, index) => ({
           billId: bill!.id,
+          lineNo: index + 1,
           productId: l.product.id,
           qtyBase: l.qtyBase,
           unitPricePaise: l.product.mrpPaise,
