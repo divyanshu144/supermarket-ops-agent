@@ -1,0 +1,73 @@
+import { and, eq, lt, sql } from 'drizzle-orm';
+import { db } from '../db/client.js';
+import { processedUpdates, sessions } from '../db/schema.js';
+
+/** A turn still 'claimed' after this long is assumed to have died mid-handling. */
+const STALE_AFTER_SECONDS = 300;
+
+export type ClaimResult = 'claimed' | 'duplicate' | 'reclaimed';
+
+/**
+ * Claim a Telegram update for processing.
+ *
+ * This is deliberately a CLAIM, not a completion marker, and the distinction is load-bearing.
+ * Under long-polling Telegram only redelivers when the offset did not advance — which is
+ * exactly when the previous attempt crashed mid-turn. An insert-on-receipt dedupe would reject
+ * precisely the redelivery that must be reprocessed, and the owner's message would vanish with
+ * no error anywhere.
+ *
+ *   no row                → 'claimed'   process it
+ *   row done              → 'duplicate' genuine redelivery, skip
+ *   row claimed, stale    → 'reclaimed' previous attempt died, reprocess
+ *   row claimed, fresh    → 'duplicate' still in flight elsewhere, skip
+ */
+export async function claimUpdate(updateId: bigint, chatId: bigint): Promise<ClaimResult> {
+  const inserted = await db
+    .insert(processedUpdates)
+    .values({ updateId, chatId, status: 'claimed' })
+    .onConflictDoNothing()
+    .returning({ updateId: processedUpdates.updateId });
+
+  if (inserted.length > 0) return 'claimed';
+
+  const reclaimed = await db
+    .update(processedUpdates)
+    .set({ claimedAt: sql`now()` })
+    .where(
+      and(
+        eq(processedUpdates.updateId, updateId),
+        eq(processedUpdates.status, 'claimed'),
+        lt(processedUpdates.claimedAt, sql`now() - make_interval(secs => ${STALE_AFTER_SECONDS})`),
+      ),
+    )
+    .returning({ updateId: processedUpdates.updateId });
+
+  return reclaimed.length > 0 ? 'reclaimed' : 'duplicate';
+}
+
+export async function completeUpdate(updateId: bigint): Promise<void> {
+  await db
+    .update(processedUpdates)
+    .set({ status: 'done', completedAt: sql`now()` })
+    .where(eq(processedUpdates.updateId, updateId));
+}
+
+export async function getSessionId(storeId: bigint): Promise<string | undefined> {
+  const rows = await db.select().from(sessions).where(eq(sessions.storeId, storeId)).limit(1);
+  return rows[0]?.agentSessionId;
+}
+
+export async function setSessionId(storeId: bigint, agentSessionId: string): Promise<void> {
+  await db
+    .insert(sessions)
+    .values({ storeId, agentSessionId })
+    .onConflictDoUpdate({
+      target: sessions.storeId,
+      set: { agentSessionId, updatedAt: sql`now()` },
+    });
+}
+
+/** Backs `/new`: clears the conversation and nothing else. Stock, khata and preferences stay. */
+export async function clearSession(storeId: bigint): Promise<void> {
+  await db.delete(sessions).where(eq(sessions.storeId, storeId));
+}
