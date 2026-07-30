@@ -12,8 +12,8 @@ Milestones from the design spec §13. The detailed per-task breakdown comes from
 - [x] Write `CLAUDE.md` (operating manual)
 - [x] Write design spec → `docs/specs/2026-07-29-supermarket-ops-agent-design.md`
 - [x] Scaffold `tasks/`, `docs/`, `HANDOFF.md`
-- [ ] **User approves the spec** ← blocking everything below
-- [ ] Implementation plan via `writing-plans` → `docs/plans/`
+- [x] **User approves the spec** ← blocking everything below
+- [x] Implementation plan via `writing-plans` → `docs/plans/`
 
 ## Milestone 0 — Walking skeleton (first few hours, before anything else)
 
