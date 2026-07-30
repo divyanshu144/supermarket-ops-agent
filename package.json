@@ -26,12 +26,15 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "grammy": "^1.45.1",
+    "pdfmake": "^0.3.11",
     "pg": "^8.22.0",
+    "pptxgenjs": "^4.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.1.2",
+    "@types/pdfmake": "^0.3.3",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.8.0",
