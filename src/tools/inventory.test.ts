@@ -4,7 +4,14 @@ import { db, pool } from '../db/client.js';
 import { products, stores } from '../db/schema.js';
 import { IdempotencyIssuer, toolContext } from './context.js';
 import { getStockTool, handleGetStock, presentStockResult } from './inventory.js';
-import { ALLOWED_TOOLS, FORBIDDEN_TOOLS, SKILL_TOOL, STORE_SERVER_NAME } from './index.js';
+import {
+  ALLOWED_TOOLS,
+  FORBIDDEN_TOOLS,
+  SKILL_TOOL,
+  STORE_SERVER_NAME,
+  STORE_TOOLS,
+  STORE_TOOL_NAMES,
+} from './index.js';
 
 const STORE = 999000005n;
 const OTHER = 999000010n;
@@ -72,10 +79,23 @@ describe('tool registration', () => {
     expect(schemaKeys).toEqual(['query']);
   });
 
-  it('allowlists exactly our store tools plus Skill, under the SDK naming convention', () => {
-    // `Skill` is the gate for progressive-disclosure skill loading. Verified empirically that
-    // granting it is sufficient and `Read` is never needed.
-    expect(ALLOWED_TOOLS).toEqual([SKILL_TOOL, `mcp__${STORE_SERVER_NAME}__get_stock`]);
+  it('allowlists every registered store tool, and nothing else but Skill', () => {
+    // A tool registered on the server but missing from the allowlist fails SILENTLY — it is
+    // simply never offered to the model, with no error anywhere. This keeps the two in step.
+    const expected = [
+      SKILL_TOOL,
+      ...STORE_TOOL_NAMES.map((n) => `mcp__${STORE_SERVER_NAME}__${n}`),
+    ];
+    expect(ALLOWED_TOOLS).toEqual(expected);
+    expect(new Set(ALLOWED_TOOLS).size).toBe(ALLOWED_TOOLS.length); // no duplicates
+  });
+
+  it('registers a handler for every allowlisted store tool', () => {
+    const registered = new Set(STORE_TOOLS.map((t) => t.name));
+    for (const name of STORE_TOOL_NAMES) {
+      expect(registered.has(name)).toBe(true);
+    }
+    expect(registered.size).toBe(STORE_TOOL_NAMES.length);
   });
 
   it('allowlists no built-in filesystem or shell tool', () => {
