@@ -120,3 +120,36 @@ invoice, analysis deck, set preference, and recall after /new.
 - Missing FK cascades on bill_items/stock_movements
 - `packageManager` unpinned — container pulled pnpm 11 against a pnpm-9 lockfile
 - Duplicate bill lines collapsed by random UUID order → nondeterministic bill totals
+
+---
+
+## 2026-07-31 — DEPLOYED AND VERIFIED IN PRODUCTION
+
+Bot live on Railway as **@divagentBot**. Project `kirana-ops-agent`, one replica, long-polling.
+Repo: github.com/divyanshu144/supermarket-ops-agent
+
+**User-driven Telegram test confirmed working.** Verified against production database, not logs:
+- Bill built across turns, mid-build edit applied (butter dropped, Maggi 4→6)
+- Stock moved exactly once, only at finalize (Sugar -2kg, Atta -1, Maggi -6)
+- Oversell: 500-Maggi bill stayed a draft with ZERO stock movements
+- Khata charge +500 with matching ledger entry, balance and ledger agree
+- 14/14 updates processed to 'done', no stuck claims
+- Latency median 9s, range 5-21s
+
+**Deploy bug found and fixed:** first deployment died on `relation "processed_updates" does not
+exist` — managed Postgres arrives empty. Container now migrates on boot via drizzle-orm's
+programmatic migrator (drizzle-kit is a dev dep, absent from the runtime image). Migrations copy
+to `dist/db/migrations` because the migrator resolves relative to its own compiled location.
+
+### Known issues, not blocking
+
+1. **Abandoned drafts accumulate.** A refused bill leaves a draft forever; nothing expires them.
+   Harmless (drafts hold no stock) but unbounded, and `find_bills` keeps returning them.
+2. **No conversation logging.** Only errors are logged, so misbehaviour can only be diagnosed
+   from database state — you can see what the agent DID, never what it SAID.
+
+### Remaining
+
+- **Recording** — `docs/RECORDING.md` has the shot list. Needs screen capture.
+- **Rotate credentials** — Railway CLI echoed both tokens to stdout, and grammY's error dump put
+  the bot token in Railway logs.
