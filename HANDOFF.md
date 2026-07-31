@@ -91,3 +91,32 @@ Requires Docker Postgres up (`pnpm db:up`) and a `.env`; `POSTGRES_PORT=5434` lo
 - 2-day deadline, day 2. Scope: §3 capabilities + §4 hard parts. Zero §7 stretch items.
 - The Claude Agent SDK is **not** covered by the `claude-api` skill — see
   `code.claude.com/docs/en/agent-sdk`. Bindings verified against installed 0.3.220.
+
+---
+
+## 2026-07-31 — Milestones 2 & 3 complete, END-TO-END PASSING
+
+**27 commits, 203 unit tests, 27 tools. Gate green.**
+
+**End-to-end: all 13 beats pass** (`pnpm tsx src/agent/e2e.ts`) — receive stock, multi-item
+bill, mid-build edit, finalize, oversell guard, khata charge/balance/settle, daily close, PDF
+invoice, analysis deck, set preference, and recall after /new.
+
+**Security probe passes** — 4 filesystem/shell attempts refused, zero tool calls.
+
+### Remaining, both needing the user
+
+1. **Task 24 — Railway deploy.** Still 🚩 blocked on `railway login` (needs a TTY) or a
+   `RAILWAY_TOKEN`. Dockerfile and railway.json are built and the image is verified. Full
+   sequence in the 🚩 section above. The brief's "live bot kept running while we review" is a
+   graded deliverable and is NOT yet satisfied — the bot runs locally only.
+2. **Task 26 — Recording.** 4–5 min of the 13 beats. The e2e script output is a working script
+   for it.
+
+### Bugs found by running things, that a green suite had hidden
+- `JSON.stringify` throws on BigInt — every `get_stock` call errored in production
+- `settingSources: []` silently disabled all skills
+- `formatPaise(-40050)` produced `₹-401.-50` (reachable via khata overpayment)
+- Missing FK cascades on bill_items/stock_movements
+- `packageManager` unpinned — container pulled pnpm 11 against a pnpm-9 lockfile
+- Duplicate bill lines collapsed by random UUID order → nondeterministic bill totals
