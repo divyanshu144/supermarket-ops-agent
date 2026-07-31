@@ -5,6 +5,13 @@ close the day, and pull GST invoices and analysis decks — in plain terse Engli
 
 **Bot: [@divagentBot](https://t.me/divagentBot)** · try `/start`, then `how much sugar is left?`
 
+> **Deployment status:** the bot currently runs locally, not on a host. The Railway trial on
+> this account expired mid-build (`railway init` and `railway add --database postgres` both
+> refuse until a plan is selected). Everything needed is committed — Dockerfile, `railway.json`
+> pinned to one replica, and step-by-step instructions for Railway, Fly.io, or split
+> Postgres/compute in [`docs/DEPLOY.md`](docs/DEPLOY.md). I would rather say that plainly than
+> imply an uptime I cannot currently promise.
+
 ---
 
 ## Setup
