@@ -1,17 +1,30 @@
 import { createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';
+import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES } from './analytics.js';
 import { BILLING_TOOLS, BILLING_TOOL_NAMES } from './billing.js';
+import { DOCUMENT_TOOLS, DOCUMENT_TOOL_NAMES } from './documents.js';
 import { INVENTORY_TOOLS, INVENTORY_TOOL_NAMES } from './inventory.js';
 import { KHATA_TOOLS, KHATA_TOOL_NAMES } from './khata.js';
+import { PREFERENCE_TOOLS, PREFERENCE_TOOL_NAMES } from './preferences.js';
 
 export const STORE_SERVER_NAME = 'store';
 
 /** Every tool the shop exposes. Adding one here is not enough — see ALLOWED_TOOLS below. */
-export const STORE_TOOLS = [...INVENTORY_TOOLS, ...BILLING_TOOLS, ...KHATA_TOOLS];
+export const STORE_TOOLS = [
+  ...INVENTORY_TOOLS,
+  ...BILLING_TOOLS,
+  ...KHATA_TOOLS,
+  ...ANALYTICS_TOOLS,
+  ...DOCUMENT_TOOLS,
+  ...PREFERENCE_TOOLS,
+];
 
 export const STORE_TOOL_NAMES = [
   ...INVENTORY_TOOL_NAMES,
   ...BILLING_TOOL_NAMES,
   ...KHATA_TOOL_NAMES,
+  ...ANALYTICS_TOOL_NAMES,
+  ...DOCUMENT_TOOL_NAMES,
+  ...PREFERENCE_TOOL_NAMES,
 ] as const;
 
 export const storeToolServer = createSdkMcpServer({

@@ -10,7 +10,9 @@ import {
   setSessionId,
 } from '../repositories/updates.js';
 import { reseedStore } from '../seed/index.js';
-import { IdempotencyIssuer, toolContext } from '../tools/context.js';
+import { readPreferences } from '../tools/preferences.js';
+import { InputFile } from 'grammy';
+import { newToolContext, toolContext } from '../tools/context.js';
 
 const env = loadEnv();
 
@@ -63,14 +65,22 @@ bot.on('message:text', async (ctx) => {
 
   try {
     const sessionId = await getSessionId(storeId);
+    const preferences = await readPreferences(storeId);
 
-    const result = await toolContext.run(
-      { storeId, updateId, idempotency: new IdempotencyIssuer(updateId) },
-      () => runAgent({ text: ctx.message.text, sessionId }),
+    const turnContext = newToolContext(storeId, updateId);
+    const result = await toolContext.run(turnContext, () =>
+      runAgent({ text: ctx.message.text, sessionId, preferences }),
     );
 
     if (result.sessionId) await setSessionId(storeId, result.sessionId);
     await ctx.reply(result.reply || 'Sorry, I could not work that out.');
+
+    // Files the tools produced this turn go out after the reply, so the owner reads the answer
+    // first and the document lands underneath it.
+    for (const artifact of turnContext.artifacts) {
+      await ctx.replyWithDocument(new InputFile(artifact.path, artifact.filename));
+    }
+
     await completeUpdate(updateId);
   } catch (error) {
     console.error({ updateId: String(updateId), storeId: String(storeId), error });

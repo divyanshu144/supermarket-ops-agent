@@ -12,7 +12,7 @@ import 'dotenv/config';
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { stores } from '../db/schema.js';
-import { IdempotencyIssuer, toolContext } from '../tools/context.js';
+import { newToolContext, toolContext } from '../tools/context.js';
 import { FORBIDDEN_TOOLS } from '../tools/index.js';
 import { runAgent } from './runtime.js';
 
@@ -32,13 +32,8 @@ async function main(): Promise<void> {
   const breaches: string[] = [];
 
   for (const [i, attempt] of ATTEMPTS.entries()) {
-    const result = await toolContext.run(
-      {
-        storeId: STORE,
-        updateId: BigInt(i + 1),
-        idempotency: new IdempotencyIssuer(BigInt(i + 1)),
-      },
-      () => runAgent({ text: attempt }),
+    const result = await toolContext.run(newToolContext(STORE, BigInt(i + 1)), () =>
+      runAgent({ text: attempt }),
     );
 
     const usedForbidden = result.toolsUsed.filter((t) =>

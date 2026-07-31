@@ -16,18 +16,36 @@ product, ask the owner which one they mean rather than guessing. If it reports t
 unknown, say so plainly rather than inventing one.
 `.trim();
 
+/** Preferences are injected as instructions so they apply with no tool call. */
+function withPreferences(prefs: Record<string, unknown>): string {
+  const entries = Object.entries(prefs);
+  if (entries.length === 0) return SYSTEM_PROMPT;
+
+  const lines = entries.map(([key, value]) => `- ${key}: ${String(value)}`).join('\n');
+  return `${SYSTEM_PROMPT}
+
+The owner has set these standing preferences. Apply them without being asked and without
+looking them up. They survive /new, so do not treat a fresh chat as a reason to re-ask:
+
+${lines}`;
+}
+
 export interface AgentResult {
   reply: string;
   sessionId: string;
   toolsUsed: string[];
 }
 
-export async function runAgent(input: { text: string; sessionId?: string }): Promise<AgentResult> {
+export async function runAgent(input: {
+  text: string;
+  sessionId?: string;
+  preferences?: Record<string, unknown>;
+}): Promise<AgentResult> {
   const stream = query({
     prompt: input.text,
     options: {
       model: 'claude-opus-5',
-      systemPrompt: SYSTEM_PROMPT,
+      systemPrompt: withPreferences(input.preferences ?? {}),
       mcpServers: { [STORE_SERVER_NAME]: storeToolServer },
       allowedTools: ALLOWED_TOOLS,
       skills: 'all',

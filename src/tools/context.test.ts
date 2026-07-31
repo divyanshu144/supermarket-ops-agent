@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { IdempotencyIssuer, requireContext, toolContext } from './context.js';
+import { IdempotencyIssuer, newToolContext, requireContext, toolContext } from './context.js';
 
 describe('requireContext', () => {
   it('throws outside a run', () => {
@@ -7,15 +7,15 @@ describe('requireContext', () => {
   });
 
   it('returns the ambient context inside a run', () => {
-    const ctx = { storeId: 7n, updateId: 1n, idempotency: new IdempotencyIssuer(1n) };
+    const ctx = newToolContext(7n, 1n);
     toolContext.run(ctx, () => {
       expect(requireContext().storeId).toBe(7n);
     });
   });
 
   it('does not leak context between sibling runs', () => {
-    const a = { storeId: 1n, updateId: 1n, idempotency: new IdempotencyIssuer(1n) };
-    const b = { storeId: 2n, updateId: 2n, idempotency: new IdempotencyIssuer(2n) };
+    const a = newToolContext(1n, 1n);
+    const b = newToolContext(2n, 2n);
 
     toolContext.run(a, () => expect(requireContext().storeId).toBe(1n));
     toolContext.run(b, () => expect(requireContext().storeId).toBe(2n));
@@ -23,7 +23,7 @@ describe('requireContext', () => {
   });
 
   it('survives an await boundary', async () => {
-    const ctx = { storeId: 42n, updateId: 1n, idempotency: new IdempotencyIssuer(1n) };
+    const ctx = newToolContext(42n, 1n);
     await toolContext.run(ctx, async () => {
       await new Promise((resolve) => setTimeout(resolve, 1));
       expect(requireContext().storeId).toBe(42n);

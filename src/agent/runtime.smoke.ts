@@ -12,16 +12,13 @@ import 'dotenv/config';
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { products, stores } from '../db/schema.js';
-import { IdempotencyIssuer, toolContext } from '../tools/context.js';
+import { newToolContext, toolContext } from '../tools/context.js';
 import { runAgent } from './runtime.js';
 
 const STORE = 999000006n;
 
 function inStore<T>(updateId: bigint, fn: () => Promise<T>): Promise<T> {
-  return toolContext.run(
-    { storeId: STORE, updateId, idempotency: new IdempotencyIssuer(updateId) },
-    fn,
-  );
+  return toolContext.run(newToolContext(STORE, updateId), fn);
 }
 
 async function main(): Promise<void> {

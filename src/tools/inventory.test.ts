@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { products, stores } from '../db/schema.js';
-import { IdempotencyIssuer, toolContext } from './context.js';
+import { newToolContext, toolContext } from './context.js';
 import { getStockTool, handleGetStock, presentStockResult } from './inventory.js';
 import {
   ALLOWED_TOOLS,
@@ -51,7 +51,7 @@ afterAll(async () => {
 });
 
 function withStore<T>(storeId: bigint, fn: () => Promise<T>): Promise<T> {
-  return toolContext.run({ storeId, updateId: 1n, idempotency: new IdempotencyIssuer(1n) }, fn);
+  return toolContext.run(newToolContext(storeId, 1n), fn);
 }
 
 describe('handleGetStock', () => {

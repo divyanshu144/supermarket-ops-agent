@@ -41,6 +41,14 @@ export class IdempotencyIssuer {
   }
 }
 
+/** A file produced during a turn, awaiting delivery by the transport. */
+export interface ProducedArtifact {
+  artifactId: string;
+  path: string;
+  filename: string;
+  mime: string;
+}
+
 export interface ToolContext {
   /**
    * Injected from the verified Telegram chat. NEVER a tool parameter — the model has no
@@ -49,6 +57,12 @@ export interface ToolContext {
   storeId: bigint;
   updateId: bigint;
   idempotency: IdempotencyIssuer;
+  /**
+   * Files generated this turn. Tools push here; the adapter drains it after the reply.
+   * Keeping delivery out of the tools is what lets an artifact be generated in a test with
+   * no bot running at all.
+   */
+  artifacts: ProducedArtifact[];
 }
 
 export const toolContext = new AsyncLocalStorage<ToolContext>();
@@ -57,4 +71,21 @@ export function requireContext(): ToolContext {
   const ctx = toolContext.getStore();
   if (!ctx) throw new Error('Tool invoked outside a request context — refusing to execute.');
   return ctx;
+}
+
+export function recordArtifact(artifact: ProducedArtifact): void {
+  requireContext().artifacts.push(artifact);
+}
+
+/**
+ * Builds a fresh per-turn context. Use this rather than an object literal so a new field
+ * cannot be silently forgotten at one of the call sites.
+ */
+export function newToolContext(storeId: bigint, updateId: bigint): ToolContext {
+  return {
+    storeId,
+    updateId,
+    idempotency: new IdempotencyIssuer(updateId),
+    artifacts: [],
+  };
 }
