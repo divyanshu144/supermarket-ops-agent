@@ -31,6 +31,10 @@ export const storeToolServer = createSdkMcpServer({
   name: STORE_SERVER_NAME,
   version: '0.1.0',
   tools: STORE_TOOLS,
+  // Without this the SDK defers these tools behind ToolSearch, which fires an extra model
+  // round-trip before nearly every call. The set is small and entirely relevant to every turn,
+  // so there is nothing to search. Costs a blocking connect at startup, capped at 5s.
+  alwaysLoad: true,
 });
 
 /**
