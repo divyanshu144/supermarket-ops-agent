@@ -138,6 +138,18 @@ export const CATALOGUE: SeedProduct[] = [
     openingBase: 22_000,
     reorderLevelBase: 8_000,
   },
+  {
+    name: 'Atta (loose)',
+    unit: 'kg',
+    isLoose: true,
+    // Same HSN as the branded pack; loose and unbranded, so GST-exempt rather than 5%.
+    hsnCode: '11010000',
+    gstRateBps: 0,
+    costPricePaise: 3200,
+    mrpPaise: 4000,
+    openingBase: 25_000,
+    reorderLevelBase: 8_000,
+  },
 ];
 
 export const SEED_KHATA = [
