@@ -2,10 +2,12 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { products, stores } from '../db/schema.js';
+import { seedStore } from '../seed/index.js';
 import { findStock } from './products.js';
 
 const STORE = 999000003n;
 const OTHER = 999000004n;
+const SEEDED_STORE = 999000093n;
 
 beforeEach(async () => {
   for (const id of [STORE, OTHER]) {
@@ -81,5 +83,33 @@ describe('findStock', () => {
   it('matches on brand as well as name', async () => {
     const result = await findStock(STORE, 'Aashirvaad');
     expect(result.status).toBe('found');
+  });
+});
+
+describe('findStock against the real seeded catalogue', () => {
+  // catalogue.test.ts only proves CATALOGUE *contains* two atta products. It does not prove
+  // the mechanism the brief's own example depends on — "add atta" -> the model asking "which
+  // one, Aashirvaad 5kg or loose?" — actually fires for a store built the way every real store
+  // is built, via seedStore. This is that end-to-end proof, on a seeded store rather than the
+  // synthetic two-row fixture the tests above use.
+  beforeEach(async () => {
+    await db.delete(stores).where(eq(stores.id, SEEDED_STORE));
+    await db.insert(stores).values({ id: SEEDED_STORE, name: 'S', gstin: '27AAAAA0000A1Z5' });
+    await seedStore(SEEDED_STORE);
+  });
+
+  afterAll(async () => {
+    await db.delete(stores).where(eq(stores.id, SEEDED_STORE));
+  });
+
+  it('asks which atta on a seeded store', async () => {
+    const result = await findStock(SEEDED_STORE, 'atta');
+    expect(result.status).toBe('ambiguous');
+    if (result.status === 'ambiguous') {
+      expect(result.candidates.length).toBeGreaterThanOrEqual(2);
+      const names = result.candidates.map((c) => c.name);
+      expect(names.some((n) => /aashirvaad/i.test(n))).toBe(true);
+      expect(names.some((n) => /loose/i.test(n))).toBe(true);
+    }
   });
 });
