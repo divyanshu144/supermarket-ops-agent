@@ -20,15 +20,26 @@ const env = loadEnv();
  *
  * Text and voice share this because it holds the update claim and the artifact drain — the two
  * things a second copy would silently let drift.
+ *
+ * `options.alreadyClaimed` is for callers that must spend money (a download, a transcription)
+ * before the substantive turn runs and so have to claim the update themselves, earlier, to avoid
+ * paying for that work twice on a redelivery. Default (text) behaviour is unchanged: claim here
+ * first, and return without doing anything on a duplicate.
  */
-export async function handleTurn(ctx: Context, text: string): Promise<void> {
+export async function handleTurn(
+  ctx: Context,
+  text: string,
+  options: { alreadyClaimed?: boolean } = {},
+): Promise<void> {
   const updateId = BigInt(ctx.update.update_id);
   const storeId = BigInt(ctx.chat!.id);
   const startedAt = Date.now();
 
-  // Claim, don't mark done. See repositories/updates.ts for why the difference matters.
-  const claim = await claimUpdate(updateId, storeId);
-  if (claim === 'duplicate') return;
+  if (!options.alreadyClaimed) {
+    // Claim, don't mark done. See repositories/updates.ts for why the difference matters.
+    const claim = await claimUpdate(updateId, storeId);
+    if (claim === 'duplicate') return;
+  }
 
   await provisionStore(storeId);
   await ctx.replyWithChatAction('typing');

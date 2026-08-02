@@ -3,7 +3,7 @@ import { loadEnv } from '../config/env.js';
 import { downloadTelegramFile } from '../media/download.js';
 import { transcribe } from '../media/transcribe.js';
 import { provisionStore } from '../repositories/stores.js';
-import { clearSession } from '../repositories/updates.js';
+import { claimUpdate, clearSession } from '../repositories/updates.js';
 import { reseedStore } from '../seed/index.js';
 import { redact } from './redact.js';
 import { handleTurn } from './turn.js';
@@ -89,6 +89,15 @@ bot.on('message:voice', async (ctx) => {
     return;
   }
 
+  // Claim before spending anything, not after. handleTurn's own claim runs too late for voice:
+  // by the time it would run, the file is already downloaded and the Whisper call already paid
+  // for. A genuine redelivery (the crash-mid-turn case claimUpdate exists for) must not repeat
+  // either of those, so this handler claims the update itself and hands the result down.
+  const updateId = BigInt(ctx.update.update_id);
+  const storeId = BigInt(ctx.chat.id);
+  const claim = await claimUpdate(updateId, storeId);
+  if (claim === 'duplicate') return;
+
   let transcript: string;
   try {
     const audio = await downloadTelegramFile(ctx, env.TELEGRAM_BOT_TOKEN);
@@ -112,7 +121,7 @@ bot.on('message:voice', async (ctx) => {
   // silently becomes a wrong bill. This does NOT wait for confirmation — it makes the mistake
   // visible in the same turn the money moves.
   await ctx.reply(`Heard: ${transcript}`);
-  await handleTurn(ctx, transcript);
+  await handleTurn(ctx, transcript, { alreadyClaimed: true });
 });
 
 /**
