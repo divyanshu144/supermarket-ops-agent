@@ -25,6 +25,13 @@ opening an account just to receive a payment.
 
 Amounts are in **paise**.
 
+## Always look it up, even if you just said the number
+
+A balance can change between turns — another bill, another session, a settlement you weren't
+part of. If the owner asked earlier and you answered, that answer is now stale the moment
+anything else touches the account. Call `get_khata_balance` every time a balance is asked for,
+even when you're confident you already know it. Money owed is the last figure worth guessing on.
+
 ## Refusals
 
 `exceeds_balance` means they offered more than is outstanding. Say what is actually owed and ask
