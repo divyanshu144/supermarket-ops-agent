@@ -6,7 +6,7 @@ import {
   salesReport,
   stockHealth,
 } from '../repositories/analytics.js';
-import { formatQuantity, type Unit } from '../domain/units.js';
+import { baseUnitsPerSellingUnit, formatQuantity, type Unit } from '../domain/units.js';
 import { requireContext } from './context.js';
 import { toolResult } from './present.js';
 
@@ -100,7 +100,12 @@ export const reorderSuggestionsTool = tool(
       suggestions: suggestions.slice(0, limit ?? 10).map((s) => ({
         name: s.name,
         in_stock: formatQuantity(s.quantityBase, s.unit as Unit),
-        sells_per_day: Number(s.unitsPerDay.toFixed(2)),
+        // unitsPerDay from the repository is a base-unit rate (grams/ml/etc). Convert to
+        // selling units so it matches in_stock and the unit the owner actually speaks in —
+        // otherwise a loose kg product reports its rate in grams (e.g. "1000/day" for sugar).
+        sells_per_day: Number(
+          (s.unitsPerDay / baseUnitsPerSellingUnit(s.unit as Unit)).toFixed(2),
+        ),
         days_of_cover:
           s.daysOfCover === null ? 'no recent sales' : Number(s.daysOfCover.toFixed(1)),
         below_reorder_level: s.quantityBase <= s.reorderLevelBase,
