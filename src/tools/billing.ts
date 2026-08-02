@@ -116,13 +116,20 @@ export const addBillItemTool = tool(
       .describe('Price per selling unit in PAISE. Only when the owner names a different price.'),
   },
   async ({ bill_id, product_query, qty, unit, unit_price_override }) => {
-    const { storeId } = requireContext();
+    const { storeId, idempotency } = requireContext();
     const result = await addBillItem(storeId, {
       billId: bill_id,
       productQuery: product_query,
       qty,
       unit,
       unitPriceOverridePaise: unit_price_override,
+      idempotencyKey: idempotency.next('add_bill_item', {
+        bill_id,
+        product_query,
+        qty,
+        unit,
+        unit_price_override,
+      }),
     });
     return toolResult(presentEdit(result));
   },

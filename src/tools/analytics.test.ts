@@ -57,9 +57,11 @@ afterAll(async () => {
 describe('reorder_suggestions tool', () => {
   it('reports sells_per_day in selling units, not base units, for a loose kg product', async () => {
     const raw = await withStore(STORE, () =>
-      reorderSuggestionsTool.handler({ days_back: 30 }, {}),
+      reorderSuggestionsTool.handler({ days_back: 30, limit: undefined }, {}),
     );
-    const parsed = JSON.parse(raw.content[0]!.text) as {
+    const block = raw.content[0]!;
+    if (block.type !== 'text') throw new Error('expected a text content block');
+    const parsed = JSON.parse(block.text) as {
       suggestions: Array<{ name: string; in_stock: string; sells_per_day: number }>;
     };
 

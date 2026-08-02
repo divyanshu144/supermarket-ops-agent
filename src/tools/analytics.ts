@@ -103,9 +103,7 @@ export const reorderSuggestionsTool = tool(
         // unitsPerDay from the repository is a base-unit rate (grams/ml/etc). Convert to
         // selling units so it matches in_stock and the unit the owner actually speaks in —
         // otherwise a loose kg product reports its rate in grams (e.g. "1000/day" for sugar).
-        sells_per_day: Number(
-          (s.unitsPerDay / baseUnitsPerSellingUnit(s.unit as Unit)).toFixed(2),
-        ),
+        sells_per_day: Number((s.unitsPerDay / baseUnitsPerSellingUnit(s.unit as Unit)).toFixed(2)),
         days_of_cover:
           s.daysOfCover === null ? 'no recent sales' : Number(s.daysOfCover.toFixed(1)),
         below_reorder_level: s.quantityBase <= s.reorderLevelBase,

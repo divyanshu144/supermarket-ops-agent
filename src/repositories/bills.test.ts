@@ -129,8 +129,10 @@ describe('openBill / getBill', () => {
 
     expect(second.billId).toBe(first.billId);
 
+    // Assert the total count, not a filter on a unique primary key — filtering by id can only
+    // ever be 0 or 1 regardless of whether a second draft was created, so it proves nothing.
     const drafts = await findBills(STORE, { customer: 'Ramesh', limit: 50 });
-    expect(drafts.filter((b) => b.id === first.billId)).toHaveLength(1);
+    expect(drafts.length).toBe(1);
   });
 
   it('opens separate bills for different keys', async () => {
@@ -244,6 +246,84 @@ describe('addBillItem', () => {
 
     const result = await addBillItem(STORE, { billId, productQuery: 'sugar', qty: 1, unit: 'kg' });
     expect(result.status).toBe('bill_not_draft');
+  });
+
+  it('replaying the same idempotency key adds only one line, not a duplicate', async () => {
+    // Simulates a crash-replay: open_bill + two add_bill_item calls happen, the turn crashes
+    // before the model sees the reply, and the whole turn (including both adds) replays with
+    // identical idempotency keys. Without keying, the replay appends the same two lines again
+    // and finalize would double-decrement stock and double-charge the customer.
+    const { billId } = await openBill(STORE);
+    const key = 'update-1:add_bill_item:abc:0';
+
+    const first = await addBillItem(STORE, {
+      billId,
+      productQuery: 'noodles',
+      qty: 2,
+      unit: 'packet',
+      idempotencyKey: key,
+    });
+    const second = await addBillItem(STORE, {
+      billId,
+      productQuery: 'noodles',
+      qty: 2,
+      unit: 'packet',
+      idempotencyKey: key,
+    });
+
+    expect(first.status).toBe('added');
+    expect(second.status).toBe('added');
+
+    const bill = await getBill(STORE, billId);
+    expect(bill!.items).toHaveLength(1);
+    expect(bill!.items[0]!.qtyBase).toBe(2);
+    expect(bill!.totals.totalPaise).toBe(bill!.items[0]!.lineTotalPaise);
+  });
+
+  it('different idempotency keys add separate lines', async () => {
+    const { billId } = await openBill(STORE);
+
+    await addBillItem(STORE, {
+      billId,
+      productQuery: 'noodles',
+      qty: 1,
+      unit: 'packet',
+      idempotencyKey: 'update-1:add_bill_item:aaa:0',
+    });
+    await addBillItem(STORE, {
+      billId,
+      productQuery: 'noodles',
+      qty: 1,
+      unit: 'packet',
+      idempotencyKey: 'update-2:add_bill_item:bbb:0',
+    });
+
+    const bill = await getBill(STORE, billId);
+    expect(bill!.items).toHaveLength(2);
+  });
+
+  it('replays a refusal too, not just a success', async () => {
+    const billId = await draftWith([{ query: 'noodles', qty: 1, unit: 'packet' }]);
+    await finalizeBill(STORE, { billId, paymentMode: 'cash' });
+    const key = 'update-1:add_bill_item:ccc:0';
+
+    const first = await addBillItem(STORE, {
+      billId,
+      productQuery: 'sugar',
+      qty: 1,
+      unit: 'kg',
+      idempotencyKey: key,
+    });
+    const second = await addBillItem(STORE, {
+      billId,
+      productQuery: 'sugar',
+      qty: 1,
+      unit: 'kg',
+      idempotencyKey: key,
+    });
+
+    expect(first.status).toBe('bill_not_draft');
+    expect(second.status).toBe('bill_not_draft');
   });
 });
 
