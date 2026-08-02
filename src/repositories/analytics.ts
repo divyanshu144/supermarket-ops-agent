@@ -1,4 +1,4 @@
-import { and, eq, gte, inArray, lt } from 'drizzle-orm';
+import { and, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { billItems, bills, products, stockMovements } from '../db/schema.js';
 import { formatPaise } from '../domain/money.js';
@@ -236,4 +236,77 @@ export async function stockHealth(storeId: bigint, sinceDays = 14): Promise<Stoc
       .filter((p) => !soldIds.has(p.id) && p.quantityBase > 0)
       .map((p) => ({ name: p.name, inStock: formatQuantity(p.quantityBase, p.unit as Unit) })),
   };
+}
+
+export interface ReorderSuggestion {
+  productId: string;
+  name: string;
+  unit: string;
+  quantityBase: number;
+  reorderLevelBase: number;
+  unitsPerDay: number;
+  /** Null when nothing sold in the window — cover is undefined, not infinite. */
+  daysOfCover: number | null;
+}
+
+/**
+ * What to order next, ranked by how soon it runs out.
+ *
+ * A flat below-reorder-level list treats a slow-moving SKU sitting at its threshold the same as
+ * a fast mover about to go empty. Velocity is what the owner actually needs to decide.
+ */
+export async function reorderSuggestions(
+  storeId: bigint,
+  daysBack = 30,
+): Promise<ReorderSuggestion[]> {
+  const since = new Date(Date.now() - daysBack * 86_400_000);
+
+  const rows = await db
+    .select({
+      productId: products.id,
+      name: products.name,
+      unit: products.unit,
+      quantityBase: products.quantityBase,
+      reorderLevelBase: products.reorderLevelBase,
+      // Sale deltas are negative; negate to get units sold. Movements outside the window and
+      // non-sale kinds contribute 0 rather than dropping the product from the report.
+      soldBase: sql<number>`
+        coalesce(sum(
+          case when ${stockMovements.kind} = 'sale'
+                and ${stockMovements.createdAt} >= ${since}
+               then -${stockMovements.qtyBaseDelta}
+               else 0 end
+        ), 0)::int
+      `,
+    })
+    .from(products)
+    .leftJoin(stockMovements, eq(stockMovements.productId, products.id))
+    .where(eq(products.storeId, storeId))
+    .groupBy(
+      products.id,
+      products.name,
+      products.unit,
+      products.quantityBase,
+      products.reorderLevelBase,
+    );
+
+  return rows
+    .map((r) => {
+      const unitsPerDay = r.soldBase / daysBack;
+      return {
+        productId: r.productId,
+        name: r.name,
+        unit: r.unit,
+        quantityBase: Number(r.quantityBase),
+        reorderLevelBase: Number(r.reorderLevelBase),
+        unitsPerDay,
+        daysOfCover: unitsPerDay > 0 ? Number(r.quantityBase) / unitsPerDay : null,
+      };
+    })
+    .sort((a, b) => {
+      // Never-selling stock sorts last: it is not urgent, however little is left.
+      if (a.daysOfCover === null) return b.daysOfCover === null ? 0 : 1;
+      if (b.daysOfCover === null) return -1;
+      return a.daysOfCover - b.daysOfCover;
+    });
 }

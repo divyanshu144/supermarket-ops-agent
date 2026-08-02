@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { tool } from '@anthropic-ai/claude-agent-sdk';
-import { dailySummary, salesReport, stockHealth } from '../repositories/analytics.js';
+import {
+  dailySummary,
+  reorderSuggestions,
+  salesReport,
+  stockHealth,
+} from '../repositories/analytics.js';
+import { baseUnitsPerSellingUnit, formatQuantity, type Unit } from '../domain/units.js';
 import { requireContext } from './context.js';
 import { toolResult } from './present.js';
 
@@ -71,6 +77,51 @@ export const stockHealthTool = tool(
   },
 );
 
-export const ANALYTICS_TOOLS = [dailySummaryTool, salesReportTool, stockHealthTool];
+export const reorderSuggestionsTool = tool(
+  'reorder_suggestions',
+  'What to order next, ranked by how soon it runs out. Uses actual sales velocity from the ' +
+    'last N days, so a fast mover about to go empty ranks above a slow one sitting at its ' +
+    'reorder level. Answers "what should I order?".',
+  {
+    days_back: z
+      .number()
+      .int()
+      .positive()
+      .max(90)
+      .optional()
+      .describe('Sales window. Defaults to 30.'),
+    limit: z.number().int().positive().max(20).optional().describe('Defaults to 10.'),
+  },
+  async ({ days_back, limit }) => {
+    const { storeId } = requireContext();
+    const suggestions = await reorderSuggestions(storeId, days_back ?? 30);
+    return toolResult({
+      window_days: days_back ?? 30,
+      suggestions: suggestions.slice(0, limit ?? 10).map((s) => ({
+        name: s.name,
+        in_stock: formatQuantity(s.quantityBase, s.unit as Unit),
+        // unitsPerDay from the repository is a base-unit rate (grams/ml/etc). Convert to
+        // selling units so it matches in_stock and the unit the owner actually speaks in —
+        // otherwise a loose kg product reports its rate in grams (e.g. "1000/day" for sugar).
+        sells_per_day: Number((s.unitsPerDay / baseUnitsPerSellingUnit(s.unit as Unit)).toFixed(2)),
+        days_of_cover:
+          s.daysOfCover === null ? 'no recent sales' : Number(s.daysOfCover.toFixed(1)),
+        below_reorder_level: s.quantityBase <= s.reorderLevelBase,
+      })),
+    });
+  },
+);
 
-export const ANALYTICS_TOOL_NAMES = ['daily_summary', 'sales_report', 'stock_health'] as const;
+export const ANALYTICS_TOOLS = [
+  dailySummaryTool,
+  salesReportTool,
+  stockHealthTool,
+  reorderSuggestionsTool,
+];
+
+export const ANALYTICS_TOOL_NAMES = [
+  'daily_summary',
+  'sales_report',
+  'stock_health',
+  'reorder_suggestions',
+] as const;

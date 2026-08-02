@@ -121,6 +121,25 @@ describe('openBill / getBill', () => {
     // The id reaches us from the model, so it can be any string at all.
     expect(await getBill(STORE, 'not-a-uuid')).toBeNull();
   });
+
+  it('returns the same bill when the same idempotency key is replayed', async () => {
+    const key = 'update-1:open_bill:abc:0';
+    const first = await openBill(STORE, { customerName: 'Ramesh', idempotencyKey: key });
+    const second = await openBill(STORE, { customerName: 'Ramesh', idempotencyKey: key });
+
+    expect(second.billId).toBe(first.billId);
+
+    // Assert the total count, not a filter on a unique primary key — filtering by id can only
+    // ever be 0 or 1 regardless of whether a second draft was created, so it proves nothing.
+    const drafts = await findBills(STORE, { customer: 'Ramesh', limit: 50 });
+    expect(drafts.length).toBe(1);
+  });
+
+  it('opens separate bills for different keys', async () => {
+    const a = await openBill(STORE, { idempotencyKey: 'k1' });
+    const b = await openBill(STORE, { idempotencyKey: 'k2' });
+    expect(a.billId).not.toBe(b.billId);
+  });
 });
 
 describe('addBillItem', () => {
@@ -227,6 +246,84 @@ describe('addBillItem', () => {
 
     const result = await addBillItem(STORE, { billId, productQuery: 'sugar', qty: 1, unit: 'kg' });
     expect(result.status).toBe('bill_not_draft');
+  });
+
+  it('replaying the same idempotency key adds only one line, not a duplicate', async () => {
+    // Simulates a crash-replay: open_bill + two add_bill_item calls happen, the turn crashes
+    // before the model sees the reply, and the whole turn (including both adds) replays with
+    // identical idempotency keys. Without keying, the replay appends the same two lines again
+    // and finalize would double-decrement stock and double-charge the customer.
+    const { billId } = await openBill(STORE);
+    const key = 'update-1:add_bill_item:abc:0';
+
+    const first = await addBillItem(STORE, {
+      billId,
+      productQuery: 'noodles',
+      qty: 2,
+      unit: 'packet',
+      idempotencyKey: key,
+    });
+    const second = await addBillItem(STORE, {
+      billId,
+      productQuery: 'noodles',
+      qty: 2,
+      unit: 'packet',
+      idempotencyKey: key,
+    });
+
+    expect(first.status).toBe('added');
+    expect(second.status).toBe('added');
+
+    const bill = await getBill(STORE, billId);
+    expect(bill!.items).toHaveLength(1);
+    expect(bill!.items[0]!.qtyBase).toBe(2);
+    expect(bill!.totals.totalPaise).toBe(bill!.items[0]!.lineTotalPaise);
+  });
+
+  it('different idempotency keys add separate lines', async () => {
+    const { billId } = await openBill(STORE);
+
+    await addBillItem(STORE, {
+      billId,
+      productQuery: 'noodles',
+      qty: 1,
+      unit: 'packet',
+      idempotencyKey: 'update-1:add_bill_item:aaa:0',
+    });
+    await addBillItem(STORE, {
+      billId,
+      productQuery: 'noodles',
+      qty: 1,
+      unit: 'packet',
+      idempotencyKey: 'update-2:add_bill_item:bbb:0',
+    });
+
+    const bill = await getBill(STORE, billId);
+    expect(bill!.items).toHaveLength(2);
+  });
+
+  it('replays a refusal too, not just a success', async () => {
+    const billId = await draftWith([{ query: 'noodles', qty: 1, unit: 'packet' }]);
+    await finalizeBill(STORE, { billId, paymentMode: 'cash' });
+    const key = 'update-1:add_bill_item:ccc:0';
+
+    const first = await addBillItem(STORE, {
+      billId,
+      productQuery: 'sugar',
+      qty: 1,
+      unit: 'kg',
+      idempotencyKey: key,
+    });
+    const second = await addBillItem(STORE, {
+      billId,
+      productQuery: 'sugar',
+      qty: 1,
+      unit: 'kg',
+      idempotencyKey: key,
+    });
+
+    expect(first.status).toBe('bill_not_draft');
+    expect(second.status).toBe('bill_not_draft');
   });
 });
 
@@ -643,6 +740,15 @@ describe('findBills', () => {
 
     expect(await findBills(STORE, { limit: 2 })).toHaveLength(2);
     expect(await findBills(STORE, { since: new Date(Date.now() + 60_000) })).toEqual([]);
+  });
+
+  it('hides drafts older than a day but keeps old finalized bills', async () => {
+    const stale = await openBill(STORE, { customerName: 'Stale' });
+    const twoDaysAgo = new Date(Date.now() - 2 * 86_400_000);
+    await db.update(bills).set({ createdAt: twoDaysAgo }).where(eq(bills.id, stale.billId));
+
+    const found = await findBills(STORE, { limit: 50 });
+    expect(found.map((b) => b.id)).not.toContain(stale.billId);
   });
 });
 

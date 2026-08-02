@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadEnv } from './env.js';
+import { loadEnv, shouldLogMessageText } from './env.js';
 
 const valid = {
   DATABASE_URL: 'postgres://u:p@localhost:5432/db',
@@ -26,5 +26,23 @@ describe('loadEnv', () => {
   it('defaults effort to medium when unset', () => {
     const { AGENT_EFFORT, ...rest } = valid;
     expect(loadEnv(rest).AGENT_EFFORT).toBe('medium');
+  });
+});
+
+describe('shouldLogMessageText', () => {
+  it('returns true when LOG_MESSAGE_TEXT is explicitly true', () => {
+    expect(shouldLogMessageText(loadEnv({ ...valid, LOG_MESSAGE_TEXT: 'true' }))).toBe(true);
+  });
+
+  it('returns false when LOG_MESSAGE_TEXT is explicitly false', () => {
+    expect(shouldLogMessageText(loadEnv({ ...valid, LOG_MESSAGE_TEXT: 'false' }))).toBe(false);
+  });
+
+  it('defaults to false in production when unset', () => {
+    expect(shouldLogMessageText(loadEnv({ ...valid, NODE_ENV: 'production' }))).toBe(false);
+  });
+
+  it('defaults to true in development when unset', () => {
+    expect(shouldLogMessageText(loadEnv({ ...valid, NODE_ENV: 'development' }))).toBe(true);
   });
 });

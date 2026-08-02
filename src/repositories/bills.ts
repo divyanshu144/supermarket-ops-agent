@@ -1,8 +1,9 @@
-import { and, asc, desc, eq, gte, ilike, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ilike, inArray, ne, or, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import {
   billItems,
   bills,
+  idempotencyKeys,
   khataAccounts,
   khataEntries,
   products,
@@ -284,15 +285,56 @@ async function selectLines(exec: Tx, billId: string): Promise<LineRow[]> {
 /** Opens an empty draft. Several drafts may be open per store at once, by design. */
 export async function openBill(
   storeId: bigint,
-  input: { customerName?: string } = {},
+  input: { customerName?: string; idempotencyKey?: string } = {},
 ): Promise<{ billId: string }> {
   const customerName = input.customerName?.trim();
-  const [row] = await db
-    .insert(bills)
-    .values({ storeId, customerName: customerName ? customerName : null })
-    .returning({ id: bills.id });
 
-  return { billId: row!.id };
+  if (!input.idempotencyKey) {
+    const [row] = await db
+      .insert(bills)
+      .values({ storeId, customerName: customerName ? customerName : null })
+      .returning({ id: bills.id });
+    return { billId: row!.id };
+  }
+
+  return db.transaction(async (tx) => {
+    // Insert-first: the unique constraint IS the enforcement. Checking then writing leaves a
+    // window in which a redelivered update opens a second draft.
+    const claimed = await tx
+      .insert(idempotencyKeys)
+      .values({
+        storeId,
+        key: input.idempotencyKey!,
+        operation: 'open_bill',
+        result: {},
+      })
+      .onConflictDoNothing()
+      .returning({ key: idempotencyKeys.key });
+
+    if (claimed.length === 0) {
+      const [existing] = await tx
+        .select({ result: idempotencyKeys.result })
+        .from(idempotencyKeys)
+        .where(
+          and(eq(idempotencyKeys.storeId, storeId), eq(idempotencyKeys.key, input.idempotencyKey!)),
+        );
+      return { billId: (existing!.result as { billId: string }).billId };
+    }
+
+    const [row] = await tx
+      .insert(bills)
+      .values({ storeId, customerName: customerName ? customerName : null })
+      .returning({ id: bills.id });
+
+    await tx
+      .update(idempotencyKeys)
+      .set({ result: { billId: row!.id } })
+      .where(
+        and(eq(idempotencyKeys.storeId, storeId), eq(idempotencyKeys.key, input.idempotencyKey!)),
+      );
+
+    return { billId: row!.id };
+  });
 }
 
 export async function getBill(storeId: bigint, billId: string): Promise<BillView | null> {
@@ -343,12 +385,24 @@ export async function getBill(storeId: bigint, billId: string): Promise<BillView
  */
 export async function findBills(
   storeId: bigint,
-  input: { customer?: string; since?: Date; limit?: number } = {},
+  input: {
+    customer?: string;
+    since?: Date;
+    limit?: number;
+    includeStaleDrafts?: boolean;
+  } = {},
 ): Promise<BillSummary[]> {
   const conditions = [eq(bills.storeId, storeId)];
   if (input.customer?.trim())
     conditions.push(ilike(bills.customerName, `%${input.customer.trim()}%`));
   if (input.since) conditions.push(gte(bills.createdAt, input.since));
+
+  // An abandoned draft holds no stock, but it clutters every "which bill?" lookup. A draft the
+  // owner has not touched in a day is not the bill they mean.
+  if (!input.includeStaleDrafts) {
+    const cutoff = new Date(Date.now() - 86_400_000);
+    conditions.push(or(ne(bills.status, 'draft'), gte(bills.createdAt, cutoff))!);
+  }
 
   const limit = Math.min(Math.max(input.limit ?? 10, 1), 50);
 
@@ -429,6 +483,15 @@ async function lockDraft(tx: Tx, storeId: bigint, billId: string): Promise<Draft
  * Two identical lines are legal — a shopkeeper ringing the same item twice is a normal bill, and
  * the idempotency ordinal exists so a replayed turn does not collapse them into one.
  */
+/** What a keyed `addBillItem` call stashes in `idempotency_keys.result` to reconstruct the
+ * original outcome on replay. Only the statuses reachable *inside* the transaction below need a
+ * slot here — `product_not_found`, `ambiguous` and `invalid_quantity` are decided before the key
+ * is ever claimed, so a replay simply redoes that (read-only) work rather than needing storage. */
+type StoredAddItemOutcome =
+  | { outcome: 'added' }
+  | { outcome: 'bill_not_found'; billId: string }
+  | { outcome: 'bill_not_draft'; billId: string; billStatus: BillStatus };
+
 export async function addBillItem(
   storeId: bigint,
   input: {
@@ -437,6 +500,7 @@ export async function addBillItem(
     qty: number;
     unit: Unit;
     unitPriceOverridePaise?: number;
+    idempotencyKey?: string;
   },
 ): Promise<AddItemResult> {
   const { billId } = input;
@@ -461,8 +525,61 @@ export async function addBillItem(
   }
 
   const outcome = await db.transaction(async (tx): Promise<AddItemResult | null> => {
+    if (input.idempotencyKey) {
+      // Insert-first, same as openBill: the unique constraint IS the enforcement. Checking
+      // then writing leaves a window in which a redelivered update appends a second line.
+      const claimed = await tx
+        .insert(idempotencyKeys)
+        .values({
+          storeId,
+          key: input.idempotencyKey,
+          operation: 'add_bill_item',
+          result: {},
+        })
+        .onConflictDoNothing()
+        .returning({ key: idempotencyKeys.key });
+
+      if (claimed.length === 0) {
+        const [existing] = await tx
+          .select({ result: idempotencyKeys.result })
+          .from(idempotencyKeys)
+          .where(
+            and(
+              eq(idempotencyKeys.storeId, storeId),
+              eq(idempotencyKeys.key, input.idempotencyKey),
+            ),
+          );
+        const stored = existing!.result as StoredAddItemOutcome;
+        if (stored.outcome === 'added') return null; // fall through to a fresh getBill below
+        if (stored.outcome === 'bill_not_found')
+          return { status: 'bill_not_found', billId: stored.billId };
+        return { status: 'bill_not_draft', billId: stored.billId, billStatus: stored.billStatus };
+      }
+    }
+
     const lock = await lockDraft(tx, storeId, billId);
-    if (!lock.ok) return lock.refusal;
+    if (!lock.ok) {
+      if (input.idempotencyKey) {
+        const stored: StoredAddItemOutcome =
+          lock.refusal.status === 'bill_not_found'
+            ? { outcome: 'bill_not_found', billId: lock.refusal.billId }
+            : {
+                outcome: 'bill_not_draft',
+                billId: lock.refusal.billId,
+                billStatus: lock.refusal.billStatus,
+              };
+        await tx
+          .update(idempotencyKeys)
+          .set({ result: stored })
+          .where(
+            and(
+              eq(idempotencyKeys.storeId, storeId),
+              eq(idempotencyKeys.key, input.idempotencyKey),
+            ),
+          );
+      }
+      return lock.refusal;
+    }
 
     // Safe as a read-modify-write because `lockDraft` holds the bill row, which is also what the
     // (bill_id, line_no) unique index would otherwise have to catch.
@@ -480,6 +597,16 @@ export async function addBillItem(
       gstRateBps: product.gstRateBps,
       hsnCode: product.hsnCode,
     });
+
+    if (input.idempotencyKey) {
+      const stored: StoredAddItemOutcome = { outcome: 'added' };
+      await tx
+        .update(idempotencyKeys)
+        .set({ result: stored })
+        .where(
+          and(eq(idempotencyKeys.storeId, storeId), eq(idempotencyKeys.key, input.idempotencyKey)),
+        );
+    }
     return null;
   });
 

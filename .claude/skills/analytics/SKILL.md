@@ -27,6 +27,13 @@ daily summaries yourself.
 Dead stock is worth mentioning unprompted when they ask how the shop is doing — it is money
 sitting on a shelf.
 
+## What to order next
+
+"what should I order?" → `reorder_suggestions`, not `stock_health`. `stock_health` is a flat
+below-reorder-level list; it ranks a slow mover sitting at its threshold the same as a fast
+mover about to go empty. `reorder_suggestions` uses actual sales velocity to rank by days of
+cover, so the item about to run out genuinely comes first.
+
 ## Only finalized bills count
 
 Drafts are not sales. If a number looks lower than the owner expects, an unfinalized bill is the

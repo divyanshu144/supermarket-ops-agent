@@ -89,8 +89,11 @@ export const openBillTool = tool(
     'bill is finalized, so a bill can be built up and edited over several messages.',
   { customer_name: z.string().optional().describe('Customer name, if the owner named one.') },
   async ({ customer_name }) => {
-    const { storeId } = requireContext();
-    const result = await openBill(storeId, { customerName: customer_name });
+    const { storeId, idempotency } = requireContext();
+    const result = await openBill(storeId, {
+      customerName: customer_name,
+      idempotencyKey: idempotency.next('open_bill', { customer_name }),
+    });
     return toolResult({ status: 'opened', bill_id: result.billId });
   },
 );
@@ -113,13 +116,20 @@ export const addBillItemTool = tool(
       .describe('Price per selling unit in PAISE. Only when the owner names a different price.'),
   },
   async ({ bill_id, product_query, qty, unit, unit_price_override }) => {
-    const { storeId } = requireContext();
+    const { storeId, idempotency } = requireContext();
     const result = await addBillItem(storeId, {
       billId: bill_id,
       productQuery: product_query,
       qty,
       unit,
       unitPriceOverridePaise: unit_price_override,
+      idempotencyKey: idempotency.next('add_bill_item', {
+        bill_id,
+        product_query,
+        qty,
+        unit,
+        unit_price_override,
+      }),
     });
     return toolResult(presentEdit(result));
   },
@@ -176,11 +186,20 @@ export const findBillsTool = tool(
     customer: z.string().optional().describe('Filter by customer name.'),
     days_back: z.number().int().positive().optional().describe('Only bills from the last N days.'),
     limit: z.number().int().positive().max(20).optional(),
+    include_stale_drafts: z
+      .boolean()
+      .optional()
+      .describe('Include drafts older than a day. Off by default — they are usually abandoned.'),
   },
-  async ({ customer, days_back, limit }) => {
+  async ({ customer, days_back, limit, include_stale_drafts }) => {
     const { storeId } = requireContext();
     const since = days_back ? new Date(Date.now() - days_back * 86_400_000) : undefined;
-    const bills = await findBills(storeId, { customer, since, limit });
+    const bills = await findBills(storeId, {
+      customer,
+      since,
+      limit,
+      includeStaleDrafts: include_stale_drafts,
+    });
     return toolResult({ count: bills.length, bills: bills.map(presentBillSummary) });
   },
 );

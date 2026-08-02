@@ -1,18 +1,12 @@
-import { Bot } from 'grammy';
+import { Bot, type CommandContext, type Context } from 'grammy';
 import { loadEnv } from '../config/env.js';
-import { runAgent } from '../agent/runtime.js';
+import { downloadTelegramFile } from '../media/download.js';
+import { transcribe } from '../media/transcribe.js';
 import { provisionStore } from '../repositories/stores.js';
-import {
-  claimUpdate,
-  clearSession,
-  completeUpdate,
-  getSessionId,
-  setSessionId,
-} from '../repositories/updates.js';
+import { claimUpdate, clearSession } from '../repositories/updates.js';
 import { reseedStore } from '../seed/index.js';
-import { readPreferences } from '../tools/preferences.js';
-import { InputFile } from 'grammy';
-import { newToolContext, toolContext } from '../tools/context.js';
+import { redact } from './redact.js';
+import { handleTurn } from './turn.js';
 
 const env = loadEnv();
 
@@ -28,63 +22,113 @@ const WELCOME = [
   '/reset — restore this shop to its starting state',
 ].join('\n');
 
-bot.command('start', async (ctx) => {
-  await provisionStore(BigInt(ctx.chat.id));
-  await ctx.reply(WELCOME);
-});
+/**
+ * Wraps a command handler so a failure replies instead of propagating.
+ *
+ * Without this, an error inside provisionStore reaches grammY's default handler, which calls
+ * bot.stop() — a single database blip would take the bot down mid-review.
+ */
+function guarded(handler: (ctx: CommandContext<Context>) => Promise<void>) {
+  return async (ctx: CommandContext<Context>): Promise<void> => {
+    try {
+      await handler(ctx);
+    } catch (error) {
+      console.error(redact({ scope: 'command', chatId: String(ctx.chat.id), error }));
+      await ctx.reply('Something went wrong on my side. Try that again?');
+    }
+  };
+}
 
-bot.command('help', async (ctx) => {
-  await ctx.reply(WELCOME);
-});
+bot.command(
+  'start',
+  guarded(async (ctx) => {
+    await provisionStore(BigInt(ctx.chat.id));
+    await ctx.reply(WELCOME);
+  }),
+);
 
-bot.command('new', async (ctx) => {
-  const storeId = BigInt(ctx.chat.id);
-  await provisionStore(storeId);
-  await clearSession(storeId);
-  await ctx.reply('Fresh chat. Your stock, khata and preferences are unchanged.');
-});
+bot.command(
+  'help',
+  guarded(async (ctx) => {
+    await ctx.reply(WELCOME);
+  }),
+);
 
-bot.command('reset', async (ctx) => {
-  const storeId = BigInt(ctx.chat.id);
-  await provisionStore(storeId);
-  await reseedStore(storeId);
-  await clearSession(storeId);
-  await ctx.reply('Shop restored to its starting state.');
-});
+bot.command(
+  'new',
+  guarded(async (ctx) => {
+    const storeId = BigInt(ctx.chat.id);
+    await provisionStore(storeId);
+    await clearSession(storeId);
+    await ctx.reply('Fresh chat. Your stock, khata and preferences are unchanged.');
+  }),
+);
+
+bot.command(
+  'reset',
+  guarded(async (ctx) => {
+    const storeId = BigInt(ctx.chat.id);
+    await provisionStore(storeId);
+    await reseedStore(storeId);
+    await clearSession(storeId);
+    await ctx.reply('Shop restored to its starting state.');
+  }),
+);
 
 bot.on('message:text', async (ctx) => {
+  await handleTurn(ctx, ctx.message.text);
+});
+
+/** Voice notes are ~60s of Opus at most; anything longer is a mis-tap, not a shop instruction. */
+const MAX_VOICE_SECONDS = 60;
+
+bot.on('message:voice', async (ctx) => {
+  // Guard on the metadata Telegram already sent, before spending a download.
+  if (ctx.message.voice.duration > MAX_VOICE_SECONDS) {
+    await ctx.reply(`That is a long one — keep voice notes under ${MAX_VOICE_SECONDS} seconds.`);
+    return;
+  }
+
+  // Claim before spending anything, not after. handleTurn's own claim runs too late for voice:
+  // by the time it would run, the file is already downloaded and the Whisper call already paid
+  // for. A genuine redelivery (the crash-mid-turn case claimUpdate exists for) must not repeat
+  // either of those, so this handler claims the update itself and hands the result down.
   const updateId = BigInt(ctx.update.update_id);
   const storeId = BigInt(ctx.chat.id);
-
-  // Claim, don't mark done. See repositories/updates.ts for why the difference matters.
   const claim = await claimUpdate(updateId, storeId);
   if (claim === 'duplicate') return;
 
-  await provisionStore(storeId);
-  await ctx.replyWithChatAction('typing');
-
+  let transcript: string;
   try {
-    const sessionId = await getSessionId(storeId);
-    const preferences = await readPreferences(storeId);
-
-    const turnContext = newToolContext(storeId, updateId);
-    const result = await toolContext.run(turnContext, () =>
-      runAgent({ text: ctx.message.text, sessionId, preferences }),
+    const audio = await downloadTelegramFile(ctx, env.TELEGRAM_BOT_TOKEN);
+    transcript = await transcribe(
+      audio,
+      ctx.message.voice.mime_type ?? 'audio/ogg',
+      env.OPENAI_API_KEY,
     );
-
-    if (result.sessionId) await setSessionId(storeId, result.sessionId);
-    await ctx.reply(result.reply || 'Sorry, I could not work that out.');
-
-    // Files the tools produced this turn go out after the reply, so the owner reads the answer
-    // first and the document lands underneath it.
-    for (const artifact of turnContext.artifacts) {
-      await ctx.replyWithDocument(new InputFile(artifact.path, artifact.filename));
-    }
-
-    await completeUpdate(updateId);
   } catch (error) {
-    console.error({ updateId: String(updateId), storeId: String(storeId), error });
-    await ctx.reply('Something went wrong on my side. Try that again?');
-    // Deliberately NOT completed: the claim goes stale and a retry can reprocess it.
+    console.error(redact({ scope: 'voice', chatId: String(ctx.chat.id), error }));
+    await ctx.reply('I could not make out that voice note. Try again, or type it?');
+    return;
   }
+
+  if (!transcript) {
+    await ctx.reply('That sounded empty — say it again?');
+    return;
+  }
+
+  // Echo before acting. "Do" (2) and "das" (10) differ by one phoneme, and a misheard quantity
+  // silently becomes a wrong bill. This does NOT wait for confirmation — it makes the mistake
+  // visible in the same turn the money moves.
+  await ctx.reply(`Heard: ${transcript}`);
+  await handleTurn(ctx, transcript, { alreadyClaimed: true });
+});
+
+/**
+ * Replaces grammY's default handler, which logs the error, calls bot.stop() and rethrows.
+ * Keeping the bot alive matters more than surfacing the failure loudly, and the redactor is
+ * what keeps ctx.api.token out of the log.
+ */
+bot.catch((error) => {
+  console.error(redact({ scope: 'bot', error }));
 });
