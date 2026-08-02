@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  # A newer push supersedes an in-flight run on the same ref.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: fmt · lint · typecheck · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      # The repository tests run against a real Postgres rather than a mock — row locks,
+      # CHECK constraints and ON CONFLICT are the things under test, and none of them exist
+      # in a fake. Matches the local docker-compose service.
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: kirana
+          POSTGRES_PASSWORD: kirana
+          POSTGRES_DB: kirana
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U kirana"
+          --health-interval 3s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgres://kirana:kirana@localhost:5432/kirana
+      # The tool layer is exercised directly, so no live model call is made and no real key is
+      # needed. Config validation is fail-fast at import, so these must be present and non-empty.
+      TELEGRAM_BOT_TOKEN: ci-placeholder-not-a-real-token
+      ANTHROPIC_API_KEY: ci-placeholder-not-a-real-key
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          # Pinned deliberately. corepack once pulled pnpm 11 against this pnpm-9 lockfile and
+          # the container would not build.
+          version: 9.15.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      - name: Format
+        run: pnpm fmt:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        # vitest.config.ts sets fileParallelism: false. The invariant suite installs a DDL
+        # trigger on khata_entries to prove the khata write is inside the finalize transaction,
+        # and while it exists any parallel file inserting there fails.
+        run: pnpm test

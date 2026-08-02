@@ -5,7 +5,11 @@ close the day, and pull GST invoices and analysis decks — in plain terse Engli
 
 **Bot: [@divagentBot](https://t.me/divagentBot)** · try `/start`, then `how much sugar is left?`
 
-> **Deployed on Railway**, one replica, long-polling. The container applies pending migrations
+[![CI](https://github.com/divyanshu144/supermarket-ops-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/divyanshu144/supermarket-ops-agent/actions/workflows/ci.yml)
+
+> **Deployed on Railway**, one replica, long-polling. The container applies pending migrations on
+> boot, so a fresh Postgres works with no manual step. Deployment notes are in
+> [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ---
 
@@ -233,12 +237,17 @@ timing. Errors go through a redactor first: grammY's `BotError` holds `ctx.api.t
 unredacted error dump puts the bot token in log retention. It also strips tokens embedded in
 URLs, which is the shape of Telegram's own file-download endpoint.
 
-Skipped, deliberately: no CI pipeline; no tracing; no auth beyond Telegram's own chat identity;
-no rate limiting.
+CI runs the same gate on every push — fmt, lint, typecheck and the full suite against a real
+Postgres service container, because row locks, `CHECK` constraints and `ON CONFLICT` are the
+things under test and none of them exist in a mock. No API key is needed: the tool layer is
+exercised directly, so nothing in the suite calls a model.
 
 Tests run with `fileParallelism: false`. The invariant suite installs a real DDL trigger on
 `khata_entries` to prove the khata write is inside the finalize transaction, and while it exists
 any parallel file inserting there fails. It was red about one run in five before I serialised it.
+
+Skipped, deliberately: no tracing; no auth beyond Telegram's own chat identity; no rate limiting;
+no deploy automation beyond push-to-deploy.
 
 ## Edge cases not handled
 
