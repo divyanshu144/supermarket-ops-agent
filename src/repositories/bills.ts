@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, ilike, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ilike, inArray, ne, or, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import {
   billItems,
@@ -343,12 +343,24 @@ export async function getBill(storeId: bigint, billId: string): Promise<BillView
  */
 export async function findBills(
   storeId: bigint,
-  input: { customer?: string; since?: Date; limit?: number } = {},
+  input: {
+    customer?: string;
+    since?: Date;
+    limit?: number;
+    includeStaleDrafts?: boolean;
+  } = {},
 ): Promise<BillSummary[]> {
   const conditions = [eq(bills.storeId, storeId)];
   if (input.customer?.trim())
     conditions.push(ilike(bills.customerName, `%${input.customer.trim()}%`));
   if (input.since) conditions.push(gte(bills.createdAt, input.since));
+
+  // An abandoned draft holds no stock, but it clutters every "which bill?" lookup. A draft the
+  // owner has not touched in a day is not the bill they mean.
+  if (!input.includeStaleDrafts) {
+    const cutoff = new Date(Date.now() - 86_400_000);
+    conditions.push(or(ne(bills.status, 'draft'), gte(bills.createdAt, cutoff))!);
+  }
 
   const limit = Math.min(Math.max(input.limit ?? 10, 1), 50);
 

@@ -644,6 +644,15 @@ describe('findBills', () => {
     expect(await findBills(STORE, { limit: 2 })).toHaveLength(2);
     expect(await findBills(STORE, { since: new Date(Date.now() + 60_000) })).toEqual([]);
   });
+
+  it('hides drafts older than a day but keeps old finalized bills', async () => {
+    const stale = await openBill(STORE, { customerName: 'Stale' });
+    const twoDaysAgo = new Date(Date.now() - 2 * 86_400_000);
+    await db.update(bills).set({ createdAt: twoDaysAgo }).where(eq(bills.id, stale.billId));
+
+    const found = await findBills(STORE, { limit: 50 });
+    expect(found.map((b) => b.id)).not.toContain(stale.billId);
+  });
 });
 
 describe('fix round 1 — regression guards', () => {

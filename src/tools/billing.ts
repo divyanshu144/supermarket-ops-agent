@@ -176,11 +176,20 @@ export const findBillsTool = tool(
     customer: z.string().optional().describe('Filter by customer name.'),
     days_back: z.number().int().positive().optional().describe('Only bills from the last N days.'),
     limit: z.number().int().positive().max(20).optional(),
+    include_stale_drafts: z
+      .boolean()
+      .optional()
+      .describe('Include drafts older than a day. Off by default — they are usually abandoned.'),
   },
-  async ({ customer, days_back, limit }) => {
+  async ({ customer, days_back, limit, include_stale_drafts }) => {
     const { storeId } = requireContext();
     const since = days_back ? new Date(Date.now() - days_back * 86_400_000) : undefined;
-    const bills = await findBills(storeId, { customer, since, limit });
+    const bills = await findBills(storeId, {
+      customer,
+      since,
+      limit,
+      includeStaleDrafts: include_stale_drafts,
+    });
     return toolResult({ count: bills.length, bills: bills.map(presentBillSummary) });
   },
 );
