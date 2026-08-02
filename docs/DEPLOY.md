@@ -1,11 +1,10 @@
 # Deploying
 
-The app is host-agnostic: one container, one long-poll process, one Postgres. It needs no
-inbound port and no public URL, because Telegram long-polling is outbound-only. That makes the
-hosting choice mostly a billing decision.
+One container, one long-poll process, one Postgres. No inbound port and no public URL — Telegram
+long-polling is outbound-only — so the hosting choice is mostly a billing decision.
 
-**Status: deployed on Railway** as [@divagentBot](https://t.me/divagentBot) — project
-`kirana-ops-agent`, service `bot`, one replica, with a managed Postgres attached.
+**Currently deployed on Railway** as [@divagentBot](https://t.me/divagentBot): project
+`kirana-ops-agent`, service `bot`, one replica, managed Postgres attached.
 
 ---
 
@@ -13,69 +12,53 @@ hosting choice mostly a billing decision.
 
 | Requirement | Why |
 |---|---|
-| One always-on process | Long-polling holds an open `getUpdates` request. A host that sleeps on idle will drop messages. |
-| **Exactly one replica** | Two processes polling one bot token produce `409 Conflict: terminated by other getUpdates request` and lose updates. Not theoretical — it happened during development, and again the first time a local `pnpm dev` overlapped the deployed instance. |
+| One always-on process | Long-polling holds an open `getUpdates` request. A host that sleeps on idle drops messages. |
+| **Exactly one replica** | Two processes on one bot token produce `409 Conflict: terminated by other getUpdates request` and lose updates. |
 | Postgres 16 | Schema uses partial unique indexes and check constraints. |
-| Outbound HTTPS | `api.telegram.org` and `api.anthropic.com`, plus `api.openai.com` if voice is enabled. No inbound needed. |
+| Outbound HTTPS | `api.telegram.org`, `api.anthropic.com`, and `api.openai.com` if voice is enabled. |
 
-### Environment
+## Environment
 
 | Variable | Required | Notes |
 |---|---|---|
-| `DATABASE_URL` | yes | Validated as a URL at boot; the process exits if malformed. |
+| `DATABASE_URL` | yes | Must be a valid URL; the process exits at boot if malformed. |
 | `TELEGRAM_BOT_TOKEN` | yes | |
 | `ANTHROPIC_API_KEY` | yes | |
-| `NODE_ENV` | set to `production` | Also flips message-text logging off by default. |
-| `AGENT_EFFORT` | no, default `medium` | `low` \| `medium` \| `high`. The latency lever. |
-| `OPENAI_API_KEY` | no | Whisper, for voice notes. **Without it the bot runs normally** and replies that voice isn't configured; text is unaffected. |
-| `LOG_MESSAGE_TEXT` | no | `true` \| `false`. Defaults to off in production, on elsewhere. Inbound text carries customer names and amounts, so turning it on in production is a deliberate choice. |
+| `NODE_ENV` | set `production` | |
+| `AGENT_EFFORT` | no, default `medium` | `low` \| `medium` \| `high`. |
+| `OPENAI_API_KEY` | no | Voice transcription. Without it the bot runs normally and replies that voice isn't configured. |
+| `LOG_MESSAGE_TEXT` | no | `true` \| `false`. Defaults off in production, on elsewhere. |
 
-Config is parsed and validated at import (`src/config/env.ts`), so a missing or malformed value
-fails at boot with a readable message rather than mid-conversation.
+Every variable is validated at boot, so a missing or malformed value fails immediately with a
+readable message rather than mid-conversation.
 
-**Migrations run automatically at boot** (`src/index.ts` → `runMigrations()`). A freshly
-provisioned managed Postgres arrives empty, and the first Railway deploy died on
-`relation "processed_updates" does not exist` before this was added. No manual migration step is
-needed on any host.
+**Migrations apply themselves on startup.** A freshly provisioned managed Postgres arrives empty;
+the first deploy here died on `relation "processed_updates" does not exist` before this was
+added. No manual migration step is needed on any host.
 
 ---
 
-## Railway (current deployment)
+## Railway
 
 `Dockerfile` and `railway.json` are committed. `railway.json` pins `numReplicas: 1` and
-`overlapSeconds: 0` — the second matters because a rolling deploy would otherwise briefly run two
-containers and trip the 409.
+`overlapSeconds: 0` — the second prevents a rolling deploy briefly running two containers.
 
 ### Deploying a change
 
-**This service is not linked to a GitHub repo**, so `git push` does **not** deploy. Pushing
-updates GitHub and runs CI; it does not touch Railway. Deploys are uploads:
+**The service is not linked to a GitHub repo, so `git push` does not deploy.** Deploys are
+uploads:
 
 ```bash
-railway up --service bot          # builds and deploys the working directory
+railway up --service bot
 ```
 
-Two commands that look like they deploy new code but do not:
+Two commands that look like deploys but ship nothing new:
 
-- `railway redeploy` — re-runs the **existing image**. If the current image is stale, this
-  redeploys the stale image, however many times you run it.
-- `git push origin main` — CI only, unless the service is linked to the repo.
+- `railway redeploy` — re-runs the **existing image**, however stale it is.
+- `git push origin main` — updates GitHub and runs CI only.
 
-To get push-to-deploy, link it once: **Railway → `bot` → Settings → Source → Connect Repo**,
-branch `main`. Worth doing — it removes the class of confusion above, and with CI green on `main`
-the thing being deployed has already been verified.
-
-### Checking what is actually running
-
-```bash
-railway logs --lines 20                      # expect: Applying migrations… / Listening as @…
-railway status --json | grep -i reason       # "deploy" = new build, "redeploy" = old image
-```
-
-The most reliable signal is the structured turn log: every handled message emits one JSON line
-with `update_id`, `store_id`, `tools` and `duration_ms`. **If you message the bot and no such
-line appears, you are talking to an old build** — nothing else produces that silence, since the
-pre-logging code only ever logged errors.
+To enable push-to-deploy, link the repo once: **Railway → `bot` → Settings → Source → Connect
+Repo**, branch `main`.
 
 ### First-time setup
 
@@ -89,11 +72,9 @@ railway variables --set TELEGRAM_BOT_TOKEN=... \
 railway up --service bot
 ```
 
-`DATABASE_URL` is injected by Railway when the Postgres service is attached. Migrations apply
-themselves on the first boot.
+`DATABASE_URL` is injected when the Postgres service is attached.
 
-> Beware `railway variables` printing secrets to your terminal — it echoes values in full, and
-> anything echoed lands in shell history and any terminal-recording you happen to be making.
+> `railway variables` prints values in full. Anything it echoes lands in shell history.
 
 ## Fly.io
 
@@ -112,46 +93,50 @@ has no inbound traffic to wake it, so autostop would silently kill the poller.
 
 ## Split: managed Postgres + any compute
 
-- **Neon** or **Supabase** for free Postgres → gives a `DATABASE_URL`
+- **Neon** or **Supabase** for Postgres → gives a `DATABASE_URL`
 - **Koyeb**, **Fly**, or any small VPS for the container
 
 The app does not care where Postgres lives. Point `DATABASE_URL` at it and boot the container.
 
-## Local, for a demo
+## Local
 
 ```bash
 pnpm db:up && pnpm dev
 ```
 
-**Stop the deployed instance first**, or both will poll the same token and neither will work
-reliably. Fine for a recorded walkthrough; **not** adequate for the brief's "kept running while
-we review" — a laptop cannot honestly promise multi-day uptime.
+Stop the deployed instance first, or both poll the same token and neither works reliably. Fine
+for a recorded walkthrough; not adequate for "kept running while we review".
 
 ---
 
-## After any deploy
+## Verifying a deploy
 
-1. **Stop every other instance first**, including a local `pnpm dev`. One token, one poller.
-2. `railway logs --lines 20` — expect `Applying migrations… / Migrations up to date. /
-   Listening as @divagentBot`.
-3. Send `/reset`, then `how much sugar is left?` The reply must name a real quantity from the
-   seeded catalogue, which proves the whole path: Telegram → agent → tool → Postgres → reply.
-4. Confirm a turn log line appeared. That is the proof the new build is serving, not the old one.
+1. **Stop every other instance**, including a local `pnpm dev`. One token, one poller.
+2. Check the logs:
 
-### A 409 right after deploy is normal
+   ```bash
+   railway logs --lines 20
+   ```
 
-Every restart logs one `409 Conflict` and a stack trace as the outgoing container dies: Telegram
-only rejects the old poller once the new one starts, and grammY's polling loop cannot catch that
-(`bot.catch` covers middleware, not `getUpdates`). It is expected and self-clearing.
+   Expect `Applying migrations… / Migrations up to date. / Listening as @divagentBot`.
 
-**A 409 that keeps repeating is not** — that means two live pollers, usually a local `pnpm dev`
-left running, or replicas set above 1.
+3. Confirm the running build is the one you just shipped:
 
-## Rotating credentials
+   ```bash
+   railway status --json | grep -i reason   # "deploy" = new build, "redeploy" = existing image
+   ```
 
-Both the bot token and the Anthropic key reached deployment logs before the error redactor
-landed. The redactor stops new leaks; it does not scrub log history.
+4. Send `/reset`, then `how much sugar is left?` — the reply must name a real quantity from the
+   seeded catalogue, which exercises Telegram → agent → tool → Postgres → reply.
 
-- **Telegram:** `/revoke` then `/token` with @BotFather, update `TELEGRAM_BOT_TOKEN`, redeploy.
-  The `@handle` is unchanged, so the README link keeps working.
-- **Anthropic:** issue a new key in the console, update the variable, redeploy, then revoke the old.
+5. Check that a JSON turn line appeared in the logs, carrying `update_id`, `tools` and
+   `duration_ms`. **A handled message with no such line means an old build is still serving** —
+   the most reliable signal available, since it needs no guesswork about timing.
+
+### A single 409 after deploy is normal
+
+Each restart logs one `409 Conflict` with a stack trace as the outgoing container exits —
+Telegram only rejects the old poller once the new one starts. It is self-clearing.
+
+**A repeating 409 is not.** That means two live pollers: usually a local `pnpm dev` left running,
+or replicas set above 1.
