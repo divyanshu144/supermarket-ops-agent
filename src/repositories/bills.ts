@@ -3,6 +3,7 @@ import { db } from '../db/client.js';
 import {
   billItems,
   bills,
+  idempotencyKeys,
   khataAccounts,
   khataEntries,
   products,
@@ -284,15 +285,56 @@ async function selectLines(exec: Tx, billId: string): Promise<LineRow[]> {
 /** Opens an empty draft. Several drafts may be open per store at once, by design. */
 export async function openBill(
   storeId: bigint,
-  input: { customerName?: string } = {},
+  input: { customerName?: string; idempotencyKey?: string } = {},
 ): Promise<{ billId: string }> {
   const customerName = input.customerName?.trim();
-  const [row] = await db
-    .insert(bills)
-    .values({ storeId, customerName: customerName ? customerName : null })
-    .returning({ id: bills.id });
 
-  return { billId: row!.id };
+  if (!input.idempotencyKey) {
+    const [row] = await db
+      .insert(bills)
+      .values({ storeId, customerName: customerName ? customerName : null })
+      .returning({ id: bills.id });
+    return { billId: row!.id };
+  }
+
+  return db.transaction(async (tx) => {
+    // Insert-first: the unique constraint IS the enforcement. Checking then writing leaves a
+    // window in which a redelivered update opens a second draft.
+    const claimed = await tx
+      .insert(idempotencyKeys)
+      .values({
+        storeId,
+        key: input.idempotencyKey!,
+        operation: 'open_bill',
+        result: {},
+      })
+      .onConflictDoNothing()
+      .returning({ key: idempotencyKeys.key });
+
+    if (claimed.length === 0) {
+      const [existing] = await tx
+        .select({ result: idempotencyKeys.result })
+        .from(idempotencyKeys)
+        .where(
+          and(eq(idempotencyKeys.storeId, storeId), eq(idempotencyKeys.key, input.idempotencyKey!)),
+        );
+      return { billId: (existing!.result as { billId: string }).billId };
+    }
+
+    const [row] = await tx
+      .insert(bills)
+      .values({ storeId, customerName: customerName ? customerName : null })
+      .returning({ id: bills.id });
+
+    await tx
+      .update(idempotencyKeys)
+      .set({ result: { billId: row!.id } })
+      .where(
+        and(eq(idempotencyKeys.storeId, storeId), eq(idempotencyKeys.key, input.idempotencyKey!)),
+      );
+
+    return { billId: row!.id };
+  });
 }
 
 export async function getBill(storeId: bigint, billId: string): Promise<BillView | null> {

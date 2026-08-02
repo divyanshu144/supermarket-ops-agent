@@ -121,6 +121,23 @@ describe('openBill / getBill', () => {
     // The id reaches us from the model, so it can be any string at all.
     expect(await getBill(STORE, 'not-a-uuid')).toBeNull();
   });
+
+  it('returns the same bill when the same idempotency key is replayed', async () => {
+    const key = 'update-1:open_bill:abc:0';
+    const first = await openBill(STORE, { customerName: 'Ramesh', idempotencyKey: key });
+    const second = await openBill(STORE, { customerName: 'Ramesh', idempotencyKey: key });
+
+    expect(second.billId).toBe(first.billId);
+
+    const drafts = await findBills(STORE, { customer: 'Ramesh', limit: 50 });
+    expect(drafts.filter((b) => b.id === first.billId)).toHaveLength(1);
+  });
+
+  it('opens separate bills for different keys', async () => {
+    const a = await openBill(STORE, { idempotencyKey: 'k1' });
+    const b = await openBill(STORE, { idempotencyKey: 'k2' });
+    expect(a.billId).not.toBe(b.billId);
+  });
 });
 
 describe('addBillItem', () => {

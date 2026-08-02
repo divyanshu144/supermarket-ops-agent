@@ -130,9 +130,14 @@ collapse unpredictably on edit, making the same inputs produce ₹42 or ₹39 at
    Telegram only redelivers when the offset didn't advance — exactly when the previous turn
    crashed. An insert-on-receipt dedupe would reject precisely the redelivery that must be
    reprocessed, and the owner's message would vanish silently.
-2. **Tool.** Keys are `(update_id, tool, args_hash, ordinal)`, injected server-side. The ordinal
-   matters: without it two legitimately identical calls in one turn — a bill with two identical
-   lines — collide and the second silently no-ops.
+2. **Tool.** Keys are `(update_id, tool, args_hash, ordinal)`, issued per turn by
+   `IdempotencyIssuer` and injected server-side. The ordinal matters: without it two legitimately
+   identical calls in one turn — a bill with two identical lines — would collide. Wired for
+   `open_bill` only, since that is the path whose duplicate does real damage: the key is
+   inserted into `idempotency_keys` first, with `onConflictDoNothing()`, and a losing insert
+   (zero rows) means the key was already used, so the existing bill id is returned instead of a
+   second draft being opened. The other mutating tools don't take a key and rely on layers 1 and
+   3.
 3. **Semantic.** Finalizing an already-finalized bill returns the existing invoice as a
    *success*. Not an error, and not a second decrement.
 

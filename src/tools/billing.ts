@@ -89,8 +89,11 @@ export const openBillTool = tool(
     'bill is finalized, so a bill can be built up and edited over several messages.',
   { customer_name: z.string().optional().describe('Customer name, if the owner named one.') },
   async ({ customer_name }) => {
-    const { storeId } = requireContext();
-    const result = await openBill(storeId, { customerName: customer_name });
+    const { storeId, idempotency } = requireContext();
+    const result = await openBill(storeId, {
+      customerName: customer_name,
+      idempotencyKey: idempotency.next('open_bill', { customer_name }),
+    });
     return toolResult({ status: 'opened', bill_id: result.billId });
   },
 );
