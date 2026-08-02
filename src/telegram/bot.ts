@@ -1,19 +1,10 @@
 import { Bot, type CommandContext, type Context } from 'grammy';
 import { loadEnv } from '../config/env.js';
-import { runAgent } from '../agent/runtime.js';
 import { provisionStore } from '../repositories/stores.js';
-import {
-  claimUpdate,
-  clearSession,
-  completeUpdate,
-  getSessionId,
-  setSessionId,
-} from '../repositories/updates.js';
+import { clearSession } from '../repositories/updates.js';
 import { reseedStore } from '../seed/index.js';
-import { readPreferences } from '../tools/preferences.js';
-import { InputFile } from 'grammy';
-import { newToolContext, toolContext } from '../tools/context.js';
 import { redact } from './redact.js';
+import { handleTurn } from './turn.js';
 
 const env = loadEnv();
 
@@ -83,40 +74,7 @@ bot.command(
 );
 
 bot.on('message:text', async (ctx) => {
-  const updateId = BigInt(ctx.update.update_id);
-  const storeId = BigInt(ctx.chat.id);
-
-  // Claim, don't mark done. See repositories/updates.ts for why the difference matters.
-  const claim = await claimUpdate(updateId, storeId);
-  if (claim === 'duplicate') return;
-
-  await provisionStore(storeId);
-  await ctx.replyWithChatAction('typing');
-
-  try {
-    const sessionId = await getSessionId(storeId);
-    const preferences = await readPreferences(storeId);
-
-    const turnContext = newToolContext(storeId, updateId);
-    const result = await toolContext.run(turnContext, () =>
-      runAgent({ text: ctx.message.text, sessionId, preferences }),
-    );
-
-    if (result.sessionId) await setSessionId(storeId, result.sessionId);
-    await ctx.reply(result.reply || 'Sorry, I could not work that out.');
-
-    // Files the tools produced this turn go out after the reply, so the owner reads the answer
-    // first and the document lands underneath it.
-    for (const artifact of turnContext.artifacts) {
-      await ctx.replyWithDocument(new InputFile(artifact.path, artifact.filename));
-    }
-
-    await completeUpdate(updateId);
-  } catch (error) {
-    console.error(redact({ updateId: String(updateId), storeId: String(storeId), error }));
-    await ctx.reply('Something went wrong on my side. Try that again?');
-    // Deliberately NOT completed: the claim goes stale and a retry can reprocess it.
-  }
+  await handleTurn(ctx, ctx.message.text);
 });
 
 /**
