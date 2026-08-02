@@ -6,10 +6,6 @@ close the day, and pull GST invoices and analysis decks — in plain terse Engli
 **Bot: [@divagentBot](https://t.me/divagentBot)** · try `/start`, then `how much sugar is left?`
 
 > **Deployed on Railway**, one replica, long-polling. The container applies pending migrations
-> on boot, so a freshly provisioned Postgres works without a manual step — the first deploy
-> failed on `relation "processed_updates" does not exist` before that was added.
-> Host-agnostic instructions for Railway, Fly.io and split Postgres/compute are in
-> [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ---
 
