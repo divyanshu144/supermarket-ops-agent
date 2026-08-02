@@ -23,7 +23,10 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Verification gate: `pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test` — 203 tests.
+Verification gate: `pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test` — 236 tests.
+
+Voice input needs `OPENAI_API_KEY` (Whisper). Without it the bot runs normally and replies that
+voice isn't configured — text is unaffected.
 
 Two scripts that hit the live API rather than mocks:
 
@@ -51,7 +54,7 @@ billing system, and a tool call the model skips is worse than one that takes an 
 ```
 Telegram (long-poll)
    ↓  claim the update, resolve chat → store, read preferences
-Agent SDK query()  ── system prompt + preferences + 5 skills + 27 tools
+Agent SDK query()  ── system prompt + preferences + 6 skills + 25 tools
    ↓  observe → reason → call tool → read result → continue
 in-process MCP tools (Zod schemas)
    ↓
@@ -66,12 +69,17 @@ touches Telegram, which is what lets an invoice be generated in a test with no b
 
 ## Skill and tool design
 
-Five skills in `.claude/skills/` — inventory, billing, khata, analytics, documents. They teach
-*how to run a shop*, not what a signature looks like; the schema already says that. The billing
-skill spends most of its length on what each refusal means, because that is where the model
-would otherwise improvise.
+Six skills in `.claude/skills/` — inventory, billing, khata, analytics, documents, hindi. They
+teach *how to run a shop*, not what a signature looks like; the schema already says that. The
+billing skill spends most of its length on what each refusal means, because that is where the
+model would otherwise improvise.
 
-27 tools across six families. Two rules shape all of them:
+The Hindi skill is a glossary and a register, not a lookup table. I considered an `aliases`
+column on `products` and rejected it: partial coverage is worse than none, because it teaches the
+model that Hindi strings are valid tool input and then fails on the words that have no alias.
+Translation stays in the model; the tool still grounds the price.
+
+25 tools across six families. Two rules shape all of them:
 
 **Refusals are data, never exceptions.** `finalize_bill` returns
 `{status: 'insufficient_stock', shortfalls: [...]}`. "You only have 6 Maggi" is an answer, not a
@@ -132,12 +140,18 @@ collapse unpredictably on edit, making the same inputs produce ₹42 or ₹39 at
    reprocessed, and the owner's message would vanish silently.
 2. **Tool.** Keys are `(update_id, tool, args_hash, ordinal)`, issued per turn by
    `IdempotencyIssuer` and injected server-side. The ordinal matters: without it two legitimately
-   identical calls in one turn — a bill with two identical lines — would collide. Wired for
-   `open_bill` only, since that is the path whose duplicate does real damage: the key is
-   inserted into `idempotency_keys` first, with `onConflictDoNothing()`, and a losing insert
-   (zero rows) means the key was already used, so the existing bill id is returned instead of a
-   second draft being opened. The other mutating tools don't take a key and rely on layers 1 and
-   3.
+   identical calls in one turn — a bill with two identical lines — would collide. The key goes
+   into `idempotency_keys` **first**, with `onConflictDoNothing()`; a losing insert (zero rows)
+   means the key was already used, so the stored result is replayed instead of the write
+   happening twice. Insert-first is the point — checking then writing leaves a window.
+
+   Wired for `open_bill` **and** `add_bill_item`. That pairing is not optional, and finding out
+   why was the most instructive bug on this branch. I keyed `open_bill` alone first. A crashed
+   turn that replays then gets *the same draft back, already holding its lines*, and the model —
+   which only sees `{status:'opened', bill_id}` — adds them again. Finalize decrements stock
+   twice and charges twice. Unkeyed, that same replay had opened a fresh draft and billed
+   correctly, leaving a stray empty one behind. **Half-applied idempotency was worse than none**:
+   it turned a cosmetic residue into a wrong bill. The other mutating tools rely on layers 1 and 3.
 3. **Semantic.** Finalizing an already-finalized bill returns the existing invoice as a
    *success*. Not an error, and not a second decrement.
 
@@ -173,6 +187,20 @@ Preferences live in Postgres and are injected into the system prompt each turn, 
 with no tool call. `/new` clears the conversation row and nothing else. In the end-to-end run,
 beat 13 answers "UPI" after `/new` having called **no tools at all**.
 
+### Voice, and Hindi
+A voice note is downloaded, transcribed through Whisper, and fed into the same turn path text
+uses — `handleTurn` is shared, so the update claim and the artifact drain can't drift between
+modalities. The provider surface is one function, `transcribe(audio, mimeType, key)`.
+
+**The bot echoes what it heard, then acts** — it does not wait for confirmation. In Hindi "do"
+(2) and "das" (10) differ by one phoneme, and a billing system that silently acts on a misheard
+quantity is worse than one that's slightly chattier. The transcript is visible in the same turn
+the money moves.
+
+The update is claimed *before* the download, not inside `handleTurn` as the text path does.
+Otherwise a redelivery pays for a second transcription and sends a duplicate echo before dedupe
+ever runs. `handleTurn` takes `{ alreadyClaimed: true }` so it doesn't then reject its own claim.
+
 ### Real artifacts
 `pdfmake` for the invoice: per-line HSN and CGST/SGST, a rate-wise tax summary grouped by slab,
 explicit round-off, shop GSTIN. `pptxgenjs` for the deck with **native chart objects** — a test
@@ -189,7 +217,7 @@ Two properties, both because a Telegram bot is an open input channel.
 verified chat. The model has no argument with which to address another shop, so no prompt can
 talk it into one. Tenancy is enforced at the boundary, not hoped for in the prompt.
 
-**The built-in tool surface is an allowlist.** `Skill` plus our 27, nothing else. `Read` is
+**The built-in tool surface is an allowlist.** `Skill` plus our 25, nothing else. `Read` is
 denied — skills load through the `Skill` tool, which I verified empirically rather than assumed.
 `security.probe.ts` asks the agent to read `.env`, run `ls -la`, list files and write a file: all
 four refused, **zero tool calls**, no credential leaked.
@@ -202,8 +230,19 @@ Followed: TDD on everything below the agent; one-way dependencies (`domain/` kno
 the DB, `agent/` nothing about Telegram); integer-only money; every §4 invariant has a test that
 fails if its guard is removed — verified by mutation, not assumed.
 
-Skipped, deliberately: no CI pipeline; no structured logging or tracing (`console.error` with
-ids); no auth beyond Telegram's own chat identity; no rate limiting.
+Logging is one structured JSON line per turn — update id, store id, tools called, duration,
+outcome. **Message text is off by default in production** and on in development, because inbound
+text carries customer names and amounts; what debugging actually needed was tool choice and
+timing. Errors go through a redactor first: grammY's `BotError` holds `ctx.api.token`, so an
+unredacted error dump puts the bot token in log retention. It also strips tokens embedded in
+URLs, which is the shape of Telegram's own file-download endpoint.
+
+Skipped, deliberately: no CI pipeline; no tracing; no auth beyond Telegram's own chat identity;
+no rate limiting.
+
+Tests run with `fileParallelism: false`. The invariant suite installs a real DDL trigger on
+`khata_entries` to prove the khata write is inside the finalize transaction, and while it exists
+any parallel file inserting there fails. It was red about one run in five before I serialised it.
 
 ## Edge cases not handled
 
@@ -217,10 +256,13 @@ Called out rather than papered over:
 - **Split payments** across modes on one bill.
 - **Bill-level discounts.** Line-level price override only.
 - **Multi-user roles.** Anyone in the chat is the owner.
-- **Idempotency under a diverging replay.** If a crashed turn is reprocessed and the model
-  produces a *structurally different* sequence of calls, the ordinal can misalign. Keying
-  `open_bill` closes the worst path (two bills, two decrements). Fully solving it needs a durable
-  per-turn execution log.
+- **Idempotency under a diverging replay.** Keys are ordinal-based, so they only line up if the
+  replayed turn makes the *same* sequence of calls. If the model reasons differently the second
+  time, the ordinals shift and later calls miss their keys. Keying `open_bill` and
+  `add_bill_item` together closes the realistic path; fully solving it needs a durable per-turn
+  execution log, which is the honest fix I didn't build.
+- **Voided sales still count toward reorder velocity.** `reorder_suggestions` reads `kind='sale'`
+  and ignores `'reversal'`, so a voided bill briefly inflates the reorder signal.
 - **Agent behaviour is not automatically tested.** The tool layer is exhaustive; the model's
   orchestration is covered by `e2e.ts`, which is a live script, not a CI gate.
 
@@ -245,12 +287,32 @@ vacuous too — I only caught it by deleting the sort and watching the test stil
 I'd keep: **a passing concurrency test proves nothing until you mutate the guard and watch it
 fail.**
 
+The pattern repeated on this branch. Reviewing my own work, I "fixed" idempotency by keying
+`open_bill` — and a reviewer showed the fix made a crash-replay produce a *doubled* bill, where
+before it had only left a stray draft. I'd optimised the thing I was looking at and made the
+system worse. Three separate tests I wrote also turned out to assert nothing: each would have
+passed against the exact wrong implementation it named. Same failure as the concurrency suite,
+one project later.
+
+**Latency.** `ToolSearch` was firing before nearly every tool call — the SDK defers MCP tools
+behind it by default. `alwaysLoad: true` on the server removed the hop: **10 of 13 end-to-end
+beats invoked ToolSearch, then 0 of 13**, median turn 9064ms → 7175ms, total −15.5%. One line,
+measured before and after rather than assumed, and no tool consolidated.
+
+**Grounding is a prompt bug, not a model bug.** The agent kept answering "what's Ramesh's
+balance?" from conversation memory — the *right* number, never read from the database. My prompt
+said "never state a **price or a quantity** you have not read from a tool". A khata balance is
+neither. The rule enumerated categories and missed the one that mattered. It's categorical now,
+and it explicitly closes the "I already said it earlier" loophole.
+
 ## What I'd do differently with more time
 
-- **Chase the latency.** `ToolSearch` fires before every store tool despite the set being small;
-  it's the prime suspect for the ~10s floor, and I'd measure that before touching `effort`.
 - **A durable per-turn execution log**, closing the idempotency residual properly.
-- **Reorder suggestions from sales velocity.** `stock_movements` already holds the data.
-- **Hindi/Hinglish.** Real kirana owners code-switch constantly and the agent currently doesn't.
 - **Golden-transcript tests** for agent behaviour, so orchestration regressions fail in CI rather
-  than in a demo.
+  than in a demo. `e2e.ts` is a live script I run by hand.
+- **Expiry and FEFO.** Genuinely useful for dairy and bread, and deliberately cut: it makes
+  `quantity_base` a derived sum over batches, turns the single-row compare-and-set into an
+  ordered walk, and changes the below-cost guard — the three things already verified in
+  production, for a payoff invisible in a demo.
+- **Photo input.** Voice and photo share only the download; photo needs a different SDK call mode
+  (`AsyncIterable<SDKUserMessage>`) whose interaction with session resume I haven't verified.
