@@ -1,5 +1,7 @@
 import { Bot, type CommandContext, type Context } from 'grammy';
 import { loadEnv } from '../config/env.js';
+import { downloadTelegramFile } from '../media/download.js';
+import { transcribe } from '../media/transcribe.js';
 import { provisionStore } from '../repositories/stores.js';
 import { clearSession } from '../repositories/updates.js';
 import { reseedStore } from '../seed/index.js';
@@ -75,6 +77,42 @@ bot.command(
 
 bot.on('message:text', async (ctx) => {
   await handleTurn(ctx, ctx.message.text);
+});
+
+/** Voice notes are ~60s of Opus at most; anything longer is a mis-tap, not a shop instruction. */
+const MAX_VOICE_SECONDS = 60;
+
+bot.on('message:voice', async (ctx) => {
+  // Guard on the metadata Telegram already sent, before spending a download.
+  if (ctx.message.voice.duration > MAX_VOICE_SECONDS) {
+    await ctx.reply(`That is a long one — keep voice notes under ${MAX_VOICE_SECONDS} seconds.`);
+    return;
+  }
+
+  let transcript: string;
+  try {
+    const audio = await downloadTelegramFile(ctx, env.TELEGRAM_BOT_TOKEN);
+    transcript = await transcribe(
+      audio,
+      ctx.message.voice.mime_type ?? 'audio/ogg',
+      env.OPENAI_API_KEY,
+    );
+  } catch (error) {
+    console.error(redact({ scope: 'voice', chatId: String(ctx.chat.id), error }));
+    await ctx.reply('I could not make out that voice note. Try again, or type it?');
+    return;
+  }
+
+  if (!transcript) {
+    await ctx.reply('That sounded empty — say it again?');
+    return;
+  }
+
+  // Echo before acting. "Do" (2) and "das" (10) differ by one phoneme, and a misheard quantity
+  // silently becomes a wrong bill. This does NOT wait for confirmation — it makes the mistake
+  // visible in the same turn the money moves.
+  await ctx.reply(`Heard: ${transcript}`);
+  await handleTurn(ctx, transcript);
 });
 
 /**
