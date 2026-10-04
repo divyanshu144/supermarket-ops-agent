@@ -30,7 +30,7 @@ under `docs/plans/`, and the full gate green before the next starts.
 | # | Sub-project | Depends on |
 |---|---|---|
 | A | Guardrails and cost | — |
-| B | Concurrency and sessions | A (cost logging) |
+| B | Session durability and graceful shutdown | A (cost logging) |
 | C | Operability | B |
 | D | Correctness audit | — (ordered after C) |
 | E | Subagents | A (needs per-turn cost data) |
@@ -94,21 +94,53 @@ aborted and replies cleanly.
 
 ## B. Concurrency and sessions
 
-- Replace `bot.start` with `@grammyjs/runner`, with `sequentialize` keyed by chat ID. Different
-  shops run in parallel; one shop's messages stay ordered. Runner concurrency is capped (about 8)
-  to protect the database pool and API rate limits.
-- Shutdown stops the runner and waits for in-flight turns, with a bounded grace period.
-- **Experiment first:** send a message, deploy, send another, and observe whether `resume` finds
-  the session. The Agent SDK keeps transcripts on local disk and Railway's disk is ephemeral, so
-  the expectation is that it does not.
-- Whatever the result, a failed resume degrades to a fresh session. A missing or corrupt
-  transcript never produces an error reply to the owner.
-- If sessions do not survive: point the SDK's config directory at a Railway volume (preferred),
-  or store transcripts in Postgres (heavier, rejected unless the volume route fails). Exact SDK
-  mechanism is confirmed against the Agent SDK docs before implementation, not written from
-  memory.
-- Tests: two chats overlap in time while same-chat messages stay ordered; a missing or corrupt
-  session file falls back to a fresh session.
+**Amended 2026-10-04** after researching the Agent SDK and grammY docs. Two findings overturned the
+original text of this section:
+
+1. The Agent SDK has a first-class `sessionStore` option (`append` and `load` are required). It
+   mirrors transcripts to a backend of our choosing, and `load` is called before a resume. That
+   replaces the Railway-volume idea: sessions live in Postgres and survive any redeploy.
+2. grammY's runner in concurrent mode confirms update offsets early, so a killed process can lose
+   up to 100 fetched updates (grammY docs, "Reliability Guarantees > grammY Runner"). Our
+   `processed_updates` claim design (AD-16) relies on Telegram *redelivering* a turn that crashed
+   mid-handling; the runner would silently turn that into a dropped message. **Decision: stay with
+   sequential long-polling (`bot.start`).** Cost accepted: one slow turn delays other shops. The
+   runner (with a durable Postgres inbox) is a later option if queueing is measured to matter.
+
+Scope of B:
+
+- **Postgres session store.** A `session_entries` table (project key, session id, subpath, ordinal,
+  JSONB entry) behind a repository, and a thin `SessionStore` adapter passed to `query()` as
+  `sessionStore`. `append` is one transaction that serialises writers per session; `load` returns
+  entries in append order, deep-equal to what was appended, or `null` for an unknown session.
+  `delete` is implemented so `/new` and `/reset confirm` remove the conversation's entries and
+  nothing orphans. The SDK's mirror-failure event is logged (redacted) and never fails a turn.
+- **Failed resume degrades to a fresh session.** Before resuming, check the store (a stored
+  session id with no stored entries, which is every session created before B, is treated as
+  gone): drop `resume`, clear the stale `sessions` row, and treat the prior session cost as 0.
+  A run that fails to start while resuming, before any assistant output, is retried once
+  without `resume`. A missing or corrupt transcript never produces an error reply to the owner.
+  This also resolves the failed-resume cost under-count deferred from sub-project A.
+- **Graceful shutdown and restart recovery.** Two grammY/claim facts, both verified in the
+  installed source, make the original wording ("recovered by redelivery, as before") wrong:
+  `bot.stop()` does not wait for the in-flight handler and then confirms the update it is handling
+  (`getUpdates` with `offset = lastTriedUpdateId + 1`), so today's SIGTERM path loses an in-flight
+  owner message; and `claimUpdate` treats a claim younger than 300 s as "still running elsewhere",
+  so a crash followed by a fast restart redelivers the update and then drops it. B therefore:
+  (1) on SIGTERM stops accepting new updates (a first middleware that never calls `next()` and
+  never returns, so grammY's loop issues no further `getUpdates` and nothing unhandled is
+  confirmed), waits for the in-flight turn up to a bounded grace period (default 30 s,
+  `SHUTDOWN_GRACE_MS`), then exits **without calling `bot.stop()`**; and (2) at boot expires every
+  `claimed` row, because with one replica any claim present at boot belongs to a dead process, so
+  a redelivered update is reclaimed and reprocessed (tools are idempotent per update). DEPLOY.md
+  records that Railway's draining/kill timing must be checked against the grace period (not yet
+  verified).
+- **Not in B:** the runner, per-chat parallelism, a replay inbox.
+- Tests: the store adapter round-trips, preserves order across batches, returns `null` for
+  unknown sessions, and `delete` cascades to subpaths; a stale session id with no stored entries
+  falls back to a fresh session with prior cost 0; a resume that fails before any output is
+  retried once without resume; `/new` and `/reset confirm` delete stored entries; shutdown waits
+  for an in-flight turn but not longer than the grace period.
 
 ## C. Operability
 
@@ -163,6 +195,7 @@ Each is recorded as a known limit in the README rather than built.
 ## Open items to verify during implementation
 
 - Railway plan tier and whether managed backups are included.
-- Whether `resume` survives a redeploy (B experiment).
+- Whether Railway's draining time exceeds the shutdown grace period (B).
+- How the SDK behaves when `resume` names a session that exists nowhere (B retries without `resume`; the exact failure mode is not yet observed live).
 - Agent SDK option names for `maxTurns`, budget cap, abort, `agents` and fallback model.
 - Whether current reviewer chats should stay grandfathered after the review window.
