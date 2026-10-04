@@ -46,6 +46,10 @@ If a locked decision needs to change, change it here first and say so explicitly
 
 ## Known Gotchas
 
+- **SDK cost semantics are unverified.** The SDK docs state `total_cost_usd` on a resumed session
+  includes earlier spend; `SDK_COST_IS_CUMULATIVE = true` in `src/agent/limits.ts` rests on the
+  docs only. `pnpm tsx src/agent/cost.probe.ts` and `pnpm tsx src/agent/e2e.ts` have NOT yet been
+  run and must be run with a real key before relying on the per-run budget cap.
 - **The `claude-api` skill does not cover the Claude Agent SDK.** They are different packages.
   Agent SDK docs live at `code.claude.com/docs/en/agent-sdk`. Verify its surface there rather
   than from memory or from the Claude API skill's tool-runner examples.

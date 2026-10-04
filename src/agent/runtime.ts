@@ -1,5 +1,13 @@
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { loadEnv } from '../config/env.js';
+import {
+  runLimits,
+  classifyResult,
+  perRunBudgetUsd,
+  turnCostUsd,
+  OUTCOME_REPLY,
+  type AgentOutcome,
+} from './limits.js';
 import { ALLOWED_TOOLS, STORE_SERVER_NAME, storeToolServer } from '../tools/index.js';
 
 const env = loadEnv();
@@ -36,17 +44,39 @@ export interface AgentResult {
   reply: string;
   sessionId: string;
   toolsUsed: string[];
+  outcome: AgentOutcome;
+  /** SDK-reported total for the session so far (cumulative on a resumed session). */
+  totalCostUsd: number;
+  /** What this run cost. Feeds the daily budget. */
+  turnCostUsd: number;
+  numTurns: number;
 }
 
 export async function runAgent(input: {
   text: string;
   sessionId?: string;
   preferences?: Record<string, unknown>;
+  /** Session spend before this run, so the budget cap and the cost accounting are per-run. */
+  priorCostUsd?: number;
 }): Promise<AgentResult> {
+  const limits = runLimits(env);
+  const prior = input.priorCostUsd ?? 0;
+
+  const abort = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    abort.abort();
+  }, limits.timeoutMs);
+
   const stream = query({
     prompt: input.text,
     options: {
-      model: 'claude-opus-5',
+      model: limits.model,
+      fallbackModel: limits.fallbackModel,
+      maxTurns: limits.maxTurns,
+      maxBudgetUsd: perRunBudgetUsd(limits.maxBudgetUsd, prior),
+      abortController: abort,
       systemPrompt: withPreferences(input.preferences ?? {}),
       mcpServers: { [STORE_SERVER_NAME]: storeToolServer },
       allowedTools: ALLOWED_TOOLS,
@@ -66,18 +96,46 @@ export async function runAgent(input: {
   const chunks: string[] = [];
   const toolsUsed: string[] = [];
   let sessionId = input.sessionId ?? '';
+  let outcome: AgentOutcome | undefined;
+  let totalCostUsd = 0;
+  let numTurns = 0;
 
-  for await (const message of stream) {
-    if (message.type === 'system' && 'session_id' in message) {
-      sessionId = String(message.session_id);
-    }
-    if (message.type === 'assistant') {
-      for (const block of message.message.content) {
-        if (block.type === 'text') chunks.push(block.text);
-        if (block.type === 'tool_use') toolsUsed.push(block.name);
+  try {
+    for await (const message of stream) {
+      if (message.type === 'system' && 'session_id' in message) {
+        sessionId = String(message.session_id);
+      }
+      if (message.type === 'assistant') {
+        for (const block of message.message.content) {
+          if (block.type === 'text') chunks.push(block.text);
+          if (block.type === 'tool_use') toolsUsed.push(block.name);
+        }
+      }
+      if (message.type === 'result') {
+        outcome = classifyResult(message);
+        totalCostUsd = message.total_cost_usd ?? 0;
+        numTurns = message.num_turns;
       }
     }
+  } catch (error) {
+    // A single-shot query() yields the error result and THEN throws (max turns, max budget).
+    // If we already saw the result, the throw carries no new information.
+    if (timedOut) outcome = 'timeout';
+    else if (outcome === undefined) throw error;
+  } finally {
+    clearTimeout(timer);
   }
 
-  return { reply: chunks.join('').trim(), sessionId, toolsUsed };
+  const finalOutcome = outcome ?? 'error';
+  const reply = finalOutcome === 'ok' ? chunks.join('').trim() : OUTCOME_REPLY[finalOutcome];
+
+  return {
+    reply,
+    sessionId,
+    toolsUsed,
+    outcome: finalOutcome,
+    totalCostUsd,
+    turnCostUsd: turnCostUsd(totalCostUsd, prior),
+    numTurns,
+  };
 }
