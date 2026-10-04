@@ -2,8 +2,8 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-04, after production-hardening sub-project A
-**Branch:** `production-hardening` — sub-project A implemented, not merged, not pushed (`improvements` is already merged into `main`)
+**Last updated:** 2026-10-04, after production-hardening sub-project B
+**Branch:** `production-hardening-b` — sub-project B implemented, stacked on `production-hardening` (PR #1, which is not merged); not pushed to main (`improvements` is already merged into `main`)
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
 ---
@@ -41,6 +41,29 @@ turn may also over-count because the session total chain keeps the pre-timeout v
 be cut off with the CLI, including every chat that messaged the bot before invite-only access
 (revoke only affects unredeemed codes; removing a store is a manual delete).
 
+## Sub-project B: session durability and shutdown (branch `production-hardening-b`)
+
+Plan: `docs/plans/2026-10-04-session-durability-and-shutdown.md`. All 7 tasks implemented and
+committed. Stacked on PR #1 (sub-project A), which is not merged. Its live steps have **not been
+run**.
+
+- Agent transcripts are mirrored to Postgres (`session_entries`, `agent/session-store.ts`,
+  `repositories/session-entries.ts`) so a conversation survives a redeploy. `/new` and
+  `/reset confirm` delete them. A resume with no stored transcript starts a fresh session (prior
+  cost 0); a resume that fails before any output is retried once without `resume`.
+- SIGTERM drains the in-flight turn (up to `SHUTDOWN_GRACE_MS`) and exits 0 without `bot.stop()`
+  (`telegram/drain.ts`). Boot order: migrations, instance lock (`db/instance-lock.ts`), expire
+  claims, poll. See `docs/DEPLOY.md` for the caveats (first-deploy transition, lock lost on a
+  dropped connection, migrations run before the lock).
+
+**Verification:** `pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test` green,
+**373 tests in 39 files** (up from 307 on A), three consecutive runs.
+
+**B left out:** the grammY runner (sequential polling kept: the runner confirms offsets early and
+can lose up to 100 updates on kill, which defeats redelivery recovery); a replay inbox; a session
+retention job (abandoned conversations accumulate); re-acquiring the lock after a mid-life
+connection loss.
+
 ## What landed on the `improvements` branch (now in `main`)
 
 | | |
@@ -71,7 +94,16 @@ before this.
 
 ## Next action
 
-Run these with real credentials, in order, then merge `production-hardening` (A is not done until
+For B, in order:
+
+1. Run `pnpm tsx src/agent/session-store.probe.ts` with a real key. PASS in B is required before
+   relying on durability. Paste C's output into `tasks/agent_memory.md` Known Gotchas.
+2. Check Railway's SIGTERM-to-SIGKILL window (draining setting) against `SHUTDOWN_GRACE_MS`.
+3. Deploy while the shop is idle: the deployment being replaced holds no instance lock, so on that
+   one deploy a live claim can still be expired.
+4. Then sub-project C.
+
+Still pending from sub-project A. Run these with real credentials, in order, then merge `production-hardening` (A is not done until
 they pass):
 
 1. `pnpm tsx src/agent/cost.probe.ts` — settles `SDK_COST_IS_CUMULATIVE`. Its header comment
@@ -93,8 +125,8 @@ the repo public (`gh repo edit divyanshu144/supermarket-ops-agent --visibility p
 
 Remaining sub-projects, each planned when its turn comes:
 
-- **B. Concurrency and sessions** — grammY runner with per-chat `sequentialize`; verify whether SDK
-  session resume survives a Railway deploy; a failed resume degrades to a fresh session.
+- **B. Concurrency and sessions** — implemented (see above); live probe, Railway timing check and
+  idle deploy pending.
 - **C. Operability** — `/healthz`, Sentry through `redact`, crash handlers, non-root Dockerfile
   with `HEALTHCHECK`, backups and a restore drill, deploy-on-CI, SDK pinned.
 - **D. Correctness audit** — gapless GST invoice numbers, IST day boundaries, injection through
@@ -115,7 +147,7 @@ Remaining sub-projects, each planned when its turn comes:
 
 ```bash
 pnpm db:up
-pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test   # 307 tests
+pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test   # 373 tests
 pnpm tsx src/agent/e2e.ts                                    # 13/13 beats, needs API credit
 pnpm tsx src/agent/security.probe.ts                         # 4 attacks, 0 tool calls
 ```

@@ -135,6 +135,7 @@ Scope of B:
   a redelivered update is reclaimed and reprocessed (tools are idempotent per update). DEPLOY.md
   records that Railway's draining/kill timing must be checked against the grace period (not yet
   verified).
+- **Instance lock (added after this spec was written).** Boot expiry is only safe if the previous process is really gone, so after migrations a process-lifetime Postgres advisory lock (`db/instance-lock.ts`) makes a new instance wait (up to 180 s) for the old one's connection to close before it expires claims and starts polling.
 - **Not in B:** the runner, per-chat parallelism, a replay inbox.
 - Tests: the store adapter round-trips, preserves order across batches, returns `null` for
   unknown sessions, and `delete` cascades to subpaths; a stale session id with no stored entries

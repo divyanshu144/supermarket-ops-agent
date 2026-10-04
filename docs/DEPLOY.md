@@ -33,6 +33,7 @@ long-polling is outbound-only — so the hosting choice is mostly a billing deci
 | `AGENT_MAX_TURNS` | no, default `15` | Per-run cap on agent turns. |
 | `AGENT_MAX_BUDGET_USD` | no, default `0.5` | Per-run spend cap. |
 | `AGENT_TURN_TIMEOUT_MS` | no, default `90000` | A run still going after this is aborted. |
+| `SHUTDOWN_GRACE_MS` | no, default `30000`, max `120000` | How long SIGTERM/SIGINT waits for the turn in flight before exiting. |
 | `STORE_DAILY_BUDGET_USD` | no, default `5` | Per-store daily spend cap; turns are refused once it is reached. |
 | `RATE_LIMIT_TURNS` | no, default `20` | Turns allowed per chat per window. |
 | `RATE_LIMIT_WINDOW_S` | no, default `600` | Rate-limit window, in seconds. |
@@ -43,6 +44,65 @@ readable message rather than mid-conversation.
 **Migrations apply themselves on startup.** A freshly provisioned managed Postgres arrives empty;
 the first deploy here died on `relation "processed_updates" does not exist` before this was
 added. No manual migration step is needed on any host.
+
+---
+
+## Deploys and shutdown
+
+On SIGTERM/SIGINT the bot stops starting work, drains the turn in flight for up to
+`SHUTDOWN_GRACE_MS` (default 30 s), and exits 0. It deliberately does not call `bot.stop()`:
+grammY's `stop()` confirms the update being handled, so a turn cut off by the exit would be lost
+instead of redelivered. The exit code stays 0 even when the grace period elapses; the log line
+says which happened ("Idle, exiting." or "Grace period elapsed with a turn still running").
+Anything not confirmed is redelivered by Telegram to the next process.
+
+**Boot order:** migrations, then acquire the instance lock, then expire in-flight claims, then
+start polling.
+
+- **The instance lock** is a process-lifetime Postgres advisory lock (key in
+  `src/db/instance-lock.ts`). A new instance waits, polling, until the old instance's database
+  connection closes, for up to 180 s (longer than the maximum `SHUTDOWN_GRACE_MS`), then fails to
+  start. So every `claimed` row present at the moment of expiry belongs to a dead process.
+- **Expiring claims** is what lets a redelivered update be reclaimed; without it, it would be
+  dropped as "still running" for up to five minutes.
+- **One replica is still required**: Telegram long-polling allows one poller per token. The lock
+  makes a second instance block and then fail, rather than expire the first one's live claims.
+
+Limits you should know about:
+
+- **First-deploy transition.** The deployment being replaced by the release that introduces the
+  lock runs older code and holds no lock, so on that one deploy the new instance can still expire
+  a live claim. Deploy while the shop is idle.
+- **Developers.** `pnpm test` and a running `pnpm dev` bot share `DATABASE_URL` and the lock key.
+  Stop the dev bot before running the tests (or point the tests at a different database),
+  otherwise the instance-lock tests fail.
+- **Migrations run before the lock**, so they execute while the old instance is still serving and
+  must stay backward-compatible with it. Two new instances starting at the same moment are not
+  serialised for migrations.
+- **The lock is lost silently** if its database connection drops mid-life: the process logs a
+  fixed `instance-lock` line and carries on, and a later instance could then overlap until the
+  process restarts. Re-acquiring is not built.
+- **Railway timing is not verified.** How long Railway waits between SIGTERM and SIGKILL (its
+  draining setting) versus `SHUTDOWN_GRACE_MS` is unchecked. If it is shorter, the grace period
+  does not take effect. That is still safe (kill, connection closes, lock freed, Telegram
+  redelivers, the boot expiry reclaims the claim) but the model call is paid twice.
+
+## Conversation storage
+
+Agent transcripts are mirrored to Postgres (`session_entries`) so a conversation survives a
+redeploy. Rows are deleted by `/new` and `/reset confirm`; **abandoned conversations accumulate**
+(there is no retention job yet), so watch the table's size. A shop whose stored session predates
+this feature gets one fresh conversation on its first message after the deploy. A mirror write
+that fails is logged with the session id only, never the text, and does not fail the turn.
+
+- A run that retries a failed resume can take up to 2x `AGENT_TURN_TIMEOUT_MS` of wall time (each
+  attempt has its own timer), so weigh that when choosing the shutdown grace period. The first
+  failed attempt's spend is not recorded.
+- A transient failure that throws before any model output on a resumed session takes the retry
+  path and can cost one conversation's context. The retry is logged as a `session` warning
+  carrying the error class name only.
+- Transcript entries are stored with NUL characters removed, because Postgres `jsonb` cannot store
+  them.
 
 ---
 
@@ -161,7 +221,7 @@ for a recorded walkthrough; not adequate for "kept running while we review".
    railway logs --lines 20
    ```
 
-   Expect `Applying migrations… / Migrations up to date. / Listening as @divagentBot`.
+   Expect `Applying migrations… / Migrations up to date. / Instance lock acquired. / Listening as @divagentBot`.
 
 3. Confirm the running build is the one you just shipped:
 

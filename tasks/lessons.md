@@ -87,3 +87,20 @@ framework, and the downstream handler would create a store for whoever reached i
 
 **Next time:** Authorization checks must use the framework's own matcher, and the downstream handler
 must fail closed rather than create the resource.
+
+---
+
+## 2026-10-04 — Recovery designed on unverified library and deploy assumptions
+
+**What happened:** The spec said an interrupted turn "is recovered by redelivery as before", and the
+SIGTERM handler called `bot.stop()`. Reading the installed source showed both were wrong.
+
+**Root cause:** Unverified assumptions about library behaviour: that `bot.stop()` waits for handlers
+(it confirms the update being handled), and that a fresh claim after a restart is reclaimable (the
+300 s stale window drops it). The fix for the second, expiring claims at boot, then assumed the
+previous process was dead, which rested on deploy configuration (`overlapSeconds`, one replica)
+rather than anything enforced.
+
+**Next time:** Read the library source for the exact shutdown/confirmation semantics before designing
+recovery on top of it. A recovery step that assumes the previous process is dead must be backed by a
+mutual-exclusion primitive (here a Postgres advisory lock), not by deploy configuration.

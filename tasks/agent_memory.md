@@ -55,6 +55,23 @@ If a locked decision needs to change, change it here first and say so explicitly
   than from memory or from the Claude API skill's tool-runner examples.
 - **An empty store produces an empty analysis deck.** Seeding must include ~2 weeks of synthetic
   sales history or one of the two headline artifacts demos as blank charts.
+- **grammY `bot.stop()` confirms the in-flight update** (`offset = lastTriedUpdateId + 1`) and does
+  not wait for the handler, so a SIGTERM path that calls it loses the owner's message. Shutdown
+  drains instead and exits without `stop()` (`telegram/drain.ts`).
+- **`claimUpdate`'s 300 s stale window drops a redelivered update after a fast restart**, hence the
+  boot-time claim expiry (`expireInFlightClaims`).
+- **The boot-time claim expiry is only safe because of the instance lock.** A Railway handoff can
+  run two containers briefly; `overlapSeconds` is not a guarantee. `db/instance-lock.ts` makes the
+  new instance wait for the old one's connection to close. The lock is lost silently if its
+  connection drops mid-life, and the first deploy that introduces it replaces code that holds no lock.
+- **The grammY runner confirms offsets early** (up to 100 updates lost on kill), which is why
+  sequential polling was kept.
+- **The SDK `SessionStore` is `@alpha`**, retries `append`, wants `uuid` idempotency, and
+  `mirror_error` text can contain query parameters (log the session id only).
+- **Postgres `jsonb` rejects U+0000.** Transcript entries are stored with NUL characters removed
+  (`repositories/session-entries.ts`).
+- **Live probe C output (resume from a store with no transcript): not yet captured.** Run
+  `pnpm tsx src/agent/session-store.probe.ts` with a real key and paste Q-C's output here.
 - **cSpell flags every domain term** (khata, kirana, atta, paise, CGST, GSTIN…). Project
   dictionary is in `cspell.json`; add new domain words there rather than ignoring the warnings.
 
@@ -88,3 +105,4 @@ _(empty — record the problem, the root cause, and the fix as they come up)_
 | AD-29 | **The allowlist genuinely blocks the filesystem.** Four direct attempts (read `.env`, run `ls -la`, list files, write a file) all refused with **zero tool calls** and no credential leaked. §4 is now empirically supported, not just designed for. | `security.probe.ts` |
 | AD-30 | **Tools must never return raw DB rows.** `JSON.stringify` throws outright on BigInt, so `get_stock` errored on every call in production while unit tests passed. Present a shaped view — which also stops leaking cost price and internal ids to the model. | live smoke run; regression test in `inventory.test.ts` |
 | AD-31 | **Pin `packageManager`.** Unpinned, container corepack pulled pnpm 11 against a pnpm-9 lockfile and the image would not build at all. | docker build failure |
+| AD-32 | **B keeps sequential polling and mirrors sessions in Postgres** (`session_entries` behind the SDK `sessionStore`). | The grammY runner confirms offsets early and can lose up to 100 updates on kill; Postgres sessions survive any redeploy. |
