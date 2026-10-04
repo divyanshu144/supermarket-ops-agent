@@ -250,6 +250,7 @@ describe('turn to ledger wiring', () => {
       totalCostUsd: 0.03,
       turnCostUsd: 0.02,
       numTurns: 1,
+      resumeDropped: false,
     });
     await bot.handleUpdate(textUpdate(OWNER, 'two') as never);
 

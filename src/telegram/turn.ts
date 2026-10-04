@@ -3,6 +3,7 @@ import { runAgent } from '../agent/runtime.js';
 import { hasStore } from '../repositories/access.js';
 import {
   claimUpdate,
+  clearSession,
   completeUpdate,
   getSessionCostMicroUsd,
   getSessionId,
@@ -102,6 +103,10 @@ export async function handleTurn(
 
     if (result.sessionId) {
       await setSessionId(storeId, result.sessionId, microUsd(result.totalCostUsd));
+    } else if (result.resumeDropped) {
+      // The stored session could not be used and no new one was created (e.g. the fresh run timed
+      // out before its first message): clear the stale row so the next turn starts clean.
+      await clearSession(storeId);
     }
     await ctx.reply(result.reply || 'Sorry, I could not work that out.');
 
@@ -123,6 +128,7 @@ export async function handleTurn(
         outcome: result.outcome,
         costUsd: result.turnCostUsd,
         numTurns: result.numTurns,
+        resumeDropped: result.resumeDropped,
       },
       logOptions,
     );

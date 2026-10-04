@@ -66,4 +66,11 @@ describe('logTurn', () => {
       num_turns: 3,
     });
   });
+
+  it('logs resume_dropped only when the resume was dropped', () => {
+    logTurn({ ...base, resumeDropped: true });
+    expect(JSON.parse(written[0]!).resume_dropped).toBe(true);
+    logTurn(base);
+    expect(JSON.parse(written[1]!)).not.toHaveProperty('resume_dropped');
+  });
 });
