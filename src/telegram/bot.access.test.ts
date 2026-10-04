@@ -318,14 +318,21 @@ describe('draining', () => {
   it('neither handles nor claims an update that arrives during shutdown', async () => {
     await provisionStore(OWNER);
     const bot = makeBot();
+
+    // Control: the harness can handle an update when not draining.
+    await bot.handleUpdate(textUpdate(OWNER, 'how much sugar is left?') as never);
+    expect(runAgent).toHaveBeenCalledTimes(1);
+    vi.mocked(runAgent).mockClear();
+    const sentBefore = sent.length;
+
     await beginDrain(10); // nothing in flight: drained at once, but the gate now holds
 
     const update = textUpdate(OWNER, 'bill 2 sugar');
     void bot.handleUpdate(update as never); // never settles by design; do not await it
-    await new Promise((r) => setTimeout(r, 50));
+    await new Promise((r) => setTimeout(r, 150));
 
     expect(runAgent).not.toHaveBeenCalled();
-    expect(sent).toHaveLength(0);
+    expect(sent).toHaveLength(sentBefore);
     const claimed = await db
       .select()
       .from(processedUpdates)

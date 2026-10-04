@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { loadEnv } from './config/env.js';
 import { bot } from './telegram/bot.js';
+import { acquireInstanceLock } from './db/instance-lock.js';
 import { runMigrations } from './db/migrate.js';
 import { expireInFlightClaims } from './repositories/updates.js';
 import { beginDrain } from './telegram/drain.js';
@@ -14,8 +15,13 @@ console.log('Applying migrations…');
 await runMigrations();
 console.log('Migrations up to date.');
 
-// One replica: any claim still 'claimed' at boot belongs to a process that died mid-turn. Expire
-// them so Telegram's redelivery of those updates is reclaimed instead of dropped as "in flight".
+// A deploy can start this process while the previous one is still draining a turn. Wait for it to
+// exit (its connection closes, freeing the lock) before touching claims or polling.
+await acquireInstanceLock();
+
+// The instance lock guarantees the previous process has exited, so every claim still 'claimed'
+// now belongs to a dead process. Expire them so Telegram's redelivery of those updates is
+// reclaimed instead of dropped as "in flight".
 const expired = await expireInFlightClaims();
 if (expired > 0) console.log(`Expired ${expired} in-flight claim(s) from the previous process.`);
 
