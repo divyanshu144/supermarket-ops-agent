@@ -11,22 +11,31 @@ export interface EntryKey {
 
 const subpathOf = (key: EntryKey): string => key.subpath ?? '';
 
+/** `String.prototype.toWellFormed` is ES2024; the project's TS lib target is ES2023. */
+interface WellFormable {
+  toWellFormed(): string;
+}
+
+function clean(text: string): string {
+  return (text.replaceAll('\u0000', '') as string & WellFormable).toWellFormed();
+}
+
 /**
- * Postgres `jsonb` rejects U+0000 in strings. A tool result containing one would make every SDK
- * retry fail and the SDK would drop the batch, so strip it from string values and object keys.
- * Walks the structure rather than the serialised text, so a literal backslash + "u0000" survives.
+ * Makes a value safe for Postgres `jsonb`, which rejects U+0000 and lone UTF-16 surrogates
+ * (e.g. an emoji truncated in tool output). Either would make every SDK retry fail and the SDK
+ * would drop the batch. NUL is removed; a lone surrogate becomes U+FFFD; valid surrogate pairs
+ * are untouched. Applies to string values and object keys. Walks the structure rather than the
+ * serialised text, so a literal backslash + "u0000" survives.
  */
 export function stripNul<T>(value: T): T {
   return strip(value) as T;
 }
 
 function strip(value: unknown): unknown {
-  if (typeof value === 'string') return value.replaceAll('\u0000', '');
+  if (typeof value === 'string') return clean(value);
   if (Array.isArray(value)) return value.map(strip);
   if (value !== null && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([k, v]) => [k.replaceAll('\u0000', ''), strip(v)]),
-    );
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [clean(k), strip(v)]));
   }
   return value;
 }
@@ -60,28 +69,31 @@ export async function appendEntries(
   });
 }
 
-/** Entries in append order, or null when nothing was ever written for the key. */
+/**
+ * Entries in append order, or null when nothing was ever written for the key.
+ *
+ * Matches on (session_id, subpath) only; `project_key` is informational. The SDK derives it from
+ * the container's cwd, which we cannot set, so if cwd ever changed between deploys a
+ * project-scoped load would return null for a session `sessionHasEntries` (session_id only) says
+ * exists. Check, load and delete share one notion of identity; session ids are UUIDs.
+ */
 export async function loadEntries(key: EntryKey): Promise<Record<string, unknown>[] | null> {
   const rows = await db
     .select({ entry: sessionEntries.entry })
     .from(sessionEntries)
     .where(
-      and(
-        eq(sessionEntries.projectKey, key.projectKey),
-        eq(sessionEntries.sessionId, key.sessionId),
-        eq(sessionEntries.subpath, subpathOf(key)),
-      ),
+      and(eq(sessionEntries.sessionId, key.sessionId), eq(sessionEntries.subpath, subpathOf(key))),
     )
     .orderBy(asc(sessionEntries.id));
   return rows.length === 0 ? null : rows.map((r) => r.entry);
 }
 
-/** No `subpath` deletes the whole session, every subpath included (the SDK's `delete` contract). */
+/**
+ * No `subpath` deletes the whole session, every subpath included (the SDK's `delete` contract).
+ * Matches on session_id (+ subpath), ignoring `project_key`, for the same reason as `loadEntries`.
+ */
 export async function deleteEntries(key: EntryKey): Promise<void> {
-  const scope = [
-    eq(sessionEntries.projectKey, key.projectKey),
-    eq(sessionEntries.sessionId, key.sessionId),
-  ];
+  const scope = [eq(sessionEntries.sessionId, key.sessionId)];
   if (key.subpath !== undefined) scope.push(eq(sessionEntries.subpath, key.subpath));
   await db.delete(sessionEntries).where(and(...scope));
 }

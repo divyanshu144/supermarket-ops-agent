@@ -149,6 +149,70 @@ describe('NUL handling', () => {
   });
 });
 
+describe('project key independence', () => {
+  it('loads entries written under a different project key', async () => {
+    const sessionId = fresh();
+    await appendEntries({ projectKey: '/a', sessionId }, [{ type: 'user', uuid: 'p1' }]);
+    expect(await loadEntries({ projectKey: '/b', sessionId })).toEqual([
+      { type: 'user', uuid: 'p1' },
+    ]);
+    expect(await sessionHasEntries(sessionId)).toBe(true);
+  });
+
+  it('deleteEntries under a different project key still deletes', async () => {
+    const sessionId = fresh();
+    await appendEntries({ projectKey: '/a', sessionId }, [{ type: 'user', uuid: 'p1' }]);
+    await deleteEntries({ projectKey: '/b', sessionId });
+    expect(await sessionHasEntries(sessionId)).toBe(false);
+    expect(await loadEntries({ projectKey: '/a', sessionId })).toBeNull();
+  });
+
+  it('a subpath delete under another project key leaves the main transcript', async () => {
+    const sessionId = fresh();
+    await appendEntries({ projectKey: '/a', sessionId }, [{ type: 'user', uuid: 'm1' }]);
+    await appendEntries({ projectKey: '/a', sessionId, subpath: 'subagents/x' }, [
+      { type: 'user', uuid: 's1' },
+    ]);
+    await deleteEntries({ projectKey: '/b', sessionId, subpath: 'subagents/x' });
+    expect(await loadEntries({ projectKey: '/b', sessionId })).toHaveLength(1);
+    expect(await loadEntries({ projectKey: '/b', sessionId, subpath: 'subagents/x' })).toBeNull();
+  });
+
+  it('keeps the main transcript and a subpath separate across project keys', async () => {
+    const sessionId = fresh();
+    await appendEntries({ projectKey: '/a', sessionId }, [{ type: 'user', uuid: 'm1' }]);
+    await appendEntries({ projectKey: '/b', sessionId, subpath: 'subagents/x' }, [
+      { type: 'user', uuid: 's1' },
+    ]);
+    expect(await loadEntries({ projectKey: '/c', sessionId })).toEqual([
+      { type: 'user', uuid: 'm1' },
+    ]);
+    expect(await loadEntries({ projectKey: '/c', sessionId, subpath: 'subagents/x' })).toEqual([
+      { type: 'user', uuid: 's1' },
+    ]);
+  });
+});
+
+describe('lone surrogate handling', () => {
+  it('replaces a lone high surrogate with U+FFFD and does not throw', async () => {
+    const key = { projectKey: PROJECT, sessionId: fresh() };
+    await appendEntries(key, [{ type: 'user', uuid: 'sg-1', text: 'cut\uD83D' }]);
+    expect(await loadEntries(key)).toEqual([{ type: 'user', uuid: 'sg-1', text: 'cut\uFFFD' }]);
+  });
+
+  it('leaves a valid surrogate pair (emoji) untouched', async () => {
+    const key = { projectKey: PROJECT, sessionId: fresh() };
+    const entry = { type: 'user', uuid: 'sg-2', text: 'ok \u{1F600}' };
+    await appendEntries(key, [entry]);
+    expect(await loadEntries(key)).toEqual([entry]);
+  });
+
+  it('well-forms object keys and nested strings in the helper', () => {
+    expect(stripNul({ ['k\uDE00']: ['a\u0000\uD83D'] })).toEqual({ ['k\uFFFD']: ['a\uFFFD'] });
+    expect(stripNul('\u{1F600}')).toBe('\u{1F600}');
+  });
+});
+
 describe('stripNul', () => {
   it('strips NUL from strings, arrays, nested objects and object keys', () => {
     expect(stripNul('a\u0000b')).toBe('ab');
