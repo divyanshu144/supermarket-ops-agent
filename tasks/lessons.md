@@ -73,3 +73,17 @@ swallows the owner's message.
 duplicate before designing the check. "Could this arrive twice?" is the wrong question;
 "under what exact failure does it arrive twice, and what state am I in then?" is the right one.
 A completion marker and a claim look identical until you ask that.
+
+---
+
+## 2026-10-04 — An authorization gate with its own idea of "/start"
+
+**What happened:** The access gate let `/start@otherbot hi` through the allow-list; it fell into the
+text handler, which provisioned a store for a stranger.
+
+**Root cause:** Two definitions of "is this /start". The gate parsed the command text itself; grammY's
+`bot.command` requires the entity and the bot's own @username. The gate was more permissive than the
+framework, and the downstream handler would create a store for whoever reached it.
+
+**Next time:** Authorization checks must use the framework's own matcher, and the downstream handler
+must fail closed rather than create the resource.

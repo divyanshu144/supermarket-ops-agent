@@ -28,6 +28,14 @@ long-polling is outbound-only — so the hosting choice is mostly a billing deci
 | `AGENT_EFFORT` | no, default `medium` | `low` \| `medium` \| `high`. |
 | `OPENAI_API_KEY` | no | Voice transcription. Without it the bot runs normally and replies that voice isn't configured. |
 | `LOG_MESSAGE_TEXT` | no | `true` \| `false`. Defaults off in production, on elsewhere. |
+| `AGENT_MODEL` | no, default `claude-opus-5` | Model for the agent. |
+| `AGENT_FALLBACK_MODEL` | no, unset | Model to fall back to if the primary is unavailable. |
+| `AGENT_MAX_TURNS` | no, default `15` | Per-run cap on agent turns. |
+| `AGENT_MAX_BUDGET_USD` | no, default `0.5` | Per-run spend cap. |
+| `AGENT_TURN_TIMEOUT_MS` | no, default `90000` | A run still going after this is aborted. |
+| `STORE_DAILY_BUDGET_USD` | no, default `5` | Per-store daily spend cap; turns are refused once it is reached. |
+| `RATE_LIMIT_TURNS` | no, default `20` | Turns allowed per chat per window. |
+| `RATE_LIMIT_WINDOW_S` | no, default `600` | Rate-limit window, in seconds. |
 
 Every variable is validated at boot, so a missing or malformed value fails immediately with a
 readable message rather than mid-conversation.
@@ -35,6 +43,30 @@ readable message rather than mid-conversation.
 **Migrations apply themselves on startup.** A freshly provisioned managed Postgres arrives empty;
 the first deploy here died on `relation "processed_updates" does not exist` before this was
 added. No manual migration step is needed on any host.
+
+---
+
+## Inviting an owner
+
+The bot is private. A chat with no store gets "This is a private bot" and nothing else, and
+`/start <code>` is the only way in. Codes are single-use, shown once, stored hashed.
+
+```bash
+pnpm invite create          # prints the code once
+pnpm invite list            # id, created, state — never the code
+pnpm invite revoke <id>     # only works on an unused code
+```
+
+In the production image the same commands run as `node dist/scripts/invite.js <create|list|revoke>`,
+for example from a shell on the service. If you run it from your machine instead, use the public
+connection string for `DATABASE_URL` (the internal one is not reachable from outside Railway).
+
+Revoking stops an unredeemed code from being redeemed. It does not cut off a shop that already
+redeemed one; that is not built.
+
+Known limits: the per-chat rate limiter is in memory and resets on restart (fine for one
+replica); a turn that is aborted by the timeout reports no cost, so the daily budget can
+under-count by up to one per-run cap.
 
 ---
 
