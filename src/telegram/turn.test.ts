@@ -9,6 +9,11 @@ import {
   getSessionId,
   setSessionId,
 } from '../repositories/updates.js';
+import {
+  appendEntries,
+  deleteSessionEntries,
+  sessionHasEntries,
+} from '../repositories/session-entries.js';
 import { provisionStore } from '../repositories/stores.js';
 import { PRIVATE_MESSAGE } from './messages.js';
 
@@ -60,6 +65,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
+  for (const id of ['old-sess', 'same-sess']) await deleteSessionEntries(id);
   await db.delete(processedUpdates).where(eq(processedUpdates.updateId, UPD));
   await db.delete(stores).where(eq(stores.id, CHAT));
   await pool.end();
@@ -143,5 +149,44 @@ describe('handleTurn — dropped resume', () => {
     });
     await handleTurn(fakeCtx(), 'hello');
     expect(await getSessionId(CHAT)).toBeUndefined();
+  });
+
+  it('deletes the old transcript when a retried resume produced a new session id', async () => {
+    await setSessionId(CHAT, 'old-sess', 100_000);
+    await appendEntries({ projectKey: '/p', sessionId: 'old-sess' }, [
+      { type: 'user', uuid: 'orphan-check' },
+    ]);
+    runAgentMock.mockResolvedValueOnce({
+      reply: 'ok',
+      sessionId: 'new-sess',
+      toolsUsed: [],
+      outcome: 'ok',
+      totalCostUsd: 0.2,
+      turnCostUsd: 0.2,
+      numTurns: 1,
+      resumeDropped: true,
+    });
+    await handleTurn(fakeCtx(), 'hello');
+    expect(await getSessionId(CHAT)).toBe('new-sess');
+    expect(await sessionHasEntries('old-sess')).toBe(false);
+  });
+
+  it('keeps the transcript on a normal resumed turn', async () => {
+    await setSessionId(CHAT, 'same-sess', 100_000);
+    await appendEntries({ projectKey: '/p', sessionId: 'same-sess' }, [
+      { type: 'user', uuid: 'keep-me' },
+    ]);
+    runAgentMock.mockResolvedValueOnce({
+      reply: 'ok',
+      sessionId: 'same-sess',
+      toolsUsed: [],
+      outcome: 'ok',
+      totalCostUsd: 0.2,
+      turnCostUsd: 0.1,
+      numTurns: 1,
+      resumeDropped: false,
+    });
+    await handleTurn(fakeCtx(), 'hello');
+    expect(await sessionHasEntries('same-sess')).toBe(true);
   });
 });

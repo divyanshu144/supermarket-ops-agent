@@ -233,6 +233,8 @@ export async function runAgent(input: {
       JSON.stringify({
         scope: 'session',
         warning: 'resume failed before any output; retrying once without resume',
+        // Class/type name only: the message can carry query parameters.
+        errorName: error.original instanceof Error ? error.original.name : typeof error.original,
       }),
     );
     try {

@@ -201,6 +201,9 @@ describe('runAgent — session store and resume', () => {
       expect(r).toMatchObject({ outcome: 'ok', reply: 'fresh', resumeDropped: true });
       expect(r.turnCostUsd).toBeCloseTo(0.1);
       expect(warn).toHaveBeenCalledTimes(1);
+      const line = String(warn.mock.calls[0]![0]);
+      expect(line).toContain('"errorName":"Error"');
+      expect(line).not.toContain('No conversation found');
     } finally {
       warn.mockRestore();
     }
@@ -212,6 +215,24 @@ describe('runAgent — session store and resume', () => {
     expect(mockQuery).toHaveBeenCalledTimes(1);
   });
 
+  it('does not retry when the only output so far was a tool call (the tool already ran)', async () => {
+    fake(
+      [
+        system,
+        {
+          type: 'assistant',
+          message: { content: [{ type: 'tool_use', name: 'get_stock', id: 't1', input: {} }] },
+        },
+      ],
+      'throw',
+      new Error('died after tool call'),
+    );
+    await expect(runAgent({ text: 'hi', sessionId: 'sess-1' })).rejects.toThrow(
+      'died after tool call',
+    );
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+  });
+
   it('does not retry a failure on a fresh run (nothing to drop), and never loops', async () => {
     fake([], 'throw', new Error('boom'));
     await expect(runAgent({ text: 'hi' })).rejects.toThrow('boom');
@@ -219,15 +240,17 @@ describe('runAgent — session store and resume', () => {
   });
 
   it('surfaces the retry failure itself if the fresh start also fails', async () => {
-    mockQuery.mockImplementation(() =>
-      // eslint-disable-next-line require-yield -- throws before yielding, like a failed spawn
-      (async function* () {
-        throw new Error('still broken');
-      })(),
-    );
+    for (const message of ['first', 'second']) {
+      mockQuery.mockImplementationOnce(() =>
+        // eslint-disable-next-line require-yield -- throws before yielding, like a failed spawn
+        (async function* () {
+          throw new Error(message);
+        })(),
+      );
+    }
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
-      await expect(runAgent({ text: 'hi', sessionId: 'sess-1' })).rejects.toThrow('still broken');
+      await expect(runAgent({ text: 'hi', sessionId: 'sess-1' })).rejects.toThrow('second');
       expect(mockQuery).toHaveBeenCalledTimes(2);
     } finally {
       warn.mockRestore();

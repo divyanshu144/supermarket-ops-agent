@@ -1,5 +1,6 @@
 import { InputFile, type Context } from 'grammy';
 import { runAgent } from '../agent/runtime.js';
+import { deleteSessionEntries } from '../repositories/session-entries.js';
 import { hasStore } from '../repositories/access.js';
 import {
   claimUpdate,
@@ -103,6 +104,15 @@ export async function handleTurn(
 
     if (result.sessionId) {
       await setSessionId(storeId, result.sessionId, microUsd(result.totalCostUsd));
+      if (result.resumeDropped && sessionId && sessionId !== result.sessionId) {
+        // A retried resume leaves the old conversation's transcript behind; /new can no longer
+        // reach it once the row points at the new session. Never fail the turn over cleanup.
+        try {
+          await deleteSessionEntries(sessionId);
+        } catch (error) {
+          console.error(redact({ scope: 'session-cleanup', storeId: String(storeId), error }));
+        }
+      }
     } else if (result.resumeDropped) {
       // The stored session could not be used and no new one was created (e.g. the fresh run timed
       // out before its first message): clear the stale row so the next turn starts clean.
