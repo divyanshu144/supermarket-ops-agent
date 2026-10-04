@@ -5,6 +5,11 @@ vi.mock('@anthropic-ai/claude-agent-sdk', async (importOriginal) => ({
   query: vi.fn(),
 }));
 
+vi.mock('./session-store.js', () => ({
+  postgresSessionStore: { __store: true },
+  sessionExists: vi.fn(),
+}));
+
 process.env.DATABASE_URL ??= 'postgres://u:p@localhost:5432/db';
 process.env.TELEGRAM_BOT_TOKEN ??= 't';
 process.env.ANTHROPIC_API_KEY ??= 'k';
@@ -13,12 +18,19 @@ process.env.AGENT_TURN_TIMEOUT_MS = '50';
 type Msg = Record<string, unknown>;
 interface QueryArgs {
   prompt: string;
-  options: { abortController: AbortController; maxBudgetUsd?: number };
+  options: {
+    abortController: AbortController;
+    maxBudgetUsd?: number;
+    resume?: string;
+    sessionStore?: unknown;
+  };
 }
 
 const { query } = await import('@anthropic-ai/claude-agent-sdk');
 const { runAgent } = await import('./runtime.js');
 const { OUTCOME_REPLY } = await import('./limits.js');
+const { sessionExists } = await import('./session-store.js');
+const sessionExistsMock = vi.mocked(sessionExists);
 
 const mockQuery = vi.mocked(query) as unknown as ReturnType<typeof vi.fn>;
 
@@ -58,6 +70,8 @@ beforeAll(() => {
 });
 beforeEach(() => {
   mockQuery.mockReset();
+  sessionExistsMock.mockReset();
+  sessionExistsMock.mockResolvedValue(true);
 });
 
 describe('runAgent', () => {
@@ -137,5 +151,193 @@ describe('runAgent', () => {
   it('rethrows a genuine failure with no result and no timeout', async () => {
     fake([], 'throw', new Error('network down'));
     await expect(runAgent({ text: 'hi' })).rejects.toThrow('network down');
+  });
+});
+
+describe('runAgent — session store and resume', () => {
+  it('passes the Postgres store and the resume id when the session is known', async () => {
+    fake([system, text('a'), result('success', false, 0.2, 1)], 'end');
+    const r = await runAgent({ text: 'hi', sessionId: 'sess-1', priorCostUsd: 0.1 });
+    const opts = (mockQuery.mock.calls[0]![0] as QueryArgs).options;
+    expect(opts.resume).toBe('sess-1');
+    expect(opts.sessionStore).toEqual({ __store: true });
+    expect(r.resumeDropped).toBe(false);
+  });
+
+  it('drops an unknown session to a fresh one with prior cost 0 (the pre-mirror sessions)', async () => {
+    sessionExistsMock.mockResolvedValue(false);
+    fake([system, text('hello'), result('success', false, 0.2, 1)], 'end');
+
+    const r = await runAgent({ text: 'hi', sessionId: 'old-local-only', priorCostUsd: 0.6 });
+
+    const opts = (mockQuery.mock.calls[0]![0] as QueryArgs).options;
+    expect(opts.resume).toBeUndefined();
+    expect(opts.maxBudgetUsd).toBe(0.5); // bare cap: the stale 0.6 must not widen it
+    expect(r.resumeDropped).toBe(true);
+    expect(r.outcome).toBe('ok');
+    expect(r.turnCostUsd).toBeCloseTo(0.2); // charged in full, not total - 0.6 clamped to 0
+  });
+
+  it('retries once without resume when the run fails to start before any output', async () => {
+    mockQuery
+      .mockImplementationOnce(() =>
+        // eslint-disable-next-line require-yield -- throws before yielding, like a failed spawn
+        (async function* () {
+          throw new Error('No conversation found with session ID');
+        })(),
+      )
+      .mockImplementationOnce(() =>
+        (async function* () {
+          yield system;
+          yield text('fresh');
+          yield result('success', false, 0.1, 1);
+        })(),
+      );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const r = await runAgent({ text: 'hi', sessionId: 'sess-1', priorCostUsd: 0.3 });
+      expect(mockQuery).toHaveBeenCalledTimes(2);
+      expect((mockQuery.mock.calls[1]![0] as QueryArgs).options.resume).toBeUndefined();
+      expect(r).toMatchObject({ outcome: 'ok', reply: 'fresh', resumeDropped: true });
+      expect(r.turnCostUsd).toBeCloseTo(0.1);
+      expect(warn).toHaveBeenCalledTimes(1);
+      const line = String(warn.mock.calls[0]![0]);
+      expect(line).toContain('"errorName":"Error"');
+      expect(line).toContain('"sessionId":"sess-1"');
+      expect(line).not.toContain('No conversation found');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('retries once without resume when a resumed run ends in error_during_execution before any output', async () => {
+    mockQuery
+      .mockImplementationOnce(() =>
+        (async function* () {
+          yield system;
+          yield result('error_during_execution', true, 0, 0);
+        })(),
+      )
+      .mockImplementationOnce(() =>
+        (async function* () {
+          yield system;
+          yield text('fresh');
+          yield result('success', false, 0.1, 1);
+        })(),
+      );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const r = await runAgent({ text: 'hi', sessionId: 'sess-1', priorCostUsd: 0.3 });
+      expect(mockQuery).toHaveBeenCalledTimes(2);
+      expect((mockQuery.mock.calls[0]![0] as QueryArgs).options.resume).toBe('sess-1');
+      expect((mockQuery.mock.calls[1]![0] as QueryArgs).options.resume).toBeUndefined();
+      expect(r).toMatchObject({ outcome: 'ok', reply: 'fresh', resumeDropped: true });
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]![0])).not.toContain('error result');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('does not retry a resumed success+is_error result (a transient API error must not wipe the conversation)', async () => {
+    fake([system, result('success', true, 0.1, 1)], 'end');
+    const r = await runAgent({ text: 'hi', sessionId: 'sess-1' });
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(r.outcome).toBe('error');
+    expect(r.resumeDropped).toBe(false);
+  });
+
+  it('does not retry a resumed error_during_execution that came after assistant output', async () => {
+    fake([system, text('partial'), result('error_during_execution', true, 0.1, 1)], 'end');
+    const r = await runAgent({ text: 'hi', sessionId: 'sess-1' });
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(r.outcome).toBe('error');
+  });
+
+  it('does not retry error_during_execution on a fresh run', async () => {
+    fake([system, result('error_during_execution', true, 0, 0)], 'end');
+    const r = await runAgent({ text: 'hi' });
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(r.outcome).toBe('error');
+  });
+
+  it('does not retry a failure that happens after output has started', async () => {
+    fake([system, text('partial')], 'throw', new Error('mid-run failure'));
+    await expect(runAgent({ text: 'hi', sessionId: 'sess-1' })).rejects.toThrow('mid-run failure');
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry when the only output so far was a tool call (the tool already ran)', async () => {
+    fake(
+      [
+        system,
+        {
+          type: 'assistant',
+          message: { content: [{ type: 'tool_use', name: 'get_stock', id: 't1', input: {} }] },
+        },
+      ],
+      'throw',
+      new Error('died after tool call'),
+    );
+    await expect(runAgent({ text: 'hi', sessionId: 'sess-1' })).rejects.toThrow(
+      'died after tool call',
+    );
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not retry a failure on a fresh run (nothing to drop), and never loops', async () => {
+    fake([], 'throw', new Error('boom'));
+    await expect(runAgent({ text: 'hi' })).rejects.toThrow('boom');
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces the retry failure itself if the fresh start also fails', async () => {
+    for (const message of ['first', 'second']) {
+      mockQuery.mockImplementationOnce(() =>
+        // eslint-disable-next-line require-yield -- throws before yielding, like a failed spawn
+        (async function* () {
+          throw new Error(message);
+        })(),
+      );
+    }
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await expect(runAgent({ text: 'hi', sessionId: 'sess-1' })).rejects.toThrow('second');
+      expect(mockQuery).toHaveBeenCalledTimes(2);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+});
+
+describe('runAgent — mirror failures', () => {
+  it('logs a mirror failure without the error text, which can contain conversation content', async () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      fake(
+        [
+          system,
+          {
+            type: 'system',
+            subtype: 'mirror_error',
+            session_id: 'sess-1',
+            error: 'Failed query: insert ... params: {"text":"khata for Ramesh is 4000"}',
+            key: { projectKey: '/p', sessionId: 'sess-1' },
+          },
+          text('ok'),
+          result('success', false, 0.1, 1),
+        ],
+        'end',
+      );
+      const r = await runAgent({ text: 'hi' });
+      expect(r.outcome).toBe('ok'); // a mirror failure never fails the turn
+      expect(err).toHaveBeenCalledTimes(1);
+      const line = String(err.mock.calls[0]![0]);
+      expect(line).toContain('sess-1');
+      expect(line).not.toContain('Ramesh');
+      expect(line).not.toContain('Failed query');
+    } finally {
+      err.mockRestore();
+    }
   });
 });

@@ -24,6 +24,7 @@ const schema = z
     STORE_DAILY_BUDGET_USD: positiveNumber(5),
     RATE_LIMIT_TURNS: positiveInt(20),
     RATE_LIMIT_WINDOW_S: positiveInt(600),
+    SHUTDOWN_GRACE_MS: z.coerce.number().int().positive().max(120_000).default(30_000),
   })
   .refine((e) => !e.AGENT_FALLBACK_MODEL || e.AGENT_FALLBACK_MODEL !== e.AGENT_MODEL, {
     path: ['AGENT_FALLBACK_MODEL'],

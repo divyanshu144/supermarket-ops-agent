@@ -114,6 +114,21 @@ Plan: `docs/plans/2026-10-04-guardrails-and-cost.md`. Implemented, not merged, n
 - [ ] Live: Telegram checklist (stranger reply, code redeem, reuse rejected, `/reset` vs `/reset confirm`, `cost_usd`/`num_turns` in log) — needs a real bot token
 - [ ] Sub-projects B–F (see `HANDOFF.md`)
 
+## Production hardening — sub-project B: session durability and shutdown (branch `production-hardening-b`)
+
+Plan: `docs/plans/2026-10-04-session-durability-and-shutdown.md`. Implemented, stacked on PR #1, not merged.
+
+- [x] 1. Transcript table and repository
+- [x] 2. SDK session-store adapter
+- [x] 3. Clearing a conversation and boot-time claim expiry
+- [x] 4. Runtime: use the store, drop an unknown resume, retry a failed start
+- [x] 5. Live probe for the store (written, not run)
+- [x] 6. Drain gate, graceful shutdown, instance lock and boot recovery
+- [x] 7. Documentation and gate
+- [ ] Live: `pnpm tsx src/agent/session-store.probe.ts` (B must PASS; paste C's output into agent_memory) — needs credentials
+- [ ] Check Railway's SIGTERM-to-SIGKILL window against `SHUTDOWN_GRACE_MS` — needs Railway
+- [ ] Deploy while the shop is idle (first-deploy lock transition) — needs Railway
+
 ## Remaining — packaging
 
 - [ ] **Rotate `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY`** — both reached deployment logs

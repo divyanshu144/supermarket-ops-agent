@@ -9,6 +9,7 @@ import {
   OUTCOME_REPLY,
   type AgentOutcome,
 } from './limits.js';
+import { postgresSessionStore, sessionExists } from './session-store.js';
 import { ALLOWED_TOOLS, STORE_SERVER_NAME, storeToolServer } from '../tools/index.js';
 
 const env = loadEnv();
@@ -54,17 +55,32 @@ export interface AgentResult {
   /** What this run cost. Feeds the daily budget. */
   turnCostUsd: number;
   numTurns: number;
+  /**
+   * True when the stored session id could not be used and this run started a fresh conversation
+   * (the store had no transcript for it, or the resume failed to start). The caller must replace
+   * or clear its stored session row.
+   */
+  resumeDropped: boolean;
 }
 
-export async function runAgent(input: {
+/** A run that threw instead of yielding a result; `sawOutput` says whether the model had spoken. */
+class RunFailed extends Error {
+  constructor(
+    readonly original: unknown,
+    readonly sawOutput: boolean,
+  ) {
+    super('agent run failed');
+  }
+}
+
+async function runOnce(args: {
   text: string;
-  sessionId?: string;
+  resume?: string;
   preferences?: Record<string, unknown>;
-  /** Session spend before this run, so the budget cap and the cost accounting are per-run. */
-  priorCostUsd?: number;
-}): Promise<AgentResult> {
+  prior: number;
+}): Promise<Omit<AgentResult, 'resumeDropped'>> {
   const limits = runLimits(env);
-  const prior = input.priorCostUsd ?? 0;
+  const prior = args.prior;
 
   const abort = new AbortController();
   let timedOut = false;
@@ -74,14 +90,14 @@ export async function runAgent(input: {
   }, limits.timeoutMs);
 
   const stream = query({
-    prompt: input.text,
+    prompt: args.text,
     options: {
       model: limits.model,
       fallbackModel: limits.fallbackModel,
       maxTurns: limits.maxTurns,
       maxBudgetUsd: perRunBudgetUsd(limits.maxBudgetUsd, prior),
       abortController: abort,
-      systemPrompt: withPreferences(input.preferences ?? {}),
+      systemPrompt: withPreferences(args.preferences ?? {}),
       mcpServers: { [STORE_SERVER_NAME]: storeToolServer },
       allowedTools: ALLOWED_TOOLS,
       skills: 'all',
@@ -90,7 +106,8 @@ export async function runAgent(input: {
       // project settings are read, so the agent's working directory must not contain
       // development instructions meant for a different audience.
       settingSources: ['project'],
-      resume: input.sessionId,
+      resume: args.resume,
+      sessionStore: postgresSessionStore,
       // Adaptive thinking stays on. `effort` is the latency lever — never disable thinking,
       // which on Opus 5 can emit tool calls as plain text that then silently never run.
       effort: env.AGENT_EFFORT,
@@ -99,7 +116,7 @@ export async function runAgent(input: {
 
   const chunks: string[] = [];
   const toolsUsed: string[] = [];
-  let sessionId = input.sessionId ?? '';
+  let sessionId = args.resume ?? '';
   let outcome: AgentOutcome | undefined;
   let totalCostUsd = prior;
   let numTurns = 0;
@@ -107,6 +124,18 @@ export async function runAgent(input: {
 
   try {
     for await (const message of stream) {
+      if (message.type === 'system' && message.subtype === 'mirror_error') {
+        // Fixed text + session id only: the error string can embed the failed query's parameters,
+        // which are conversation content.
+        console.error(
+          JSON.stringify({
+            scope: 'session-store',
+            warning: 'transcript mirror failed; the turn is unaffected',
+            sessionId: message.session_id,
+          }),
+        );
+        continue;
+      }
       if (message.type === 'system' && 'session_id' in message) {
         sessionId = String(message.session_id);
       }
@@ -117,6 +146,21 @@ export async function runAgent(input: {
         }
       }
       if (message.type === 'result') {
+        // A resumed run that dies in an error result before saying anything fails identically on
+        // every turn (the same session id would be stored again). Take the retry-fresh path.
+        // Deliberately NOT for subtype 'success' + is_error (a transient API error: the owner's
+        // conversation must survive it), nor max_turns / max_budget, nor once output was seen.
+        if (
+          args.resume &&
+          message.subtype === 'error_during_execution' &&
+          chunks.length === 0 &&
+          toolsUsed.length === 0
+        ) {
+          throw new RunFailed(
+            new Error('resumed run ended in an error result before any output'),
+            false,
+          );
+        }
         sawResult = true;
         outcome = classifyResult(message);
         totalCostUsd = message.total_cost_usd;
@@ -126,7 +170,9 @@ export async function runAgent(input: {
   } catch (error) {
     // A single-shot query() yields the error result and THEN throws (max turns, max budget).
     // If we already saw the result, the throw carries no new information.
-    if (outcome === undefined && !timedOut) throw error;
+    if (outcome === undefined && !timedOut) {
+      throw new RunFailed(error, chunks.length > 0 || toolsUsed.length > 0);
+    }
   } finally {
     clearTimeout(timer);
   }
@@ -142,7 +188,7 @@ export async function runAgent(input: {
 
   // Tripwire: a resumed run whose cumulative total went DOWN means either the cost total is
   // really per-call or the resume silently started a fresh session. Neither is visible otherwise.
-  if (input.sessionId && sawResult && SDK_COST_IS_CUMULATIVE && totalCostUsd < prior) {
+  if (args.resume && sawResult && SDK_COST_IS_CUMULATIVE && totalCostUsd < prior) {
     console.warn(
       JSON.stringify({
         scope: 'cost',
@@ -164,4 +210,59 @@ export async function runAgent(input: {
     turnCostUsd: timedOutWithoutResult ? limits.maxBudgetUsd : turnCostUsd(totalCostUsd, prior),
     numTurns,
   };
+}
+
+export async function runAgent(input: {
+  text: string;
+  sessionId?: string;
+  preferences?: Record<string, unknown>;
+  /** Session spend before this run, so the budget cap and the cost accounting are per-run. */
+  priorCostUsd?: number;
+}): Promise<AgentResult> {
+  let resume = input.sessionId;
+  let prior = input.priorCostUsd ?? 0;
+  let resumeDropped = false;
+
+  // A session id the store has no transcript for cannot be resumed on a fresh container. That is
+  // every session created before the mirror existed, so the first message after a deploy starts a
+  // new conversation instead of failing. The old session's spend does not carry over.
+  if (resume && !(await sessionExists(resume))) {
+    resume = undefined;
+    prior = 0;
+    resumeDropped = true;
+  }
+
+  try {
+    return {
+      ...(await runOnce({ text: input.text, resume, preferences: input.preferences, prior })),
+      resumeDropped,
+    };
+  } catch (error) {
+    if (!(error instanceof RunFailed)) throw error;
+    // A resume that fails to start, before the model has said anything, is retried once without
+    // it. Spawn-level failures throw; a failure on a started session arrives as a result message,
+    // so a transient API error does not reach this branch. If it ever does, the cost is one lost
+    // conversation context, which the warning below makes visible.
+    if (!resume || error.sawOutput) throw error.original;
+    console.warn(
+      JSON.stringify({
+        scope: 'session',
+        warning: 'resume failed before any output; retrying once without resume',
+        sessionId: resume, // a UUID, not content
+        // Class/type name only: the message can carry query parameters.
+        errorName: error.original instanceof Error ? error.original.name : typeof error.original,
+      }),
+    );
+    try {
+      const fresh = await runOnce({
+        text: input.text,
+        resume: undefined,
+        preferences: input.preferences,
+        prior: 0,
+      });
+      return { ...fresh, resumeDropped: true };
+    } catch (retryError) {
+      throw retryError instanceof RunFailed ? retryError.original : retryError;
+    }
+  }
 }

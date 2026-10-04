@@ -1,6 +1,7 @@
 import { and, eq, lt, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { processedUpdates, sessions } from '../db/schema.js';
+import { deleteSessionEntries } from './session-entries.js';
 
 /** A turn still 'claimed' after this long is assumed to have died mid-handling. */
 const STALE_AFTER_SECONDS = 300;
@@ -52,6 +53,25 @@ export async function completeUpdate(updateId: bigint): Promise<void> {
     .where(eq(processedUpdates.updateId, updateId));
 }
 
+/**
+ * Boot-time recovery for a process that died mid-turn.
+ *
+ * A claim younger than STALE_AFTER_SECONDS is treated as "still running elsewhere", which is
+ * right while the owner's process is alive and wrong after a restart: Telegram redelivers the
+ * update immediately, finds a fresh claim and drops it, so the owner's message is lost. With one
+ * replica (DEPLOY.md) every claim present at boot belongs to a dead process, so expire them all.
+ * Completed updates are untouched: a redelivery of finished work must stay a duplicate.
+ * Do not call this with more than one replica running.
+ */
+export async function expireInFlightClaims(): Promise<number> {
+  const rows = await db
+    .update(processedUpdates)
+    .set({ claimedAt: sql`now() - make_interval(secs => ${STALE_AFTER_SECONDS + 1})` })
+    .where(eq(processedUpdates.status, 'claimed'))
+    .returning({ updateId: processedUpdates.updateId });
+  return rows.length;
+}
+
 export async function getSessionId(storeId: bigint): Promise<string | undefined> {
   const rows = await db.select().from(sessions).where(eq(sessions.storeId, storeId)).limit(1);
   return rows[0]?.agentSessionId;
@@ -80,7 +100,13 @@ export async function setSessionId(
     });
 }
 
-/** Backs `/new`: clears the conversation and nothing else. Stock, khata and preferences stay. */
+/**
+ * Backs `/new` and `/reset`: clears the conversation and nothing else. Stock, khata and
+ * preferences stay. The mirrored transcript goes too, or every cleared conversation would
+ * accumulate in session_entries forever.
+ */
 export async function clearSession(storeId: bigint): Promise<void> {
+  const sessionId = await getSessionId(storeId);
+  if (sessionId) await deleteSessionEntries(sessionId);
   await db.delete(sessions).where(eq(sessions.storeId, storeId));
 }

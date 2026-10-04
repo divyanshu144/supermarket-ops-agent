@@ -1,5 +1,6 @@
 import {
   bigint,
+  bigserial,
   boolean,
   check,
   date,
@@ -257,4 +258,32 @@ export const usage = pgTable(
     turns: integer('turns').notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.storeId, t.day] })],
+);
+
+/**
+ * Mirror of Agent SDK session transcripts, so `resume` works from the database on a fresh
+ * container (the SDK's local transcript lives on a disk that a redeploy wipes).
+ *
+ * `id` is the append order. `subpath` is '' for the main transcript (the SDK forbids an empty
+ * string, so '' is free to mean "none"). The partial unique index makes a retried batch
+ * idempotent: most entries carry a stable `uuid`, and entries without one are never deduplicated.
+ * Retention is ours: rows are deleted on /new and /reset, and abandoned conversations accumulate.
+ */
+export const sessionEntries = pgTable(
+  'session_entries',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    projectKey: text('project_key').notNull(),
+    sessionId: text('session_id').notNull(),
+    subpath: text('subpath').notNull().default(''),
+    entryUuid: text('entry_uuid'),
+    entry: jsonb('entry').$type<Record<string, unknown>>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('session_entries_lookup_idx').on(t.sessionId, t.projectKey, t.subpath, t.id),
+    uniqueIndex('session_entries_uuid_uq')
+      .on(t.projectKey, t.sessionId, t.subpath, t.entryUuid)
+      .where(sql`${t.entryUuid} is not null`),
+  ],
 );

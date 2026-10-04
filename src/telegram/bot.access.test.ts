@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { eq, inArray } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { inviteCodes, processedUpdates, stores } from '../db/schema.js';
@@ -23,6 +23,7 @@ vi.mock('../media/transcribe.js', async (importOriginal) => ({
 }));
 
 const { createBot } = await import('./bot.js');
+const { beginDrain, resetDrainForTests } = await import('./drain.js');
 const { runAgent } = await import('../agent/runtime.js');
 const { downloadTelegramFile } = await import('../media/download.js');
 const { createInvite } = await import('../repositories/access.js');
@@ -250,6 +251,7 @@ describe('turn to ledger wiring', () => {
       totalCostUsd: 0.03,
       turnCostUsd: 0.02,
       numTurns: 1,
+      resumeDropped: false,
     });
     await bot.handleUpdate(textUpdate(OWNER, 'two') as never);
 
@@ -307,5 +309,34 @@ describe('spend and rate guards', () => {
     await bot.handleUpdate(textUpdate(SPAMMER, 'one too many') as never);
     expect(runAgent).toHaveBeenCalledTimes(env.RATE_LIMIT_TURNS);
     expect(replies().at(-1)).toBe(RATE_LIMITED_REPLY);
+  });
+});
+
+describe('draining', () => {
+  afterEach(() => resetDrainForTests());
+
+  it('neither handles nor claims an update that arrives during shutdown', async () => {
+    await provisionStore(OWNER);
+    const bot = makeBot();
+
+    // Control: the harness can handle an update when not draining.
+    await bot.handleUpdate(textUpdate(OWNER, 'how much sugar is left?') as never);
+    expect(runAgent).toHaveBeenCalledTimes(1);
+    vi.mocked(runAgent).mockClear();
+    const sentBefore = sent.length;
+
+    await beginDrain(10); // nothing in flight: drained at once, but the gate now holds
+
+    const update = textUpdate(OWNER, 'bill 2 sugar');
+    void bot.handleUpdate(update as never); // never settles by design; do not await it
+    await new Promise((r) => setTimeout(r, 150));
+
+    expect(runAgent).not.toHaveBeenCalled();
+    expect(sent).toHaveLength(sentBefore);
+    const claimed = await db
+      .select()
+      .from(processedUpdates)
+      .where(eq(processedUpdates.updateId, BigInt(update.update_id)));
+    expect(claimed).toHaveLength(0);
   });
 });

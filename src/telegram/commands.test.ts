@@ -1,8 +1,10 @@
+import { randomUUID } from 'node:crypto';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import { eq, inArray } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
-import { inviteCodes, products, stores } from '../db/schema.js';
+import { inviteCodes, products, sessionEntries, stores } from '../db/schema.js';
 import { createInvite, hasStore, redeemInvite } from '../repositories/access.js';
+import { appendEntries, sessionHasEntries } from '../repositories/session-entries.js';
 import { provisionStore } from '../repositories/stores.js';
 import { getSessionCostMicroUsd, getSessionId, setSessionId } from '../repositories/updates.js';
 import { newCommand, resetCommand, startCommand } from './commands.js';
@@ -12,6 +14,12 @@ const STRANGER = 999100020n;
 const OWNER = 999100021n;
 const OTHER = 999100022n;
 const made: string[] = [];
+const sessions: string[] = [];
+function freshSession(): string {
+  const id = randomUUID();
+  sessions.push(id);
+  return id;
+}
 
 async function invite() {
   const created = await createInvite();
@@ -24,6 +32,8 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+  if (sessions.length)
+    await db.delete(sessionEntries).where(inArray(sessionEntries.sessionId, sessions));
   if (made.length) await db.delete(inviteCodes).where(inArray(inviteCodes.id, made));
   await pool.end();
 });
@@ -81,15 +91,19 @@ describe('resetCommand', () => {
 
   it('clears the conversation session on /reset confirm but not on a bare /reset', async () => {
     await provisionStore(OWNER);
-    await setSessionId(OWNER, 's', 123_456);
+    const sid = freshSession();
+    await setSessionId(OWNER, sid, 123_456);
+    await appendEntries({ projectKey: '/p', sessionId: sid }, [{ type: 'user', uuid: 'x' }]);
 
     await resetCommand(OWNER, '');
-    expect(await getSessionId(OWNER)).toBe('s');
+    expect(await getSessionId(OWNER)).toBe(sid);
     expect(await getSessionCostMicroUsd(OWNER)).toBe(123_456);
+    expect(await sessionHasEntries(sid)).toBe(true);
 
     await resetCommand(OWNER, 'confirm');
     expect(await getSessionId(OWNER)).toBeUndefined();
     expect(await getSessionCostMicroUsd(OWNER)).toBe(0);
+    expect(await sessionHasEntries(sid)).toBe(false);
   });
 });
 
@@ -101,9 +115,12 @@ describe('newCommand', () => {
 
   it('clears the conversation session and its cost total', async () => {
     await provisionStore(OWNER);
-    await setSessionId(OWNER, 's', 123_456);
+    const sid = freshSession();
+    await setSessionId(OWNER, sid, 123_456);
+    await appendEntries({ projectKey: '/p', sessionId: sid }, [{ type: 'user', uuid: 'x' }]);
     await newCommand(OWNER);
     expect(await getSessionId(OWNER)).toBeUndefined();
     expect(await getSessionCostMicroUsd(OWNER)).toBe(0);
+    expect(await sessionHasEntries(sid)).toBe(false);
   });
 });

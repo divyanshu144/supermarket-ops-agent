@@ -91,3 +91,15 @@ describe('loadEnv limits', () => {
     ).toThrow(/AGENT_FALLBACK_MODEL/);
   });
 });
+
+describe('SHUTDOWN_GRACE_MS', () => {
+  it('defaults to 30 seconds and accepts an override up to two minutes', () => {
+    expect(loadEnv(valid).SHUTDOWN_GRACE_MS).toBe(30_000);
+    expect(loadEnv({ ...valid, SHUTDOWN_GRACE_MS: '120000' }).SHUTDOWN_GRACE_MS).toBe(120_000);
+  });
+
+  it('rejects zero and values above two minutes', () => {
+    expect(() => loadEnv({ ...valid, SHUTDOWN_GRACE_MS: '0' })).toThrow(/SHUTDOWN_GRACE_MS/);
+    expect(() => loadEnv({ ...valid, SHUTDOWN_GRACE_MS: '120001' })).toThrow(/SHUTDOWN_GRACE_MS/);
+  });
+});
