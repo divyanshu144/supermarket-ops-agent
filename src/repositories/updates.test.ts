@@ -6,6 +6,7 @@ import {
   claimUpdate,
   clearSession,
   completeUpdate,
+  getSessionCostMicroUsd,
   getSessionId,
   setSessionId,
 } from './updates.js';
@@ -101,5 +102,24 @@ describe('sessions', () => {
     // /new must not wipe the shop.
     const store = await db.select().from(stores).where(eq(stores.id, CHAT));
     expect(store).toHaveLength(1);
+  });
+});
+
+describe('session cost', () => {
+  it('is zero when there is no session', async () => {
+    expect(await getSessionCostMicroUsd(CHAT)).toBe(0);
+  });
+
+  it('stores and updates the cumulative cost with the session id', async () => {
+    await setSessionId(CHAT, 's1', 400_000);
+    expect(await getSessionCostMicroUsd(CHAT)).toBe(400_000);
+    await setSessionId(CHAT, 's1', 650_000);
+    expect(await getSessionCostMicroUsd(CHAT)).toBe(650_000);
+  });
+
+  it('resets when the conversation is cleared with /new', async () => {
+    await setSessionId(CHAT, 's1', 400_000);
+    await clearSession(CHAT);
+    expect(await getSessionCostMicroUsd(CHAT)).toBe(0);
   });
 });

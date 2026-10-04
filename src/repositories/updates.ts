@@ -57,13 +57,26 @@ export async function getSessionId(storeId: bigint): Promise<string | undefined>
   return rows[0]?.agentSessionId;
 }
 
-export async function setSessionId(storeId: bigint, agentSessionId: string): Promise<void> {
+export async function getSessionCostMicroUsd(storeId: bigint): Promise<number> {
+  const rows = await db
+    .select({ cost: sessions.costMicroUsd })
+    .from(sessions)
+    .where(eq(sessions.storeId, storeId))
+    .limit(1);
+  return rows[0]?.cost ?? 0;
+}
+
+export async function setSessionId(
+  storeId: bigint,
+  agentSessionId: string,
+  costMicroUsd = 0,
+): Promise<void> {
   await db
     .insert(sessions)
-    .values({ storeId, agentSessionId })
+    .values({ storeId, agentSessionId, costMicroUsd })
     .onConflictDoUpdate({
       target: sessions.storeId,
-      set: { agentSessionId, updatedAt: sql`now()` },
+      set: { agentSessionId, costMicroUsd, updatedAt: sql`now()` },
     });
 }
 
