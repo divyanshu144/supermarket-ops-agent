@@ -14,11 +14,13 @@
  *   C. Turn 3 resumes a session id that exists nowhere. It records HOW that fails (thrown error
  *      text, or an error result), which decides whether runtime.ts's retry condition ("throws
  *      before any assistant output") matches reality. Paste the output of C
- *      into tasks/agent_memory.md under Known Gotchas.
+ *      into tasks/agent_memory.md under Known Gotchas. C's verdict is a heuristic from ONE
+ *      observation, not a proof; B depends on the model complying with the one-word instruction.
+ *      If A fails, B and C are skipped (they would be meaningless) and the exit code is non-zero.
  */
 import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { query } from '@anthropic-ai/claude-agent-sdk';
@@ -30,12 +32,24 @@ import { postgresSessionStore } from './session-store.js';
 const env = loadEnv();
 const CODEWORD = 'PINEAPPLE';
 
+/** Every session id the probe touches, so the finally block can delete them all. */
+const seenSessionIds = new Set<string>();
+const tempDirs: string[] = [];
+
+function tempDir(prefix: string): string {
+  const dir = mkdtempSync(join(tmpdir(), prefix));
+  tempDirs.push(dir);
+  return dir;
+}
+
 async function turn(prompt: string, resume: string | undefined, configDir: string) {
   let sessionId = resume ?? '';
+  if (resume) seenSessionIds.add(resume);
   let reply = '';
   let seenAssistant = false;
   let resultSubtype = '';
   let threw = '';
+  let stderr = '';
   try {
     for await (const m of query({
       prompt,
@@ -48,9 +62,15 @@ async function turn(prompt: string, resume: string | undefined, configDir: strin
         allowedTools: [],
         maxTurns: 3,
         env: { ...process.env, CLAUDE_CONFIG_DIR: configDir },
+        stderr: (data: string) => {
+          stderr += data;
+        },
       },
     })) {
-      if (m.type === 'system' && 'session_id' in m) sessionId = String(m.session_id);
+      if (m.type === 'system' && 'session_id' in m) {
+        sessionId = String(m.session_id);
+        seenSessionIds.add(sessionId);
+      }
       if (m.type === 'assistant') {
         seenAssistant = true;
         for (const b of m.message.content) if (b.type === 'text') reply += b.text;
@@ -60,40 +80,69 @@ async function turn(prompt: string, resume: string | undefined, configDir: strin
   } catch (error) {
     threw = (error as Error).message;
   }
-  return { sessionId, reply, seenAssistant, resultSubtype, threw };
+  return { sessionId, reply, seenAssistant, resultSubtype, threw, stderrTail: stderr.slice(-400) };
 }
 
-const dirA = mkdtempSync(join(tmpdir(), 'probe-a-'));
-const dirB = mkdtempSync(join(tmpdir(), 'probe-b-'));
-
-let probedSessionId = '';
 try {
+  const dirA = tempDir('probe-a-');
+  const dirB = tempDir('probe-b-');
+  const dirC = tempDir('probe-c-');
+
   console.log('A. fresh session, local transcripts in', dirA);
   const a = await turn(`Remember the codeword ${CODEWORD}. Reply with just: ok`, undefined, dirA);
-  probedSessionId = a.sessionId;
   console.log(`   session=${a.sessionId} reply="${a.reply.trim()}" threw="${a.threw}"`);
 
-  console.log('B. resume from the store with an EMPTY config dir', dirB);
-  const b = await turn('What is the codeword? Reply with just the word.', a.sessionId, dirB);
-  console.log(`   reply="${b.reply.trim()}" threw="${b.threw}"`);
-  console.log(
-    b.reply.toUpperCase().includes(CODEWORD)
-      ? '   PASS: the conversation survived without any local transcript.'
-      : '   FAIL: resume from the store did not restore the conversation.',
-  );
+  if (a.threw || !a.sessionId) {
+    console.log(
+      `   A FAILED (${a.threw || 'no session id'}): B and C are not meaningful. ` +
+        'Fix the A failure first (is ANTHROPIC_API_KEY real?).',
+    );
+    process.exitCode = 1;
+  } else {
+    console.log('B. resume from the store with an EMPTY config dir', dirB);
+    const b = await turn('What is the codeword? Reply with just the word.', a.sessionId, dirB);
+    console.log(`   reply="${b.reply.trim()}" threw="${b.threw}"`);
+    console.log(
+      b.reply.toUpperCase().includes(CODEWORD)
+        ? '   PASS: the conversation survived without any local transcript.'
+        : '   FAIL: resume from the store did not restore the conversation.',
+    );
 
-  console.log('C. resume a session id that exists nowhere');
-  const missing = randomUUID();
-  const c = await turn('hello', missing, mkdtempSync(join(tmpdir(), 'probe-c-')));
-  console.log(
-    `   threw="${c.threw}" resultSubtype="${c.resultSubtype}" sawAssistantOutput=${c.seenAssistant}`,
-  );
-  console.log(
-    c.threw && !c.seenAssistant
-      ? '   MATCHES runtime.ts: a spawn-level throw before any assistant output (the retry condition).'
-      : '   DOES NOT MATCH the runtime.ts retry condition: update RunFailed handling before relying on it.',
-  );
+    console.log('C. resume a session id that exists nowhere');
+    const c = await turn('hello', randomUUID(), dirC);
+    console.log(
+      `   threw="${c.threw}" resultSubtype="${c.resultSubtype}" sawAssistantOutput=${c.seenAssistant}`,
+    );
+    console.log(`   reply="${c.reply.trim()}" stderrTail=${JSON.stringify(c.stderrTail)}`);
+    if (c.threw && !c.seenAssistant) {
+      console.log(
+        '   MATCHES runtime.ts: an unknown resume throws before any assistant output, so the retry-once-without-resume branch will fire.',
+      );
+    } else if (c.threw) {
+      console.log(
+        '   THREW AFTER OUTPUT: runtime.ts will NOT retry (output had started); an unknown resume fails mid-run. Review RunFailed.sawOutput before relying on the retry.',
+      );
+    } else if (c.resultSubtype !== 'success') {
+      console.log(
+        `   ERROR RESULT, NOT A THROW: an unknown resume yields a result with subtype ${c.resultSubtype}; runtime.ts's retry only handles throws — handle result errors for resumes or rely on the pre-check (sessionExists) alone.`,
+      );
+    } else {
+      console.log(
+        '   SILENT SUCCESS: the SDK started a fresh session for an unknown id. The retry branch never fires; the sessionExists pre-check is what protects the owner, and that is fine.',
+      );
+    }
+  }
 } finally {
-  if (probedSessionId) await deleteSessionEntries(probedSessionId);
-  await pool.end();
+  try {
+    for (const id of seenSessionIds) {
+      try {
+        await deleteSessionEntries(id);
+      } catch (error) {
+        console.log(`   cleanup of ${id} failed: ${(error as Error).message}`);
+      }
+    }
+    for (const dir of tempDirs) rmSync(dir, { recursive: true, force: true });
+  } finally {
+    await pool.end();
+  }
 }
