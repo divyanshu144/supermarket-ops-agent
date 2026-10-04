@@ -1,0 +1,117 @@
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
+import { eq, inArray } from 'drizzle-orm';
+import { db, pool } from '../db/client.js';
+import { inviteCodes, stores } from '../db/schema.js';
+import { createInvite, hasStore, listInvites, redeemInvite, revokeInvite } from './access.js';
+
+const A = 999100002n;
+const B = 999100003n;
+const GROUP = -999100004n; // Telegram group chat ids are negative
+const made: string[] = [];
+
+async function invite() {
+  const created = await createInvite();
+  made.push(created.id);
+  return created;
+}
+
+afterEach(async () => {
+  await db.delete(stores).where(inArray(stores.id, [A, B, GROUP]));
+});
+
+afterAll(async () => {
+  if (made.length) await db.delete(inviteCodes).where(inArray(inviteCodes.id, made));
+  await db.delete(stores).where(inArray(stores.id, [A, B, GROUP]));
+  await pool.end();
+});
+
+describe('hasStore', () => {
+  it('is false before provisioning and true after redemption', async () => {
+    expect(await hasStore(A)).toBe(false);
+    const { code } = await invite();
+    await redeemInvite(code, A);
+    expect(await hasStore(A)).toBe(true);
+  });
+});
+
+describe('createInvite', () => {
+  it('stores only a hash, never the plaintext code', async () => {
+    const { id, code } = await invite();
+    const [row] = await db.select().from(inviteCodes).where(eq(inviteCodes.id, id));
+    expect(row!.codeHash).not.toContain(code);
+    expect(row!.codeHash).toHaveLength(64);
+  });
+
+  it('issues a lowercase code with no ambiguous characters', async () => {
+    const { code } = await invite();
+    expect(code).toMatch(/^[a-hj-km-np-z2-9]{12}$/);
+  });
+});
+
+describe('redeemInvite', () => {
+  it('provisions a store and records who used the code', async () => {
+    const { id, code } = await invite();
+    expect(await redeemInvite(code, A)).toBe('redeemed');
+    expect(await hasStore(A)).toBe(true);
+    const [row] = await db.select().from(inviteCodes).where(eq(inviteCodes.id, id));
+    expect(row!.usedByChat).toBe(A);
+    expect(row!.usedAt).not.toBeNull();
+  });
+
+  it('refuses a second redemption and creates no second store', async () => {
+    const { code } = await invite();
+    await redeemInvite(code, A);
+    expect(await redeemInvite(code, B)).toBe('invalid');
+    expect(await hasStore(B)).toBe(false);
+  });
+
+  it('lets exactly one of two simultaneous redemptions win', async () => {
+    const { code } = await invite();
+    const results = await Promise.all([redeemInvite(code, A), redeemInvite(code, B)]);
+    expect([...results].sort()).toEqual(['invalid', 'redeemed']);
+    const owners = [await hasStore(A), await hasStore(B)].filter(Boolean);
+    expect(owners).toHaveLength(1);
+  });
+
+  it('rejects an unknown code', async () => {
+    expect(await redeemInvite('zzzzzzzzzzzz', A)).toBe('invalid');
+    expect(await hasStore(A)).toBe(false);
+  });
+
+  it('rejects a revoked code', async () => {
+    const { id, code } = await invite();
+    expect(await revokeInvite(id)).toBe(true);
+    expect(await redeemInvite(code, A)).toBe('invalid');
+    expect(await hasStore(A)).toBe(false);
+  });
+
+  it('accepts a code typed in upper case with stray spaces', async () => {
+    const { code } = await invite();
+    expect(await redeemInvite(`  ${code.toUpperCase()} `, A)).toBe('redeemed');
+  });
+
+  it('works from a group chat with a negative id', async () => {
+    const { code } = await invite();
+    expect(await redeemInvite(code, GROUP)).toBe('redeemed');
+    expect(await hasStore(GROUP)).toBe(true);
+  });
+});
+
+describe('revokeInvite', () => {
+  it('does not revoke a code that was already redeemed', async () => {
+    const { id, code } = await invite();
+    await redeemInvite(code, A);
+    expect(await revokeInvite(id)).toBe(false);
+    expect(await hasStore(A)).toBe(true);
+  });
+});
+
+describe('listInvites', () => {
+  it('lists codes without any code material', async () => {
+    const { id } = await invite();
+    const rows = await listInvites();
+    const row = rows.find((r) => r.id === id);
+    expect(row).toBeDefined();
+    expect(Object.keys(row!)).not.toContain('codeHash');
+  });
+});
