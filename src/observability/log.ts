@@ -1,11 +1,16 @@
 import { redact } from '../telegram/redact.js';
 
+export type TurnOutcome =
+  'ok' | 'error' | 'max_turns' | 'max_budget' | 'timeout' | 'rate_limited' | 'daily_cap';
+
 export interface TurnLog {
   updateId: bigint;
   storeId: bigint;
   tools: string[];
   durationMs: number;
-  outcome: 'ok' | 'error';
+  outcome: TurnOutcome;
+  costUsd?: number;
+  numTurns?: number;
   text?: string;
   error?: unknown;
 }
@@ -30,6 +35,8 @@ export function logTurn(entry: TurnLog, options: LogOptions = { includeText: fal
     outcome: entry.outcome,
   };
 
+  if (entry.costUsd !== undefined) line.cost_usd = entry.costUsd;
+  if (entry.numTurns !== undefined) line.num_turns = entry.numTurns;
   if (options.includeText && entry.text !== undefined) line.text = entry.text;
   if (entry.error !== undefined) line.error = redact(entry.error);
 

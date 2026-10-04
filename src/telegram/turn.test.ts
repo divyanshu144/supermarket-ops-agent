@@ -8,7 +8,15 @@ import { claimUpdate } from '../repositories/updates.js';
 // handleTurn calls runAgent, which calls the real Anthropic API. Mocked so this test exercises
 // only the claim/skip-claim branch the alreadyClaimed option controls, with no network call and
 // no dependency on API credit.
-const runAgentMock = vi.fn(async () => ({ reply: 'ok', sessionId: 'sess-1', toolsUsed: [] }));
+const runAgentMock = vi.fn(async () => ({
+  reply: 'ok',
+  sessionId: 'sess-1',
+  toolsUsed: [],
+  outcome: 'ok' as const,
+  totalCostUsd: 0,
+  turnCostUsd: 0,
+  numTurns: 1,
+}));
 vi.mock('../agent/runtime.js', () => ({ runAgent: () => runAgentMock() }));
 
 const { handleTurn } = await import('./turn.js');

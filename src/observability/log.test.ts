@@ -49,4 +49,21 @@ describe('logTurn', () => {
     });
     expect(written[0]).not.toContain('AAHkq2LpXvBn3RtYw8ZcQe1FgH5JmNoPqRs');
   });
+
+  it('records cost, turn count and the wider outcome set', () => {
+    logTurn({
+      updateId: 1n,
+      storeId: 2n,
+      tools: [],
+      durationMs: 5,
+      outcome: 'daily_cap',
+      costUsd: 0.1234,
+      numTurns: 3,
+    });
+    expect(JSON.parse(written[0]!)).toMatchObject({
+      outcome: 'daily_cap',
+      cost_usd: 0.1234,
+      num_turns: 3,
+    });
+  });
 });
