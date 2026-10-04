@@ -17,15 +17,27 @@ console.log('Migrations up to date.');
 
 // A deploy can start this process while the previous one is still draining a turn. Wait for it to
 // exit (its connection closes, freeing the lock) before touching claims or polling.
-await acquireInstanceLock();
+let shuttingDown = false;
+
+await acquireInstanceLock({
+  // The lock connection died: the lock is gone and a new instance may already be starting. Stop
+  // taking new work, let the turn in flight finish, then exit non-zero so Railway's restart
+  // policy brings us back to re-acquire the lock. Not when a normal shutdown is already running.
+  onLost: () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.error(
+      JSON.stringify({ scope: 'instance-lock', warning: 'lock lost; draining and exiting' }),
+    );
+    void beginDrain(env.SHUTDOWN_GRACE_MS).then(() => process.exit(1));
+  },
+});
 
 // The instance lock guarantees the previous process has exited, so every claim still 'claimed'
 // now belongs to a dead process. Expire them so Telegram's redelivery of those updates is
 // reclaimed instead of dropped as "in flight".
 const expired = await expireInFlightClaims();
 if (expired > 0) console.log(`Expired ${expired} in-flight claim(s) from the previous process.`);
-
-let shuttingDown = false;
 
 async function shutdown(signal: string): Promise<void> {
   if (shuttingDown) return;
