@@ -146,8 +146,9 @@ Remaining sub-projects, each planned when its turn comes:
 - **D. Correctness audit** — gapless GST invoice numbers, IST day boundaries, injection through
   stored names, artifact cleanup, khata export/delete.
 - **E. Subagents** — one read-only analytics/deck subagent, kept only if measurement shows it pays.
-- **F. Submission packaging** — trim README to about a page, move depth to `docs/DESIGN.md`, bring
-  HANDOFF and todo current, recording.
+- **F. Submission packaging** — README trimmed to 95 lines with the full text moved to
+  `docs/DESIGN.md` (done on `readme-trim`, author still to read the wording); bring HANDOFF and todo
+  current; recording.
 
 ## Open questions
 
