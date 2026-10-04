@@ -48,8 +48,8 @@ export type RedeemResult = 'redeemed' | 'invalid';
  * Redeems a code and provisions the caller's store.
  *
  * The claim is one conditional UPDATE, so two simultaneous redemptions cannot both succeed —
- * not a read-then-write. If provisioning then fails, the code is released: a database blip
- * must not cost the owner their only invite.
+ * not a read-then-write. If provisioning then fails before the chat has a store, the code is released: a database blip
+ * must not cost the owner their only invite. If the store row already exists, the code stays used.
  */
 export async function redeemInvite(code: string, chatId: bigint): Promise<RedeemResult> {
   const claimed = await db
@@ -69,10 +69,20 @@ export async function redeemInvite(code: string, chatId: bigint): Promise<Redeem
   try {
     await provisionStore(chatId);
   } catch (error) {
-    await db
-      .update(inviteCodes)
-      .set({ usedByChat: null, usedAt: null })
-      .where(eq(inviteCodes.id, claimed[0]!.id));
+    // Release the code only if the chat still has NO store. provisionStore can fail after the
+    // store row committed (seeding); the chat then already owns a store, and releasing the code
+    // would let another chat redeem it too: one invite, two stores. A secondary failure here
+    // must not mask the original error.
+    try {
+      if (!(await hasStore(chatId))) {
+        await db
+          .update(inviteCodes)
+          .set({ usedByChat: null, usedAt: null })
+          .where(eq(inviteCodes.id, claimed[0]!.id));
+      }
+    } catch {
+      // swallowed: the original error is what the caller needs
+    }
     throw error;
   }
   return 'redeemed';
