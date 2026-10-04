@@ -41,6 +41,7 @@ describe('redeemInvite when provisioning fails', () => {
     // The released code works for another chat (the mock now inserts a real store row).
     provision.mockImplementationOnce(async (chatId: bigint) => {
       await db.insert(stores).values({ id: chatId, name: 'Test', gstin: 'X' });
+      return { id: chatId, created: true };
     });
     expect(await redeemInvite(code, CHAT_B)).toBe('redeemed');
     expect(await hasStore(CHAT_B)).toBe(true);
