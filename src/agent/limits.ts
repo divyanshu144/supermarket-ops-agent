@@ -33,18 +33,30 @@ export function microUsd(usd: number | undefined): number {
 }
 
 /**
- * Per the Agent SDK docs, `total_cost_usd` on a resumed session includes the session's earlier
- * spend. `src/agent/cost.probe.ts` confirms this and whether `maxBudgetUsd` compares against
- * the same cumulative figure. If the probe shows per-call semantics, flip this to false — the
- * two helpers below are the only code that depends on it.
+ * Two independent SDK facts, both taken from the docs and both UNVERIFIED until
+ * `src/agent/cost.probe.ts` has been run against the live API (Q1 sets this one, Q2 the next).
+ *
+ * SDK_COST_IS_CUMULATIVE drives `turnCostUsd`: is `total_cost_usd` on a resumed session the
+ * session's lifetime total (true) or only this call (false)? If it is really per-call but this
+ * says true, the daily budget UNDER-counts (we subtract the prior spend from a figure that never
+ * included it) and the per-run cap ratchets upward as the stored session total grows.
  */
 export const SDK_COST_IS_CUMULATIVE = true;
+
+/**
+ * SDK_BUDGET_IS_CUMULATIVE drives `perRunBudgetUsd`: is `maxBudgetUsd` compared against that
+ * cumulative session total (true) or only this run's spend (false)? If the SDK compares against
+ * the cumulative total but this says false, the per-run cap effectively becomes cap + lifetime
+ * session spend until `/new`, i.e. it stops bounding a run. If it is per-run but this says true,
+ * the cap is looser than intended by the prior spend.
+ */
+export const SDK_BUDGET_IS_CUMULATIVE = true;
 
 /** The `maxBudgetUsd` to pass so the cap bounds THIS run, not the whole conversation. */
 export function perRunBudgetUsd(
   cap: number,
   priorUsd: number,
-  cumulative: boolean = SDK_COST_IS_CUMULATIVE,
+  cumulative: boolean = SDK_BUDGET_IS_CUMULATIVE,
 ): number {
   return cumulative ? cap + priorUsd : cap;
 }

@@ -12,10 +12,20 @@
  *       PER-RUN, or the budget is only checked between turns and this single-call run slipped
  *       through, which is INCONCLUSIVE.
  *
- * Reading an ambiguous result: the shipped default (pass cap + priorCost) is the safe choice either
- * way. Worst case it is looser than intended, never a spurious stop.
+ * Q1 sets SDK_COST_IS_CUMULATIVE and Q2 sets SDK_BUDGET_IS_CUMULATIVE in limits.ts; they are
+ * independent facts and both ship `true` UNVERIFIED. The consequences of a wrong value:
+ *   - cost total is really per-call but SDK_COST_IS_CUMULATIVE is true: the daily budget
+ *     under-counts and the per-run cap ratchets upward.
+ *   - total is cumulative but the cap is really per-run and SDK_BUDGET_IS_CUMULATIVE is true: the
+ *     cap is looser than intended by the prior spend. The reverse (cap compared against the
+ *     cumulative total, constant false): the per-run cap becomes cap + lifetime session spend
+ *     until `/new`.
  *
- * Record the result in tasks/agent_memory.md and set SDK_COST_IS_CUMULATIVE in limits.ts.
+ * Q3 (printed at the end): does resuming return the SAME session id? If turn 2's session_id
+ * differs from turn 1's, a resume forks a new session, which matters for the deferred
+ * failed-resume cost fix.
+ *
+ * Record the result in tasks/agent_memory.md and set both constants in limits.ts.
  */
 import 'dotenv/config';
 import { query } from '@anthropic-ai/claude-agent-sdk';
@@ -75,4 +85,11 @@ console.log(
     (three.subtype === 'error_max_budget_usd'
       ? 'cap is CUMULATIVE'
       : 'cap is PER-RUN, OR the budget is only checked between turns and this single-call run slipped through (INCONCLUSIVE; the shipped default is the safe choice either way)'),
+);
+
+console.log(
+  `\nQ3: turn 1 session ${one.sessionId}, turn 2 session ${two.sessionId} -> ` +
+    (one.sessionId === two.sessionId
+      ? 'resume KEEPS the same session id'
+      : 'resume returns a DIFFERENT session id (the stored id must be updated every turn)'),
 );

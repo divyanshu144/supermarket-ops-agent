@@ -13,7 +13,7 @@ process.env.AGENT_TURN_TIMEOUT_MS = '50';
 type Msg = Record<string, unknown>;
 interface QueryArgs {
   prompt: string;
-  options: { abortController: AbortController };
+  options: { abortController: AbortController; maxBudgetUsd?: number };
 }
 
 const { query } = await import('@anthropic-ai/claude-agent-sdk');
@@ -82,7 +82,8 @@ describe('runAgent', () => {
     const r = await runAgent({ text: 'hi', priorCostUsd: 0.7 });
     expect(r.outcome).toBe('timeout');
     expect(r.totalCostUsd).toBe(0.7);
-    expect(r.turnCostUsd).toBe(0);
+    // Unknown real spend: charge the per-run cap (default 0.5) so the daily budget over-counts.
+    expect(r.turnCostUsd).toBe(0.5);
     expect(r.reply).toBe(OUTCOME_REPLY.timeout);
   });
 
@@ -91,6 +92,46 @@ describe('runAgent', () => {
     const r = await runAgent({ text: 'hi' });
     expect(r.outcome).toBe('ok');
     expect(r.reply).toBe('done');
+    expect(r.turnCostUsd).toBeCloseTo(0.3); // real cost, not the cap
+  });
+
+  it('passes the bare cap with no prior spend and cap + prior on a resumed session', async () => {
+    fake([system, text('a'), result('success', false, 0.1, 1)], 'end');
+    await runAgent({ text: 'hi' });
+    const first = (mockQuery.mock.calls[0]![0] as QueryArgs).options.maxBudgetUsd;
+    expect(first).toBe(0.5);
+
+    mockQuery.mockReset();
+    fake([system, text('a'), result('success', false, 0.2, 1)], 'end');
+    await runAgent({ text: 'hi', sessionId: 'sess-1', priorCostUsd: 0.1 });
+    const second = (mockQuery.mock.calls[0]![0] as QueryArgs).options.maxBudgetUsd;
+    expect(second).toBeCloseTo(0.6);
+  });
+
+  it('warns once, with numbers only, when a resumed total falls below the prior total', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      fake([system, text('secret reply'), result('success', false, 0.05, 1)], 'end');
+      await runAgent({ text: 'hi', sessionId: 'sess-1', priorCostUsd: 0.3 });
+      expect(warn).toHaveBeenCalledTimes(1);
+      const line = JSON.parse(String(warn.mock.calls[0]![0]));
+      expect(line).toMatchObject({ scope: 'cost', prior: 0.3, total: 0.05 });
+      expect(JSON.stringify(line)).not.toContain('secret');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('does not warn on a normal resume or on a fresh session', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      fake([system, text('a'), result('success', false, 0.4, 1)], 'end');
+      await runAgent({ text: 'hi', sessionId: 'sess-1', priorCostUsd: 0.3 });
+      await runAgent({ text: 'hi' });
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it('rethrows a genuine failure with no result and no timeout', async () => {

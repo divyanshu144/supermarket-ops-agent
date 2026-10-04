@@ -5,6 +5,7 @@ import {
   classifyResult,
   perRunBudgetUsd,
   turnCostUsd,
+  SDK_COST_IS_CUMULATIVE,
   OUTCOME_REPLY,
   type AgentOutcome,
 } from './limits.js';
@@ -102,6 +103,7 @@ export async function runAgent(input: {
   let outcome: AgentOutcome | undefined;
   let totalCostUsd = prior;
   let numTurns = 0;
+  let sawResult = false;
 
   try {
     for await (const message of stream) {
@@ -115,6 +117,7 @@ export async function runAgent(input: {
         }
       }
       if (message.type === 'result') {
+        sawResult = true;
         outcome = classifyResult(message);
         totalCostUsd = message.total_cost_usd;
         numTurns = message.num_turns;
@@ -130,7 +133,26 @@ export async function runAgent(input: {
   // Only a run that produced no result is a timeout; a late abort must not overwrite a real one.
   if (outcome === undefined && timedOut) outcome = 'timeout';
 
+  // A timed-out run produced no result, so its real spend is unknown. Charge the daily budget the
+  // per-run cap (worst case for an aborted run) so it over-counts rather than under-counts. The
+  // session total stays at `prior` so the cumulative chain is untouched. A late abort AFTER a
+  // result keeps the real cost.
+  const timedOutWithoutResult = outcome === 'timeout' && !sawResult;
   const finalOutcome = outcome ?? 'error';
+
+  // Tripwire: a resumed run whose cumulative total went DOWN means either the cost total is
+  // really per-call or the resume silently started a fresh session. Neither is visible otherwise.
+  if (input.sessionId && sawResult && SDK_COST_IS_CUMULATIVE && totalCostUsd < prior) {
+    console.warn(
+      JSON.stringify({
+        scope: 'cost',
+        warning:
+          'resumed run total below prior; cost total may be per-call or the resume started a fresh session',
+        prior,
+        total: totalCostUsd,
+      }),
+    );
+  }
   const reply = finalOutcome === 'ok' ? chunks.join('').trim() : OUTCOME_REPLY[finalOutcome];
 
   return {
@@ -139,7 +161,7 @@ export async function runAgent(input: {
     toolsUsed,
     outcome: finalOutcome,
     totalCostUsd,
-    turnCostUsd: turnCostUsd(totalCostUsd, prior),
+    turnCostUsd: timedOutWithoutResult ? limits.maxBudgetUsd : turnCostUsd(totalCostUsd, prior),
     numTurns,
   };
 }
