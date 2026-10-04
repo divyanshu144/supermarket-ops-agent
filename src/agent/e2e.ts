@@ -182,12 +182,14 @@ async function main(): Promise<void> {
   await provisionStore(STORE); // seeds the catalogue and two weeks of history
 
   let sessionId: string | undefined;
+  let priorCostUsd = 0;
   let updateId = 1n;
   const failures: string[] = [];
 
   for (const beat of BEATS) {
     if (beat.freshChat) {
       sessionId = undefined; // exactly what /new does: drop the conversation, keep the shop
+      priorCostUsd = 0;
       console.log('\n--- /new (fresh conversation) ---');
     }
 
@@ -197,9 +199,10 @@ async function main(): Promise<void> {
     // Read preferences fresh each turn, exactly as the Telegram adapter does.
     const preferences = await readPreferences(STORE);
     const result = await toolContext.run(context, () =>
-      runAgent({ text: beat.say, sessionId, preferences }),
+      runAgent({ text: beat.say, sessionId, preferences, priorCostUsd }),
     );
     sessionId = result.sessionId || sessionId;
+    priorCostUsd = result.totalCostUsd;
     updateId += 1n;
 
     const problem = await beat.check(result.reply, result.toolsUsed, context.artifacts);
@@ -209,9 +212,11 @@ async function main(): Promise<void> {
     console.log(`  agent : ${result.reply.replace(/\n/g, ' ').slice(0, 160)}`);
     console.log(`  tools : ${result.toolsUsed.join(', ') || '(none)'}`);
     console.log(`  time  : ${Date.now() - started}ms`);
+    console.log(`  cost  : $${result.turnCostUsd.toFixed(4)} · ${result.outcome}`);
     console.log(`  result: ${problem ? `FAIL — ${problem}` : 'pass'}`);
 
-    if (problem) failures.push(`${beat.name}: ${problem}`);
+    const failure = problem ?? (result.outcome !== 'ok' ? `outcome ${result.outcome}` : null);
+    if (failure) failures.push(`${beat.name}: ${failure}`);
   }
 
   console.log('\n================ END-TO-END RESULT ================');

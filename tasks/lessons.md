@@ -73,3 +73,34 @@ swallows the owner's message.
 duplicate before designing the check. "Could this arrive twice?" is the wrong question;
 "under what exact failure does it arrive twice, and what state am I in then?" is the right one.
 A completion marker and a claim look identical until you ask that.
+
+---
+
+## 2026-10-04 — An authorization gate with its own idea of "/start"
+
+**What happened:** The access gate let `/start@otherbot hi` through the allow-list; it fell into the
+text handler, which provisioned a store for a stranger.
+
+**Root cause:** Two definitions of "is this /start". The gate parsed the command text itself; grammY's
+`bot.command` requires the entity and the bot's own @username. The gate was more permissive than the
+framework, and the downstream handler would create a store for whoever reached it.
+
+**Next time:** Authorization checks must use the framework's own matcher, and the downstream handler
+must fail closed rather than create the resource.
+
+---
+
+## 2026-10-04 — Recovery designed on unverified library and deploy assumptions
+
+**What happened:** The spec said an interrupted turn "is recovered by redelivery as before", and the
+SIGTERM handler called `bot.stop()`. Reading the installed source showed both were wrong.
+
+**Root cause:** Unverified assumptions about library behaviour: that `bot.stop()` waits for handlers
+(it confirms the update being handled), and that a fresh claim after a restart is reclaimable (the
+300 s stale window drops it). The fix for the second, expiring claims at boot, then assumed the
+previous process was dead, which rested on deploy configuration (`overlapSeconds`, one replica)
+rather than anything enforced.
+
+**Next time:** Read the library source for the exact shutdown/confirmation semantics before designing
+recovery on top of it. A recovery step that assumes the previous process is dead must be backed by a
+mutual-exclusion primitive (here a Postgres advisory lock), not by deploy configuration.

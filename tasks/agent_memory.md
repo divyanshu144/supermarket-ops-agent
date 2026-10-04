@@ -25,6 +25,7 @@ If a locked decision needs to change, change it here first and say so explicitly
 | AD-12 | Railway for deployment | Managed Postgres in one click, stays running through review. |
 | AD-13 | Price, GST rate and HSN **snapshotted onto `bill_items` at add time** | A bill built across several messages must not shift if the product is edited mid-build. |
 | AD-14 | Scope: §3 capabilities + §4 hard parts. **Zero §7 stretch items.** | 2-day fixed deadline. §4 is what is graded. |
+| AD-32 | **B keeps sequential polling and mirrors sessions in Postgres** (`session_entries` behind the SDK `sessionStore`). | The grammY runner confirms offsets early and can lose up to 100 updates on kill (from reading grammY's source). Sessions are expected to survive redeploys; unverified until `src/agent/session-store.probe.ts` passes. |
 
 ### Revised 2026-07-29 after spec review
 
@@ -46,11 +47,32 @@ If a locked decision needs to change, change it here first and say so explicitly
 
 ## Known Gotchas
 
+- **SDK cost semantics are unverified.** The SDK docs state `total_cost_usd` on a resumed session
+  includes earlier spend; `SDK_COST_IS_CUMULATIVE = true` in `src/agent/limits.ts` rests on the
+  docs only. `pnpm tsx src/agent/cost.probe.ts` and `pnpm tsx src/agent/e2e.ts` have NOT yet been
+  run and must be run with a real key before relying on the per-run budget cap.
 - **The `claude-api` skill does not cover the Claude Agent SDK.** They are different packages.
   Agent SDK docs live at `code.claude.com/docs/en/agent-sdk`. Verify its surface there rather
   than from memory or from the Claude API skill's tool-runner examples.
 - **An empty store produces an empty analysis deck.** Seeding must include ~2 weeks of synthetic
   sales history or one of the two headline artifacts demos as blank charts.
+- **grammY `bot.stop()` confirms the in-flight update** (`offset = lastTriedUpdateId + 1`) and does
+  not wait for the handler, so a SIGTERM path that calls it loses the owner's message. Shutdown
+  drains instead and exits without `stop()` (`telegram/drain.ts`).
+- **`claimUpdate`'s 300 s stale window drops a redelivered update after a fast restart**, hence the
+  boot-time claim expiry (`expireInFlightClaims`).
+- **The boot-time claim expiry is only safe because of the instance lock.** A Railway handoff may
+  run two containers briefly (not verified); `overlapSeconds` is not a guarantee. `db/instance-lock.ts` makes the
+  new instance wait for the old one's connection to close. The lock is lost silently if its
+  connection drops mid-life, and the first deploy that introduces it replaces code that holds no lock.
+- **The grammY runner confirms offsets early** (up to 100 updates lost on kill), which is why
+  sequential polling was kept.
+- **The SDK `SessionStore` is `@alpha`**, retries `append`, wants `uuid` idempotency, and
+  `mirror_error` text can contain query parameters (log the session id only).
+- **Postgres `jsonb` rejects U+0000.** Transcript entries are stored with NUL characters removed
+  (`repositories/session-entries.ts`).
+- **Live probe C output (resume from a store with no transcript): not yet captured.** Run
+  `pnpm tsx src/agent/session-store.probe.ts` with a real key and paste Q-C's output here.
 - **cSpell flags every domain term** (khata, kirana, atta, paise, CGST, GSTIN…). Project
   dictionary is in `cspell.json`; add new domain words there rather than ignoring the warnings.
 

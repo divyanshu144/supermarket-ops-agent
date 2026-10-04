@@ -28,6 +28,15 @@ long-polling is outbound-only — so the hosting choice is mostly a billing deci
 | `AGENT_EFFORT` | no, default `medium` | `low` \| `medium` \| `high`. |
 | `OPENAI_API_KEY` | no | Voice transcription. Without it the bot runs normally and replies that voice isn't configured. |
 | `LOG_MESSAGE_TEXT` | no | `true` \| `false`. Defaults off in production, on elsewhere. |
+| `AGENT_MODEL` | no, default `claude-opus-5` | Model for the agent. |
+| `AGENT_FALLBACK_MODEL` | no, unset | Model to fall back to if the primary is unavailable. |
+| `AGENT_MAX_TURNS` | no, default `15` | Per-run cap on agent turns. |
+| `AGENT_MAX_BUDGET_USD` | no, default `0.5` | Per-run spend cap. |
+| `AGENT_TURN_TIMEOUT_MS` | no, default `90000` | A run still going after this is aborted. |
+| `SHUTDOWN_GRACE_MS` | no, default `30000`, max `120000` | How long SIGTERM/SIGINT waits for the turn in flight before exiting. |
+| `STORE_DAILY_BUDGET_USD` | no, default `5` | Per-store daily spend cap; turns are refused once it is reached. |
+| `RATE_LIMIT_TURNS` | no, default `20` | Turns allowed per chat per window. |
+| `RATE_LIMIT_WINDOW_S` | no, default `600` | Rate-limit window, in seconds. |
 
 Every variable is validated at boot, so a missing or malformed value fails immediately with a
 readable message rather than mid-conversation.
@@ -38,10 +47,122 @@ added. No manual migration step is needed on any host.
 
 ---
 
+## Deploys and shutdown
+
+On SIGTERM/SIGINT the bot stops starting work, drains the turn in flight for up to
+`SHUTDOWN_GRACE_MS` (default 30 s), and exits 0. It deliberately does not call `bot.stop()`:
+grammY's `stop()` confirms the update being handled, so a turn cut off by the exit would be lost
+instead of redelivered. The exit code stays 0 even when the grace period elapses; the log line
+says which happened ("Idle, exiting." or "Grace period elapsed with a turn still running").
+Anything not confirmed is redelivered by Telegram to the next process.
+
+**Boot order:** migrations, then acquire the instance lock, then expire in-flight claims, then
+start polling.
+
+- **The instance lock** is a process-lifetime Postgres advisory lock (key in
+  `src/db/instance-lock.ts`). A new instance waits, polling, until the old instance's database
+  connection closes, for up to 180 s (longer than the maximum `SHUTDOWN_GRACE_MS`), then fails to
+  start. So every `claimed` row present at the moment of expiry belongs to a dead process (subject to the limits below).
+- **Expiring claims** is what lets a redelivered update be reclaimed; without it, it would be
+  dropped as "still running" for up to five minutes.
+- **Deploy configuration is not the guarantee.** `railway.json` asks Railway not to overlap
+  containers (`overlapSeconds: 0`), but that is a request whose behaviour is unverified; the lock
+  is what enforces it.
+- **One replica is still required**: Telegram long-polling allows one poller per token. The lock
+  makes a second instance block and then fail, rather than expire the first one's live claims.
+
+Limits you should know about:
+
+- **First-deploy transition.** The deployment being replaced by the release that introduces the
+  lock runs older code and holds no lock, so on that one deploy the new instance can still expire
+  a live claim. Deploy while the shop is idle.
+- **Developers.** `pnpm test` and a running `pnpm dev` bot share `DATABASE_URL` and the lock key.
+  Stop the dev bot before running the tests (or point the tests at a different database),
+  otherwise the instance-lock tests fail.
+- **Migrations run before the lock**, so they execute while the old instance is still serving and
+  must stay backward-compatible with it. Two new instances starting at the same moment are not
+  serialised for migrations.
+- **A lost lock restarts the process.** If the lock connection errors or closes mid-life, the
+  process logs a fixed `instance-lock` line, drains the turn in flight for up to
+  `SHUTDOWN_GRACE_MS` and exits 1, so Railway's restart policy brings it back and it re-acquires
+  the lock. The lock connection sets `tcp_keepalives_idle = 30` (best-effort) so a vanished client
+  host does not leave the server backend holding the lock for the OS keepalive time.
+- **Poolers.** Session-level advisory locks do not work through a transaction-mode connection
+  pooler (PgBouncer-style pooled URLs some hosts offer): the lock would be taken on one server
+  connection and silently dropped or moved. Use a direct or session-mode `DATABASE_URL`. Whether
+  Railway's `DATABASE_URL` is direct is unverified (believed to be).
+- **A healthcheck can deadlock the deploy.** The lock is taken before polling starts, and a new
+  instance waits for it while the old one is still running. If sub-project C adds a `/healthz`,
+  it must be served BEFORE the lock wait and must not report unhealthy merely because the
+  instance is waiting for the lock, or the healthcheck must not gate stopping the old deployment.
+  Otherwise the new instance cannot become healthy while Railway waits for it before stopping the
+  old one, the 180 s lock timeout fires, and the deploy fails. Railway's ordering of "new
+  deployment healthy" versus "stop the old one" is unverified.
+- **Railway timing is not verified.** How long Railway waits between SIGTERM and SIGKILL (its
+  draining setting) versus `SHUTDOWN_GRACE_MS` is unchecked. If it is shorter, the grace period
+  does not take effect. That is still safe (kill, connection closes, lock freed, Telegram
+  redelivers, the boot expiry reclaims the claim) but the model call is paid twice.
+
+## Conversation storage
+
+Agent transcripts are mirrored to Postgres (`session_entries`) so a conversation survives a
+redeploy. Rows are deleted by `/new` and `/reset confirm`; **abandoned conversations accumulate**
+(there is no retention job yet), so watch the table's size. A shop whose stored session predates
+this feature gets one fresh conversation on its first message after the deploy. A mirror write
+that fails is logged with the session id only, never the text, and does not fail the turn.
+
+- A run that retries a failed resume can take up to 2x `AGENT_TURN_TIMEOUT_MS` of wall time (each
+  attempt has its own timer), so weigh that when choosing the shutdown grace period. The first
+  failed attempt's spend is not recorded.
+- A transient failure that throws before any model output on a resumed session takes the retry
+  path and can cost one conversation's context. The retry is logged as a `session` warning
+  carrying the error class name only.
+- Transcript entries are stored with NUL characters removed, because Postgres `jsonb` cannot store
+  them.
+
+---
+
+## Inviting an owner
+
+The bot is private. A chat with no store gets "This is a private bot" and nothing else, and
+`/start <code>` is the only way in. Codes are single-use, shown once, stored hashed.
+
+```bash
+pnpm invite create          # prints the code once
+pnpm invite list            # id, created, state — never the code
+pnpm invite revoke <id>     # only works on an unused code
+```
+
+In the production image the same commands run as `node dist/scripts/invite.js <create|list|revoke>`,
+for example from a shell on the service. If you run it from your machine instead, use the public
+connection string for `DATABASE_URL` (the internal one is not reachable from outside Railway).
+
+The invite CLI loads the full app config, so `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY` (any
+non-empty values) must be set along with `DATABASE_URL` wherever you run it.
+
+Revoking stops an unredeemed code from being redeemed. It does not cut off a shop that already
+redeemed one; that is not built. Removing a store is a manual delete.
+
+Every chat that has ever messaged the bot before invite-only access already owns a store and keeps
+access. Audit them with `SELECT id, name, created_at FROM stores ORDER BY created_at;` and delete
+any you do not recognise (deleting a store cascades to its data).
+
+Known limits: the per-chat rate limiter is in memory and resets on restart (fine for one
+replica); a turn that is aborted by the timeout is charged the full per-run cap to the daily
+budget (a deliberate over-count; the next resumed turn may also over-count because the session
+total keeps its pre-timeout value); a voice note uses two rate-limit slots; `/start <code>` posted
+in a CHANNEL would consume the code and create a store the bot cannot use (redeem only in a private
+chat or group); in a group chat every member acts as the owner and, with Telegram privacy mode on,
+the bot only sees commands and replies there.
+
+---
+
 ## Railway
 
 `Dockerfile` and `railway.json` are committed. `railway.json` pins `numReplicas: 1` and
-`overlapSeconds: 0` — the second prevents a rolling deploy briefly running two containers.
+`overlapSeconds: 0`, which asks Railway not to overlap containers during a deploy. That is a
+request, not a guarantee, and its behaviour has not been verified; the instance lock (see Deploys
+and shutdown) is what actually stops a second instance from expiring live claims.
 
 ### Deploying a change
 
@@ -118,7 +239,12 @@ for a recorded walkthrough; not adequate for "kept running while we review".
    railway logs --lines 20
    ```
 
-   Expect `Applying migrations… / Migrations up to date. / Listening as @divagentBot`.
+   Expect, in order: `Applying migrations…`, `Migrations up to date.`, (`Waiting for the previous
+   instance to exit…`), `Instance lock acquired.`, (`Expired N in-flight claim(s) from the
+   previous process.`), `Starting kirana agent (long-polling)…`, `Listening as @divagentBot`.
+   The two parenthesised lines are normal on an overlapping deploy or after a cut-off turn;
+   "Waiting…" is the lock working. A failure reading `Could not acquire the instance lock` after
+   about 180 s means another instance still holds the lock.
 
 3. Confirm the running build is the one you just shipped:
 

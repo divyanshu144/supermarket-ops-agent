@@ -46,3 +46,60 @@ describe('shouldLogMessageText', () => {
     expect(shouldLogMessageText(loadEnv({ ...valid, NODE_ENV: 'development' }))).toBe(true);
   });
 });
+
+describe('loadEnv limits', () => {
+  it('applies the documented defaults', () => {
+    const env = loadEnv(valid);
+    expect(env.AGENT_MODEL).toBe('claude-opus-5');
+    expect(env.AGENT_FALLBACK_MODEL).toBeUndefined();
+    expect(env.AGENT_MAX_TURNS).toBe(15);
+    expect(env.AGENT_MAX_BUDGET_USD).toBe(0.5);
+    expect(env.AGENT_TURN_TIMEOUT_MS).toBe(90_000);
+    expect(env.STORE_DAILY_BUDGET_USD).toBe(5);
+    expect(env.RATE_LIMIT_TURNS).toBe(20);
+    expect(env.RATE_LIMIT_WINDOW_S).toBe(600);
+  });
+
+  it('coerces numeric strings from the environment', () => {
+    expect(loadEnv({ ...valid, AGENT_MAX_TURNS: '7' }).AGENT_MAX_TURNS).toBe(7);
+    expect(loadEnv({ ...valid, AGENT_MAX_BUDGET_USD: '1.25' }).AGENT_MAX_BUDGET_USD).toBe(1.25);
+  });
+
+  it('caps the turn timeout at 10 minutes', () => {
+    expect(loadEnv({ ...valid, AGENT_TURN_TIMEOUT_MS: '600000' }).AGENT_TURN_TIMEOUT_MS).toBe(
+      600_000,
+    );
+    expect(() => loadEnv({ ...valid, AGENT_TURN_TIMEOUT_MS: '600001' })).toThrow(
+      /AGENT_TURN_TIMEOUT_MS/,
+    );
+  });
+
+  it('rejects an infinite budget cap', () => {
+    expect(() => loadEnv({ ...valid, AGENT_MAX_BUDGET_USD: 'Infinity' })).toThrow(
+      /AGENT_MAX_BUDGET_USD/,
+    );
+  });
+
+  it('rejects a non-positive limit', () => {
+    expect(() => loadEnv({ ...valid, AGENT_MAX_BUDGET_USD: '0' })).toThrow(/AGENT_MAX_BUDGET_USD/);
+    expect(() => loadEnv({ ...valid, RATE_LIMIT_TURNS: '-3' })).toThrow(/RATE_LIMIT_TURNS/);
+  });
+
+  it('rejects a fallback model equal to the primary', () => {
+    expect(() =>
+      loadEnv({ ...valid, AGENT_MODEL: 'claude-opus-5', AGENT_FALLBACK_MODEL: 'claude-opus-5' }),
+    ).toThrow(/AGENT_FALLBACK_MODEL/);
+  });
+});
+
+describe('SHUTDOWN_GRACE_MS', () => {
+  it('defaults to 30 seconds and accepts an override up to two minutes', () => {
+    expect(loadEnv(valid).SHUTDOWN_GRACE_MS).toBe(30_000);
+    expect(loadEnv({ ...valid, SHUTDOWN_GRACE_MS: '120000' }).SHUTDOWN_GRACE_MS).toBe(120_000);
+  });
+
+  it('rejects zero and values above two minutes', () => {
+    expect(() => loadEnv({ ...valid, SHUTDOWN_GRACE_MS: '0' })).toThrow(/SHUTDOWN_GRACE_MS/);
+    expect(() => loadEnv({ ...valid, SHUTDOWN_GRACE_MS: '120001' })).toThrow(/SHUTDOWN_GRACE_MS/);
+  });
+});

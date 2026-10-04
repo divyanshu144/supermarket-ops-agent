@@ -1,11 +1,14 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
-import { processedUpdates, sessions, stores } from '../db/schema.js';
+import { processedUpdates, sessionEntries, sessions, stores } from '../db/schema.js';
+import { appendEntries, sessionHasEntries } from './session-entries.js';
 import {
   claimUpdate,
   clearSession,
   completeUpdate,
+  expireInFlightClaims,
+  getSessionCostMicroUsd,
   getSessionId,
   setSessionId,
 } from './updates.js';
@@ -20,6 +23,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
+  await db.delete(sessionEntries).where(eq(sessionEntries.sessionId, 'sess-to-clear'));
   await db.delete(processedUpdates).where(eq(processedUpdates.updateId, UPD));
   await db.delete(stores).where(eq(stores.id, CHAT));
   await pool.end();
@@ -101,5 +105,81 @@ describe('sessions', () => {
     // /new must not wipe the shop.
     const store = await db.select().from(stores).where(eq(stores.id, CHAT));
     expect(store).toHaveLength(1);
+  });
+});
+
+describe('session cost', () => {
+  it('is zero when there is no session', async () => {
+    expect(await getSessionCostMicroUsd(CHAT)).toBe(0);
+  });
+
+  it('stores and updates the cumulative cost with the session id', async () => {
+    await setSessionId(CHAT, 's1', 400_000);
+    expect(await getSessionCostMicroUsd(CHAT)).toBe(400_000);
+    await setSessionId(CHAT, 's1', 650_000);
+    expect(await getSessionCostMicroUsd(CHAT)).toBe(650_000);
+  });
+
+  it('resets when the conversation is cleared with /new', async () => {
+    await setSessionId(CHAT, 's1', 400_000);
+    await clearSession(CHAT);
+    expect(await getSessionCostMicroUsd(CHAT)).toBe(0);
+  });
+});
+
+describe('expireInFlightClaims (boot recovery)', () => {
+  it('lets a redelivered update be reclaimed straight away after a restart', async () => {
+    await claimUpdate(UPD, CHAT);
+    // Without recovery the claim is "still in flight elsewhere" for 300 s, so the redelivery is dropped.
+    expect(await claimUpdate(UPD, CHAT)).toBe('duplicate');
+
+    expect(await expireInFlightClaims()).toBeGreaterThanOrEqual(1);
+
+    expect(await claimUpdate(UPD, CHAT)).toBe('reclaimed');
+  });
+
+  it('leaves completed updates alone, so a genuine redelivery is still a duplicate', async () => {
+    await claimUpdate(UPD, CHAT);
+    await completeUpdate(UPD);
+    await expireInFlightClaims();
+    expect(await claimUpdate(UPD, CHAT)).toBe('duplicate');
+  });
+});
+
+describe('expireInFlightClaims only touches in-flight rows', () => {
+  it('does not rewrite the claim time of a completed update', async () => {
+    await claimUpdate(UPD, CHAT);
+    await completeUpdate(UPD);
+    const [before] = await db
+      .select()
+      .from(processedUpdates)
+      .where(eq(processedUpdates.updateId, UPD));
+
+    await expireInFlightClaims();
+
+    const [after] = await db
+      .select()
+      .from(processedUpdates)
+      .where(eq(processedUpdates.updateId, UPD));
+    expect(after!.claimedAt).toEqual(before!.claimedAt);
+  });
+});
+
+describe('clearSession removes the stored transcript', () => {
+  it('deletes the mirrored entries along with the session row', async () => {
+    await setSessionId(CHAT, 'sess-to-clear', 1000);
+    await appendEntries({ projectKey: '/p', sessionId: 'sess-to-clear' }, [
+      { type: 'user', uuid: 'clear-me' },
+    ]);
+    expect(await sessionHasEntries('sess-to-clear')).toBe(true);
+
+    await clearSession(CHAT);
+
+    expect(await sessionHasEntries('sess-to-clear')).toBe(false);
+    expect(await getSessionId(CHAT)).toBeUndefined();
+  });
+
+  it('is a no-op when the shop has no session', async () => {
+    await expect(clearSession(CHAT)).resolves.toBeUndefined();
   });
 });

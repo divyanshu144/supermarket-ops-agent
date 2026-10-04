@@ -29,6 +29,20 @@
       "when": 1785410590849,
       "tag": "0003_friendly_harry_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791107938389,
+      "tag": "0004_volatile_siren",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791136098576,
+      "tag": "0005_free_black_cat",
+      "breakpoints": true
     }
   ]
 }

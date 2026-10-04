@@ -95,9 +95,43 @@ fixes from the final whole-branch review.
 - [x] Gate green: 236 tests, three consecutive clean runs
 - [x] `e2e.ts`: PASS 13/13
 
+## Production hardening — sub-project A: guardrails and cost (branch `production-hardening`)
+
+Plan: `docs/plans/2026-10-04-guardrails-and-cost.md`. Implemented, not merged, not pushed.
+
+- [x] 1. Environment configuration (limits, budget, rate limit, models)
+- [x] 2. Schema and migration (`invite_codes`, `usage`, session cost)
+- [x] 3. Access repository (invite codes, atomic redemption)
+- [x] 4. Usage repository and session cost
+- [x] 5. Rate limiter
+- [x] 6. Agent limits, runtime and cost probe
+- [x] 7. Messages and commands (invite-aware `/start`, confirm-gated `/reset`)
+- [x] 8. Access gate, turn wiring and bot assembly (incl. `/start@otherbot` fix)
+- [x] 9. Invite CLI
+- [x] 10. Documentation and gate (307 tests, three runs)
+- [ ] Live: `pnpm tsx src/agent/cost.probe.ts` (settles `SDK_COST_IS_CUMULATIVE`) — needs credentials
+- [ ] Live: `pnpm tsx src/agent/e2e.ts`, 13 beats ok under the new limits — needs credentials
+- [ ] Live: Telegram checklist (stranger reply, code redeem, reuse rejected, `/reset` vs `/reset confirm`, `cost_usd`/`num_turns` in log) — needs a real bot token
+- [ ] Sub-projects B–F (see `HANDOFF.md`)
+
+## Production hardening — sub-project B: session durability and shutdown (branch `production-hardening-b`)
+
+Plan: `docs/plans/2026-10-04-session-durability-and-shutdown.md`. Implemented, stacked on PR #1, not merged.
+
+- [x] 1. Transcript table and repository
+- [x] 2. SDK session-store adapter
+- [x] 3. Clearing a conversation and boot-time claim expiry
+- [x] 4. Runtime: use the store, drop an unknown resume, retry a failed start
+- [x] 5. Live probe for the store (written, not run)
+- [x] 6. Drain gate, graceful shutdown, instance lock and boot recovery
+- [x] 7. Documentation and gate
+- [ ] Live: `pnpm tsx src/agent/session-store.probe.ts` (B must PASS; paste C's output into agent_memory) — needs credentials
+- [ ] Check Railway's SIGTERM-to-SIGKILL window against `SHUTDOWN_GRACE_MS` — needs Railway
+- [ ] Deploy while the shop is idle (first-deploy lock transition) — needs Railway
+
 ## Remaining — packaging
 
 - [ ] **Rotate `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY`** — both reached deployment logs
       before the redactor landed
-- [ ] Merge `improvements` → `main`, redeploy so Railway runs this code
+- [x] Merge `improvements` → `main` (redeploy still needed so Railway runs it)
 - [ ] Make the repo public (`gh repo edit … --visibility public`) — user runs this

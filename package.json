@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "db:up": "docker compose up -d postgres",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "invite": "tsx src/scripts/invite.ts"
   },
   "keywords": [],
   "author": "",
