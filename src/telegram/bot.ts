@@ -6,10 +6,10 @@ import { transcribe } from '../media/transcribe.js';
 import { claimUpdate, completeUpdate } from '../repositories/updates.js';
 import { newCommand, resetCommand, startCommand } from './commands.js';
 import { accessGate } from './gate.js';
-import { RATE_LIMITED_REPLY, WELCOME } from './messages.js';
+import { DAILY_CAP_REPLY, RATE_LIMITED_REPLY, WELCOME } from './messages.js';
 import { turnLimiter } from './rate-limit.js';
 import { redact } from './redact.js';
-import { handleTurn } from './turn.js';
+import { dailyCapReached, handleTurn } from './turn.js';
 
 const env = loadEnv();
 
@@ -101,6 +101,13 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
     // handleTurn consumes one more, which makes a voice note count double — it costs double.
     if (!turnLimiter.tryConsume(String(storeId))) {
       await ctx.reply(RATE_LIMITED_REPLY);
+      await completeUpdate(updateId);
+      return;
+    }
+
+    // Whisper is paid for before handleTurn can refuse, so the daily cap applies here too.
+    if (await dailyCapReached(storeId)) {
+      await ctx.reply(DAILY_CAP_REPLY);
       await completeUpdate(updateId);
       return;
     }

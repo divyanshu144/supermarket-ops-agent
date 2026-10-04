@@ -60,10 +60,10 @@ function makeBot() {
   return bot;
 }
 
-let nextId = 5_000_000;
-function textUpdate(chatId: bigint, text: string) {
+let nextId = Date.now() % 2_000_000_000;
+function textUpdate(chatId: bigint, text: string, opts: { entity?: boolean } = {}) {
   const id = nextId++;
-  const isCommand = text.startsWith('/');
+  const isCommand = opts.entity ?? text.startsWith('/');
   return {
     update_id: id,
     message: {
@@ -162,8 +162,49 @@ describe('access gate', () => {
     const bot = makeBot();
 
     await bot.handleUpdate(textUpdate(GROUP, `/start ${code}`) as never);
+    expect(replies()).toEqual([WELCOME]);
     await bot.handleUpdate(textUpdate(GROUP, 'stock check') as never);
     expect(runAgent).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not let a stranger slip through with /start addressed to another bot', async () => {
+    const bot = makeBot();
+    await bot.handleUpdate(textUpdate(STRANGER, '/start@otherbot hi') as never);
+    expect(replies()).toEqual([PRIVATE_MESSAGE]);
+    expect(runAgent).not.toHaveBeenCalled();
+    expect(
+      await db
+        .select()
+        .from(stores)
+        .where(inArray(stores.id, [STRANGER])),
+    ).toHaveLength(0);
+  });
+
+  it('does not treat /start text with no command entity as a start', async () => {
+    const bot = makeBot();
+    await bot.handleUpdate(textUpdate(STRANGER, '/start hello', { entity: false }) as never);
+    expect(replies()).toEqual([PRIVATE_MESSAGE]);
+    expect(runAgent).not.toHaveBeenCalled();
+    expect(
+      await db
+        .select()
+        .from(stores)
+        .where(inArray(stores.id, [STRANGER])),
+    ).toHaveLength(0);
+  });
+
+  it('redeems /start@<this bot> <code>', async () => {
+    const { id, code } = await createInvite();
+    made.push(id);
+    const bot = makeBot();
+    await bot.handleUpdate(textUpdate(STRANGER, `/start@test_bot ${code}`) as never);
+    expect(replies()).toEqual([WELCOME]);
+    expect(
+      await db
+        .select()
+        .from(stores)
+        .where(inArray(stores.id, [STRANGER])),
+    ).toHaveLength(1);
   });
 
   it('keeps an existing owner working with no code at all', async () => {
@@ -183,6 +224,18 @@ describe('spend and rate guards', () => {
     await bot.handleUpdate(textUpdate(CAPPED, 'hello') as never);
 
     expect(replies()).toEqual([DAILY_CAP_REPLY]);
+    expect(runAgent).not.toHaveBeenCalled();
+  });
+
+  it('refuses a voice note at the cap before downloading or transcribing', async () => {
+    await provisionStore(CAPPED);
+    await recordUsage(CAPPED, microUsd(env.STORE_DAILY_BUDGET_USD));
+    const bot = makeBot();
+
+    await bot.handleUpdate(voiceUpdate(CAPPED) as never);
+
+    expect(replies()).toEqual([DAILY_CAP_REPLY]);
+    expect(downloadTelegramFile).not.toHaveBeenCalled();
     expect(runAgent).not.toHaveBeenCalled();
   });
 

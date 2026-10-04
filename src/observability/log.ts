@@ -1,7 +1,7 @@
 import { redact } from '../telegram/redact.js';
 
 export type TurnOutcome =
-  'ok' | 'error' | 'max_turns' | 'max_budget' | 'timeout' | 'rate_limited' | 'daily_cap';
+  'ok' | 'error' | 'max_turns' | 'max_budget' | 'timeout' | 'rate_limited' | 'daily_cap' | 'denied';
 
 export interface TurnLog {
   updateId: bigint;

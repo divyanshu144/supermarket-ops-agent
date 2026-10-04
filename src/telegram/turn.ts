@@ -1,6 +1,6 @@
 import { InputFile, type Context } from 'grammy';
 import { runAgent } from '../agent/runtime.js';
-import { provisionStore } from '../repositories/stores.js';
+import { hasStore } from '../repositories/access.js';
 import {
   claimUpdate,
   completeUpdate,
@@ -11,7 +11,7 @@ import {
 import { recordUsage, spentTodayMicroUsd } from '../repositories/usage.js';
 import { microUsd } from '../agent/limits.js';
 import { turnLimiter } from './rate-limit.js';
-import { DAILY_CAP_REPLY, RATE_LIMITED_REPLY } from './messages.js';
+import { DAILY_CAP_REPLY, PRIVATE_MESSAGE, RATE_LIMITED_REPLY } from './messages.js';
 import { readPreferences } from '../tools/preferences.js';
 import { newToolContext, toolContext } from '../tools/context.js';
 import { logTurn } from '../observability/log.js';
@@ -20,6 +20,11 @@ import { redact } from './redact.js';
 
 const env = loadEnv();
 const DAILY_CAP_MICRO_USD = microUsd(env.STORE_DAILY_BUDGET_USD);
+
+/** At the cap counts as over it: the budget is a ceiling, not a target. */
+export async function dailyCapReached(storeId: bigint): Promise<boolean> {
+  return (await spentTodayMicroUsd(storeId)) >= DAILY_CAP_MICRO_USD;
+}
 
 /**
  * One owner turn, whatever modality it arrived as.
@@ -51,7 +56,10 @@ export async function handleTurn(
 
   // A refusal completes the update: a redelivery of a message we deliberately declined must
   // not be reprocessed.
-  const refuse = async (outcome: 'rate_limited' | 'daily_cap', message: string): Promise<void> => {
+  const refuse = async (
+    outcome: 'rate_limited' | 'daily_cap' | 'denied',
+    message: string,
+  ): Promise<void> => {
     await ctx.reply(message);
     await completeUpdate(updateId);
     logTurn(
@@ -60,15 +68,19 @@ export async function handleTurn(
     );
   };
 
+  // Second line of defence behind the access gate: a turn never creates a store. The only way
+  // one comes into existence is redeeming an invite code.
+  if (!(await hasStore(storeId))) {
+    return refuse('denied', PRIVATE_MESSAGE);
+  }
+
   if (!turnLimiter.tryConsume(String(storeId))) {
     return refuse('rate_limited', RATE_LIMITED_REPLY);
   }
-  // At the cap counts as over it: the budget is a ceiling, not a target.
-  if ((await spentTodayMicroUsd(storeId)) >= DAILY_CAP_MICRO_USD) {
+  if (await dailyCapReached(storeId)) {
     return refuse('daily_cap', DAILY_CAP_REPLY);
   }
 
-  await provisionStore(storeId);
   await ctx.replyWithChatAction('typing');
 
   try {
@@ -81,9 +93,6 @@ export async function handleTurn(
       runAgent({ text, sessionId, preferences, priorCostUsd: priorMicro / 1_000_000 }),
     );
 
-    if (result.sessionId) {
-      await setSessionId(storeId, result.sessionId, microUsd(result.totalCostUsd));
-    }
     // Accounting must never fail the turn: the owner's reply is more important than the ledger.
     try {
       await recordUsage(storeId, microUsd(result.turnCostUsd));
@@ -91,6 +100,9 @@ export async function handleTurn(
       console.error(redact({ scope: 'usage', storeId: String(storeId), error }));
     }
 
+    if (result.sessionId) {
+      await setSessionId(storeId, result.sessionId, microUsd(result.totalCostUsd));
+    }
     await ctx.reply(result.reply || 'Sorry, I could not work that out.');
 
     // Files the tools produced this turn go out after the reply, so the owner reads the answer

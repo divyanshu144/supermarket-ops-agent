@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { processedUpdates, stores } from '../db/schema.js';
 import { claimUpdate } from '../repositories/updates.js';
+import { provisionStore } from '../repositories/stores.js';
+import { PRIVATE_MESSAGE } from './messages.js';
 
 // handleTurn calls runAgent, which calls the real Anthropic API. Mocked so this test exercises
 // only the claim/skip-claim branch the alreadyClaimed option controls, with no network call and
@@ -47,6 +49,8 @@ beforeEach(async () => {
   runAgentMock.mockClear();
   await db.delete(processedUpdates).where(eq(processedUpdates.updateId, UPD));
   await db.delete(stores).where(eq(stores.id, CHAT));
+  // handleTurn never creates a store, so the owner under test must already exist.
+  await provisionStore(CHAT);
 });
 
 afterAll(async () => {
@@ -87,5 +91,16 @@ describe('handleTurn — alreadyClaimed', () => {
 
     expect(runAgentMock).toHaveBeenCalledOnce();
     expect(await updateStatus()).toBe('done');
+  });
+
+  it('never creates a store: a chat with no store gets the private message and no agent run', async () => {
+    await db.delete(stores).where(eq(stores.id, CHAT));
+    const ctx = fakeCtx();
+
+    await handleTurn(ctx, 'hello');
+
+    expect(ctx.replies).toEqual([PRIVATE_MESSAGE]);
+    expect(runAgentMock).not.toHaveBeenCalled();
+    expect(await db.select().from(stores).where(eq(stores.id, CHAT))).toHaveLength(0);
   });
 });
