@@ -45,7 +45,10 @@ export interface AgentResult {
   sessionId: string;
   toolsUsed: string[];
   outcome: AgentOutcome;
-  /** SDK-reported total for the session so far (cumulative on a resumed session). */
+  /**
+   * Session total so far (cumulative on a resumed session). Equals `priorCostUsd` when no
+   * result message arrived, so the cumulative chain never resets to zero.
+   */
   totalCostUsd: number;
   /** What this run cost. Feeds the daily budget. */
   turnCostUsd: number;
@@ -97,7 +100,7 @@ export async function runAgent(input: {
   const toolsUsed: string[] = [];
   let sessionId = input.sessionId ?? '';
   let outcome: AgentOutcome | undefined;
-  let totalCostUsd = 0;
+  let totalCostUsd = prior;
   let numTurns = 0;
 
   try {
@@ -113,18 +116,19 @@ export async function runAgent(input: {
       }
       if (message.type === 'result') {
         outcome = classifyResult(message);
-        totalCostUsd = message.total_cost_usd ?? 0;
+        totalCostUsd = message.total_cost_usd;
         numTurns = message.num_turns;
       }
     }
   } catch (error) {
     // A single-shot query() yields the error result and THEN throws (max turns, max budget).
     // If we already saw the result, the throw carries no new information.
-    if (timedOut) outcome = 'timeout';
-    else if (outcome === undefined) throw error;
+    if (outcome === undefined && !timedOut) throw error;
   } finally {
     clearTimeout(timer);
   }
+  // Only a run that produced no result is a timeout; a late abort must not overwrite a real one.
+  if (outcome === undefined && timedOut) outcome = 'timeout';
 
   const finalOutcome = outcome ?? 'error';
   const reply = finalOutcome === 'ok' ? chunks.join('').trim() : OUTCOME_REPLY[finalOutcome];

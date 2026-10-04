@@ -215,8 +215,8 @@ async function main(): Promise<void> {
     console.log(`  cost  : $${result.turnCostUsd.toFixed(4)} · ${result.outcome}`);
     console.log(`  result: ${problem ? `FAIL — ${problem}` : 'pass'}`);
 
-    if (problem) failures.push(`${beat.name}: ${problem}`);
-    if (result.outcome !== 'ok') failures.push(`${beat.name}: outcome ${result.outcome}`);
+    const failure = problem ?? (result.outcome !== 'ok' ? `outcome ${result.outcome}` : null);
+    if (failure) failures.push(`${beat.name}: ${failure}`);
   }
 
   console.log('\n================ END-TO-END RESULT ================');
