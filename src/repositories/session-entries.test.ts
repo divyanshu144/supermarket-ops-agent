@@ -5,6 +5,7 @@ import { db, pool } from '../db/client.js';
 import { sessionEntries } from '../db/schema.js';
 import {
   appendEntries,
+  stripNul,
   deleteEntries,
   deleteSessionEntries,
   loadEntries,
@@ -116,6 +117,59 @@ describe('appendEntries', () => {
     expect(
       await loadEntries({ projectKey: PROJECT, sessionId, subpath: 'subagents/agent-1' }),
     ).toEqual([{ type: 'user', uuid: 's1' }]);
+  });
+});
+
+describe('NUL handling', () => {
+  it('appends an entry with a NUL in a nested string and loads it back with the NUL removed', async () => {
+    const key = { projectKey: PROJECT, sessionId: fresh() };
+    await appendEntries(key, [
+      {
+        type: 'user',
+        uuid: 'nul-1',
+        n: 7,
+        message: { content: [{ type: 'tool_result', text: 'ab\u0000cd' }] },
+      },
+    ]);
+    expect(await loadEntries(key)).toEqual([
+      {
+        type: 'user',
+        uuid: 'nul-1',
+        n: 7,
+        message: { content: [{ type: 'tool_result', text: 'abcd' }] },
+      },
+    ]);
+  });
+
+  it('preserves a literal backslash followed by u0000', async () => {
+    const key = { projectKey: PROJECT, sessionId: fresh() };
+    const entry = { type: 'user', uuid: 'nul-2', text: 'a\\u0000b' };
+    await appendEntries(key, [entry]);
+    expect(await loadEntries(key)).toEqual([entry]);
+  });
+});
+
+describe('stripNul', () => {
+  it('strips NUL from strings, arrays, nested objects and object keys', () => {
+    expect(stripNul('a\u0000b')).toBe('ab');
+    expect(stripNul(['x\u0000', ['\u0000y']])).toEqual(['x', ['y']]);
+    expect(stripNul({ 'k\u0000ey': { deep: 'v\u0000al' } })).toEqual({ key: { deep: 'val' } });
+  });
+
+  it('leaves numbers, booleans and null untouched', () => {
+    expect(stripNul({ a: 1, b: true, c: false, d: null, e: 0 })).toEqual({
+      a: 1,
+      b: true,
+      c: false,
+      d: null,
+      e: 0,
+    });
+    expect(stripNul(null)).toBeNull();
+    expect(stripNul(5)).toBe(5);
+  });
+
+  it('does not touch a literal backslash-u0000 sequence', () => {
+    expect(stripNul('a\\u0000b')).toBe('a\\u0000b');
   });
 });
 
