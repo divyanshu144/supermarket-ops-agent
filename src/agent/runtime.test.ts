@@ -203,10 +203,62 @@ describe('runAgent — session store and resume', () => {
       expect(warn).toHaveBeenCalledTimes(1);
       const line = String(warn.mock.calls[0]![0]);
       expect(line).toContain('"errorName":"Error"');
+      expect(line).toContain('"sessionId":"sess-1"');
       expect(line).not.toContain('No conversation found');
     } finally {
       warn.mockRestore();
     }
+  });
+
+  it('retries once without resume when a resumed run ends in error_during_execution before any output', async () => {
+    mockQuery
+      .mockImplementationOnce(() =>
+        (async function* () {
+          yield system;
+          yield result('error_during_execution', true, 0, 0);
+        })(),
+      )
+      .mockImplementationOnce(() =>
+        (async function* () {
+          yield system;
+          yield text('fresh');
+          yield result('success', false, 0.1, 1);
+        })(),
+      );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const r = await runAgent({ text: 'hi', sessionId: 'sess-1', priorCostUsd: 0.3 });
+      expect(mockQuery).toHaveBeenCalledTimes(2);
+      expect((mockQuery.mock.calls[0]![0] as QueryArgs).options.resume).toBe('sess-1');
+      expect((mockQuery.mock.calls[1]![0] as QueryArgs).options.resume).toBeUndefined();
+      expect(r).toMatchObject({ outcome: 'ok', reply: 'fresh', resumeDropped: true });
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]![0])).not.toContain('error result');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('does not retry a resumed success+is_error result (a transient API error must not wipe the conversation)', async () => {
+    fake([system, result('success', true, 0.1, 1)], 'end');
+    const r = await runAgent({ text: 'hi', sessionId: 'sess-1' });
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(r.outcome).toBe('error');
+    expect(r.resumeDropped).toBe(false);
+  });
+
+  it('does not retry a resumed error_during_execution that came after assistant output', async () => {
+    fake([system, text('partial'), result('error_during_execution', true, 0.1, 1)], 'end');
+    const r = await runAgent({ text: 'hi', sessionId: 'sess-1' });
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(r.outcome).toBe('error');
+  });
+
+  it('does not retry error_during_execution on a fresh run', async () => {
+    fake([system, result('error_during_execution', true, 0, 0)], 'end');
+    const r = await runAgent({ text: 'hi' });
+    expect(mockQuery).toHaveBeenCalledTimes(1);
+    expect(r.outcome).toBe('error');
   });
 
   it('does not retry a failure that happens after output has started', async () => {

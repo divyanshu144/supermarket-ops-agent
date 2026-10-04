@@ -146,6 +146,21 @@ async function runOnce(args: {
         }
       }
       if (message.type === 'result') {
+        // A resumed run that dies in an error result before saying anything fails identically on
+        // every turn (the same session id would be stored again). Take the retry-fresh path.
+        // Deliberately NOT for subtype 'success' + is_error (a transient API error: the owner's
+        // conversation must survive it), nor max_turns / max_budget, nor once output was seen.
+        if (
+          args.resume &&
+          message.subtype === 'error_during_execution' &&
+          chunks.length === 0 &&
+          toolsUsed.length === 0
+        ) {
+          throw new RunFailed(
+            new Error('resumed run ended in an error result before any output'),
+            false,
+          );
+        }
         sawResult = true;
         outcome = classifyResult(message);
         totalCostUsd = message.total_cost_usd;
@@ -233,6 +248,7 @@ export async function runAgent(input: {
       JSON.stringify({
         scope: 'session',
         warning: 'resume failed before any output; retrying once without resume',
+        sessionId: resume, // a UUID, not content
         // Class/type name only: the message can carry query parameters.
         errorName: error.original instanceof Error ? error.original.name : typeof error.original,
       }),
