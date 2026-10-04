@@ -56,13 +56,27 @@ run**.
   claims, poll. See `docs/DEPLOY.md` for the caveats (first-deploy transition, lock lost on a
   dropped connection, migrations run before the lock).
 
+**Branch state:** `production-hardening-b` is not pushed (no `origin/production-hardening-b`) and
+not merged.
+
+**Sub-project C note (healthcheck vs lock):** the instance lock is taken before polling starts. A
+`/healthz` must be served BEFORE the lock wait and must not report unhealthy while merely waiting
+for the lock, or the healthcheck must not gate stopping the old deployment. Otherwise the new
+instance cannot become healthy while Railway waits for it before stopping the old one, the 180 s
+lock timeout fires and the deploy fails. Railway's ordering of "new healthy" vs "stop old" is
+unverified. Also: use a direct or session-mode `DATABASE_URL` (advisory locks break through a
+transaction-mode pooler).
+
 **Verification:** `pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test` green,
-**373 tests in 39 files** (up from 307 on A), three consecutive runs.
+**386 tests in 39 files** (up from 307 on A), three consecutive runs after the final fix wave.
 
 **B left out:** the grammY runner (sequential polling kept: the runner confirms offsets early and
 can lose up to 100 updates on kill, which defeats redelivery recovery); a replay inbox; a session
-retention job (abandoned conversations accumulate); re-acquiring the lock after a mid-life
-connection loss.
+retention job (abandoned conversations accumulate); in-process re-acquisition of a lost lock (a
+lost lock now drains and exits 1 so Railway restarts the process); session rotation/retention
+(transcripts grow until `/new`; `load` materialises all rows each turn and `loadTimeoutMs` is
+60 s); probe step D (resuming a transcript cut off after a `tool_use` with no `tool_result`).
+Review items M3 and M6 also exist and are not addressed here.
 
 ## What landed on the `improvements` branch (now in `main`)
 

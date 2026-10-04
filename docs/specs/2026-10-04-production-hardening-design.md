@@ -111,7 +111,7 @@ Scope of B:
 
 - **Postgres session store.** A `session_entries` table (project key, session id, subpath, ordinal,
   JSONB entry) behind a repository, and a thin `SessionStore` adapter passed to `query()` as
-  `sessionStore`. `append` is one transaction that serialises writers per session; `load` returns
+  `sessionStore`. `append` is one transaction, ordered by a bigserial id; this is correct while the SDK calls `append` serially within one process (its contract), and there is no per-session lock; `load` returns
   entries in append order, deep-equal to what was appended, or `null` for an unknown session.
   `delete` is implemented so `/new` and `/reset confirm` remove the conversation's entries and
   nothing orphans. The SDK's mirror-failure event is logged (redacted) and never fails a turn.

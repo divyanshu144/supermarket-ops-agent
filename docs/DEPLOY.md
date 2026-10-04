@@ -82,9 +82,22 @@ Limits you should know about:
 - **Migrations run before the lock**, so they execute while the old instance is still serving and
   must stay backward-compatible with it. Two new instances starting at the same moment are not
   serialised for migrations.
-- **The lock is lost without stopping the process** if its database connection drops mid-life: the process logs a
-  fixed `instance-lock` line and carries on, and a later instance could then overlap until the
-  process restarts. Re-acquiring is not built.
+- **A lost lock restarts the process.** If the lock connection errors or closes mid-life, the
+  process logs a fixed `instance-lock` line, drains the turn in flight for up to
+  `SHUTDOWN_GRACE_MS` and exits 1, so Railway's restart policy brings it back and it re-acquires
+  the lock. The lock connection sets `tcp_keepalives_idle = 30` (best-effort) so a vanished client
+  host does not leave the server backend holding the lock for the OS keepalive time.
+- **Poolers.** Session-level advisory locks do not work through a transaction-mode connection
+  pooler (PgBouncer-style pooled URLs some hosts offer): the lock would be taken on one server
+  connection and silently dropped or moved. Use a direct or session-mode `DATABASE_URL`. Whether
+  Railway's `DATABASE_URL` is direct is unverified (believed to be).
+- **A healthcheck can deadlock the deploy.** The lock is taken before polling starts, and a new
+  instance waits for it while the old one is still running. If sub-project C adds a `/healthz`,
+  it must be served BEFORE the lock wait and must not report unhealthy merely because the
+  instance is waiting for the lock, or the healthcheck must not gate stopping the old deployment.
+  Otherwise the new instance cannot become healthy while Railway waits for it before stopping the
+  old one, the 180 s lock timeout fires, and the deploy fails. Railway's ordering of "new
+  deployment healthy" versus "stop the old one" is unverified.
 - **Railway timing is not verified.** How long Railway waits between SIGTERM and SIGKILL (its
   draining setting) versus `SHUTDOWN_GRACE_MS` is unchecked. If it is shorter, the grace period
   does not take effect. That is still safe (kill, connection closes, lock freed, Telegram

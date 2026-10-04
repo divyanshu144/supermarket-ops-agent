@@ -102,11 +102,12 @@ try {
     console.log('B. resume from the store with an EMPTY config dir', dirB);
     const b = await turn('What is the codeword? Reply with just the word.', a.sessionId, dirB);
     console.log(`   reply="${b.reply.trim()}" threw="${b.threw}"`);
-    console.log(
-      b.reply.toUpperCase().includes(CODEWORD)
-        ? '   PASS: the conversation survived without any local transcript.'
-        : '   FAIL: resume from the store did not restore the conversation.',
-    );
+    if (b.reply.toUpperCase().includes(CODEWORD)) {
+      console.log('   PASS: the conversation survived without any local transcript.');
+    } else {
+      console.log('   FAIL: resume from the store did not restore the conversation.');
+      process.exitCode = 1;
+    }
 
     console.log('C. resume a session id that exists nowhere');
     const c = await turn('hello', randomUUID(), dirC);

@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Context } from 'grammy';
+import type { AgentResult } from '../agent/runtime.js';
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { processedUpdates, stores } from '../db/schema.js';
@@ -20,7 +21,7 @@ import { PRIVATE_MESSAGE } from './messages.js';
 // handleTurn calls runAgent, which calls the real Anthropic API. Mocked so this test exercises
 // only the claim/skip-claim branch the alreadyClaimed option controls, with no network call and
 // no dependency on API credit.
-const runAgentMock = vi.fn(async (): Promise<Record<string, unknown>> => ({
+const runAgentMock = vi.fn(async (): Promise<AgentResult> => ({
   reply: 'ok',
   sessionId: 'sess-1',
   toolsUsed: [],
@@ -129,7 +130,7 @@ describe('handleTurn — dropped resume', () => {
       turnCostUsd: 0.2,
       numTurns: 1,
       resumeDropped: true,
-    });
+    } satisfies AgentResult);
     await handleTurn(fakeCtx(), 'hello');
     expect(await getSessionId(CHAT)).toBe('new-id');
     expect(await getSessionCostMicroUsd(CHAT)).toBe(200_000);
@@ -146,7 +147,7 @@ describe('handleTurn — dropped resume', () => {
       turnCostUsd: 0.5,
       numTurns: 0,
       resumeDropped: true,
-    });
+    } satisfies AgentResult);
     await handleTurn(fakeCtx(), 'hello');
     expect(await getSessionId(CHAT)).toBeUndefined();
   });
@@ -165,7 +166,7 @@ describe('handleTurn — dropped resume', () => {
       turnCostUsd: 0.2,
       numTurns: 1,
       resumeDropped: true,
-    });
+    } satisfies AgentResult);
     await handleTurn(fakeCtx(), 'hello');
     expect(await getSessionId(CHAT)).toBe('new-sess');
     expect(await sessionHasEntries('old-sess')).toBe(false);
@@ -185,7 +186,7 @@ describe('handleTurn — dropped resume', () => {
       turnCostUsd: 0.1,
       numTurns: 1,
       resumeDropped: false,
-    });
+    } satisfies AgentResult);
     await handleTurn(fakeCtx(), 'hello');
     expect(await sessionHasEntries('same-sess')).toBe(true);
   });
