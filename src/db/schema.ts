@@ -2,6 +2,7 @@ import {
   bigint,
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -77,6 +78,9 @@ export const sessions = pgTable('sessions', {
     .primaryKey()
     .references(() => stores.id, { onDelete: 'cascade' }),
   agentSessionId: text('agent_session_id').notNull(),
+  // Cumulative model spend for this conversation, in micro-USD. The SDK reports a resumed
+  // session's total_cost_usd including earlier turns, so the per-turn cost is the difference.
+  costMicroUsd: bigint('cost_micro_usd', { mode: 'number' }).notNull().default(0),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -222,4 +226,35 @@ export const idempotencyKeys = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.storeId, t.key] })],
+);
+
+/**
+ * Single-use invite codes. Only a hash is stored; the plaintext is shown once at creation.
+ * `used_at` and `revoked_at` are both set by conditional UPDATEs, so a code can be redeemed
+ * at most once even under concurrent redemption.
+ */
+export const inviteCodes = pgTable('invite_codes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  codeHash: text('code_hash').notNull().unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  usedByChat: bigint('used_by_chat', { mode: 'bigint' }),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+});
+
+/**
+ * Model spend per store per IST day. Micro-USD integers: this is an estimate of API cost, not
+ * shop money, but it is still never accumulated as a float.
+ */
+export const usage = pgTable(
+  'usage',
+  {
+    storeId: bigint('store_id', { mode: 'bigint' })
+      .notNull()
+      .references(() => stores.id, { onDelete: 'cascade' }),
+    day: date('day').notNull(),
+    costMicroUsd: bigint('cost_micro_usd', { mode: 'number' }).notNull().default(0),
+    turns: integer('turns').notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.storeId, t.day] })],
 );
