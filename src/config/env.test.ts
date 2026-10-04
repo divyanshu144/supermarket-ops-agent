@@ -65,6 +65,21 @@ describe('loadEnv limits', () => {
     expect(loadEnv({ ...valid, AGENT_MAX_BUDGET_USD: '1.25' }).AGENT_MAX_BUDGET_USD).toBe(1.25);
   });
 
+  it('caps the turn timeout at 10 minutes', () => {
+    expect(loadEnv({ ...valid, AGENT_TURN_TIMEOUT_MS: '600000' }).AGENT_TURN_TIMEOUT_MS).toBe(
+      600_000,
+    );
+    expect(() => loadEnv({ ...valid, AGENT_TURN_TIMEOUT_MS: '600001' })).toThrow(
+      /AGENT_TURN_TIMEOUT_MS/,
+    );
+  });
+
+  it('rejects an infinite budget cap', () => {
+    expect(() => loadEnv({ ...valid, AGENT_MAX_BUDGET_USD: 'Infinity' })).toThrow(
+      /AGENT_MAX_BUDGET_USD/,
+    );
+  });
+
   it('rejects a non-positive limit', () => {
     expect(() => loadEnv({ ...valid, AGENT_MAX_BUDGET_USD: '0' })).toThrow(/AGENT_MAX_BUDGET_USD/);
     expect(() => loadEnv({ ...valid, RATE_LIMIT_TURNS: '-3' })).toThrow(/RATE_LIMIT_TURNS/);

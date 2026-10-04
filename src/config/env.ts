@@ -19,7 +19,8 @@ const schema = z
     AGENT_FALLBACK_MODEL: z.string().optional(),
     AGENT_MAX_TURNS: positiveInt(15),
     AGENT_MAX_BUDGET_USD: positiveNumber(0.5),
-    AGENT_TURN_TIMEOUT_MS: positiveInt(90_000),
+    // setTimeout fires immediately above 2^31-1 ms; 10 minutes is far past any sane turn.
+    AGENT_TURN_TIMEOUT_MS: z.coerce.number().int().positive().max(600_000).default(90_000),
     STORE_DAILY_BUDGET_USD: positiveNumber(5),
     RATE_LIMIT_TURNS: positiveInt(20),
     RATE_LIMIT_WINDOW_S: positiveInt(600),
