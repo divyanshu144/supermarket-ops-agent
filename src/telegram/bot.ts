@@ -6,6 +6,7 @@ import { transcribe, whisperCostMicroUsd } from '../media/transcribe.js';
 import { claimUpdate, completeUpdate } from '../repositories/updates.js';
 import { recordUsage } from '../repositories/usage.js';
 import { newCommand, resetCommand, startCommand } from './commands.js';
+import { drainGate } from './drain.js';
 import { accessGate } from './gate.js';
 import { DAILY_CAP_REPLY, RATE_LIMITED_REPLY, WELCOME } from './messages.js';
 import { turnLimiter } from './rate-limit.js';
@@ -46,7 +47,9 @@ function argOf(ctx: CommandContext<Context>): string {
 export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
   const bot = new Bot(token, botInfo ? { botInfo } : undefined);
 
-  // First: nothing below runs for a chat that has no store and is not redeeming a code.
+  // The drain gate is first: during shutdown nothing below runs and nothing is claimed.
+  bot.use(drainGate);
+  // Then: nothing below runs for a chat that has no store and is not redeeming a code.
   bot.use(accessGate);
 
   bot.command(
