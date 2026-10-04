@@ -1,14 +1,33 @@
 import { z } from 'zod';
 
-const schema = z.object({
-  DATABASE_URL: z.string().url(),
-  TELEGRAM_BOT_TOKEN: z.string().min(1),
-  ANTHROPIC_API_KEY: z.string().min(1),
-  OPENAI_API_KEY: z.string().optional(),
-  AGENT_EFFORT: z.enum(['low', 'medium', 'high']).default('medium'),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  LOG_MESSAGE_TEXT: z.enum(['true', 'false']).optional(),
-});
+const positiveInt = (fallback: number) => z.coerce.number().int().positive().default(fallback);
+const positiveNumber = (fallback: number) => z.coerce.number().positive().default(fallback);
+
+const schema = z
+  .object({
+    DATABASE_URL: z.string().url(),
+    TELEGRAM_BOT_TOKEN: z.string().min(1),
+    ANTHROPIC_API_KEY: z.string().min(1),
+    OPENAI_API_KEY: z.string().optional(),
+    AGENT_EFFORT: z.enum(['low', 'medium', 'high']).default('medium'),
+    NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+    LOG_MESSAGE_TEXT: z.enum(['true', 'false']).optional(),
+
+    AGENT_MODEL: z.string().min(1).default('claude-opus-5'),
+    // Empty string is treated as unset by agent/limits.ts, so `AGENT_FALLBACK_MODEL=` in a
+    // dotenv file does not break boot.
+    AGENT_FALLBACK_MODEL: z.string().optional(),
+    AGENT_MAX_TURNS: positiveInt(15),
+    AGENT_MAX_BUDGET_USD: positiveNumber(0.5),
+    AGENT_TURN_TIMEOUT_MS: positiveInt(90_000),
+    STORE_DAILY_BUDGET_USD: positiveNumber(5),
+    RATE_LIMIT_TURNS: positiveInt(20),
+    RATE_LIMIT_WINDOW_S: positiveInt(600),
+  })
+  .refine((e) => !e.AGENT_FALLBACK_MODEL || e.AGENT_FALLBACK_MODEL !== e.AGENT_MODEL, {
+    path: ['AGENT_FALLBACK_MODEL'],
+    message: 'must differ from AGENT_MODEL (the SDK throws at startup otherwise)',
+  });
 
 export type Env = z.infer<typeof schema>;
 

@@ -46,3 +46,33 @@ describe('shouldLogMessageText', () => {
     expect(shouldLogMessageText(loadEnv({ ...valid, NODE_ENV: 'development' }))).toBe(true);
   });
 });
+
+describe('loadEnv limits', () => {
+  it('applies the documented defaults', () => {
+    const env = loadEnv(valid);
+    expect(env.AGENT_MODEL).toBe('claude-opus-5');
+    expect(env.AGENT_FALLBACK_MODEL).toBeUndefined();
+    expect(env.AGENT_MAX_TURNS).toBe(15);
+    expect(env.AGENT_MAX_BUDGET_USD).toBe(0.5);
+    expect(env.AGENT_TURN_TIMEOUT_MS).toBe(90_000);
+    expect(env.STORE_DAILY_BUDGET_USD).toBe(5);
+    expect(env.RATE_LIMIT_TURNS).toBe(20);
+    expect(env.RATE_LIMIT_WINDOW_S).toBe(600);
+  });
+
+  it('coerces numeric strings from the environment', () => {
+    expect(loadEnv({ ...valid, AGENT_MAX_TURNS: '7' }).AGENT_MAX_TURNS).toBe(7);
+    expect(loadEnv({ ...valid, AGENT_MAX_BUDGET_USD: '1.25' }).AGENT_MAX_BUDGET_USD).toBe(1.25);
+  });
+
+  it('rejects a non-positive limit', () => {
+    expect(() => loadEnv({ ...valid, AGENT_MAX_BUDGET_USD: '0' })).toThrow(/AGENT_MAX_BUDGET_USD/);
+    expect(() => loadEnv({ ...valid, RATE_LIMIT_TURNS: '-3' })).toThrow(/RATE_LIMIT_TURNS/);
+  });
+
+  it('rejects a fallback model equal to the primary', () => {
+    expect(() =>
+      loadEnv({ ...valid, AGENT_MODEL: 'claude-opus-5', AGENT_FALLBACK_MODEL: 'claude-opus-5' }),
+    ).toThrow(/AGENT_FALLBACK_MODEL/);
+  });
+});
