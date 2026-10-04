@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { transcribe } from './transcribe.js';
+import { transcribe, whisperCostMicroUsd } from './transcribe.js';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -28,5 +28,23 @@ describe('transcribe', () => {
     vi.stubGlobal('fetch', fetchMock);
     await expect(transcribe(audio, 'audio/ogg', undefined)).rejects.toThrow(/not configured/i);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('whisperCostMicroUsd', () => {
+  it('charges $0.006 per minute in micro-USD', () => {
+    expect(whisperCostMicroUsd(60)).toBe(6000);
+    expect(whisperCostMicroUsd(3)).toBe(300);
+  });
+
+  it('rounds partial micro-dollars up', () => {
+    expect(whisperCostMicroUsd(90.5)).toBe(9050);
+    expect(whisperCostMicroUsd(0.01)).toBe(1);
+  });
+
+  it('is zero for no audio and never negative', () => {
+    expect(whisperCostMicroUsd(0)).toBe(0);
+    expect(whisperCostMicroUsd(-5)).toBe(0);
+    expect(whisperCostMicroUsd(Number.NaN)).toBe(0);
   });
 });

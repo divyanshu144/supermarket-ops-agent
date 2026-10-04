@@ -2,8 +2,9 @@ import { Bot, type CommandContext, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { loadEnv } from '../config/env.js';
 import { downloadTelegramFile } from '../media/download.js';
-import { transcribe } from '../media/transcribe.js';
+import { transcribe, whisperCostMicroUsd } from '../media/transcribe.js';
 import { claimUpdate, completeUpdate } from '../repositories/updates.js';
+import { recordUsage } from '../repositories/usage.js';
 import { newCommand, resetCommand, startCommand } from './commands.js';
 import { accessGate } from './gate.js';
 import { DAILY_CAP_REPLY, RATE_LIMITED_REPLY, WELCOME } from './messages.js';
@@ -124,6 +125,15 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
       console.error(redact({ scope: 'voice', chatId: String(ctx.chat.id), error }));
       await ctx.reply('I could not make out that voice note. Try again, or type it?');
       return;
+    }
+
+    // Whisper bills the clip whether or not it contained speech, so record it before the empty
+    // check. recordUsage also bumps the informational `turns` counter; accepted. A bookkeeping
+    // failure must never fail the turn.
+    try {
+      await recordUsage(storeId, whisperCostMicroUsd(ctx.message.voice.duration));
+    } catch (error) {
+      console.error(redact({ scope: 'voice-usage', chatId: String(ctx.chat.id), error }));
     }
 
     if (!transcript) {

@@ -1,5 +1,16 @@
 const ENDPOINT = 'https://api.openai.com/v1/audio/transcriptions';
 
+/** OpenAI whisper-1 list price, USD per minute of audio. Update if the price changes. */
+const WHISPER_USD_PER_MINUTE = 0.006;
+
+/** Whisper spend for a clip, in whole micro-USD (rounded up, never negative). */
+export function whisperCostMicroUsd(durationSeconds: number): number {
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return 0;
+  // 0.006 USD/min = 6000 micro-USD/min; work in integers of micro-USD to avoid float drift.
+  const microPerMinute = Math.round(WHISPER_USD_PER_MINUTE * 1_000_000);
+  return Math.ceil((durationSeconds * microPerMinute) / 60);
+}
+
 /**
  * Speech to text. The entire provider surface is this one function, so swapping Whisper for
  * anything else touches this file and nothing above it.

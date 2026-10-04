@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { inviteCodes, processedUpdates, stores } from '../db/schema.js';
 
@@ -17,13 +17,17 @@ vi.mock('../agent/runtime.js', () => ({
 vi.mock('../media/download.js', () => ({
   downloadTelegramFile: vi.fn().mockResolvedValue(Buffer.from('x')),
 }));
-vi.mock('../media/transcribe.js', () => ({ transcribe: vi.fn().mockResolvedValue('hello') }));
+vi.mock('../media/transcribe.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../media/transcribe.js')>()),
+  transcribe: vi.fn().mockResolvedValue('hello'),
+}));
 
 const { createBot } = await import('./bot.js');
 const { runAgent } = await import('../agent/runtime.js');
 const { downloadTelegramFile } = await import('../media/download.js');
 const { createInvite } = await import('../repositories/access.js');
-const { recordUsage } = await import('../repositories/usage.js');
+const { recordUsage, spentTodayMicroUsd } = await import('../repositories/usage.js');
+const { getSessionCostMicroUsd } = await import('../repositories/updates.js');
 const { provisionStore } = await import('../repositories/stores.js');
 const { loadEnv } = await import('../config/env.js');
 const { PRIVATE_MESSAGE, DAILY_CAP_REPLY, RATE_LIMITED_REPLY, WELCOME } =
@@ -169,7 +173,8 @@ describe('access gate', () => {
 
   it('does not let a stranger slip through with /start addressed to another bot', async () => {
     const bot = makeBot();
-    await bot.handleUpdate(textUpdate(STRANGER, '/start@otherbot hi') as never);
+    const update = textUpdate(STRANGER, '/start@otherbot hi');
+    await bot.handleUpdate(update as never);
     expect(replies()).toEqual([PRIVATE_MESSAGE]);
     expect(runAgent).not.toHaveBeenCalled();
     expect(
@@ -178,11 +183,18 @@ describe('access gate', () => {
         .from(stores)
         .where(inArray(stores.id, [STRANGER])),
     ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(processedUpdates)
+        .where(eq(processedUpdates.updateId, BigInt(update.update_id))),
+    ).toHaveLength(0); // denied by the gate before any claim; handleTurn would have claimed it
   });
 
   it('does not treat /start text with no command entity as a start', async () => {
     const bot = makeBot();
-    await bot.handleUpdate(textUpdate(STRANGER, '/start hello', { entity: false }) as never);
+    const update = textUpdate(STRANGER, '/start hello', { entity: false });
+    await bot.handleUpdate(update as never);
     expect(replies()).toEqual([PRIVATE_MESSAGE]);
     expect(runAgent).not.toHaveBeenCalled();
     expect(
@@ -191,6 +203,12 @@ describe('access gate', () => {
         .from(stores)
         .where(inArray(stores.id, [STRANGER])),
     ).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(processedUpdates)
+        .where(eq(processedUpdates.updateId, BigInt(update.update_id))),
+    ).toHaveLength(0); // denied by the gate before any claim; handleTurn would have claimed it
   });
 
   it('redeems /start@<this bot> <code>', async () => {
@@ -211,6 +229,44 @@ describe('access gate', () => {
     await provisionStore(OWNER);
     const bot = makeBot();
     await bot.handleUpdate(textUpdate(OWNER, 'hello') as never);
+    expect(runAgent).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('turn to ledger wiring', () => {
+  it('records each turn against the daily budget and the session, passing the prior total', async () => {
+    await provisionStore(OWNER);
+    const bot = makeBot();
+
+    await bot.handleUpdate(textUpdate(OWNER, 'one') as never);
+    expect(await spentTodayMicroUsd(OWNER)).toBe(10_000);
+    expect(await getSessionCostMicroUsd(OWNER)).toBe(10_000);
+
+    vi.mocked(runAgent).mockResolvedValueOnce({
+      reply: 'again',
+      sessionId: 'sess-1',
+      toolsUsed: [],
+      outcome: 'ok',
+      totalCostUsd: 0.03,
+      turnCostUsd: 0.02,
+      numTurns: 1,
+    });
+    await bot.handleUpdate(textUpdate(OWNER, 'two') as never);
+
+    expect(runAgent).toHaveBeenLastCalledWith(expect.objectContaining({ priorCostUsd: 0.01 }));
+    expect(await spentTodayMicroUsd(OWNER)).toBe(30_000);
+    expect(await getSessionCostMicroUsd(OWNER)).toBe(30_000);
+  });
+
+  it('records the Whisper cost of a voice note against the daily budget', async () => {
+    await provisionStore(OWNER);
+    const bot = makeBot();
+    const before = await spentTodayMicroUsd(OWNER);
+
+    await bot.handleUpdate(voiceUpdate(OWNER) as never);
+
+    // 3 s of audio = 300 micro-USD of Whisper, plus the mocked agent turn's 10_000.
+    expect((await spentTodayMicroUsd(OWNER)) - before).toBe(10_300);
     expect(runAgent).toHaveBeenCalledTimes(1);
   });
 });
