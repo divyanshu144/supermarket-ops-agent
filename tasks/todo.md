@@ -69,7 +69,8 @@ Milestones from the design spec §13. The detailed per-task breakdown comes from
 ## Milestone 5 — Ship
 
 - [x] Railway deploy with managed Postgres, bot left running
-- [ ] README (~1 page): harness + why, control loop, skill/tool design, each hard part, edge cases skipped
+- [x] README (~1 page): harness + why, control loop, skill/tool design, each hard part, edge cases skipped
+      (95 lines on `readme-trim`; the full text is in `docs/DESIGN.md`; wording still to be read by the author)
 - [ ] 4–5 min recording: stock → bill with edit → oversell guard → khata → PDF → deck → preference + `/new`
 - [x] Final gate: `pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test`
 
