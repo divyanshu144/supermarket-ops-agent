@@ -62,9 +62,12 @@ start polling.
 - **The instance lock** is a process-lifetime Postgres advisory lock (key in
   `src/db/instance-lock.ts`). A new instance waits, polling, until the old instance's database
   connection closes, for up to 180 s (longer than the maximum `SHUTDOWN_GRACE_MS`), then fails to
-  start. So every `claimed` row present at the moment of expiry belongs to a dead process.
+  start. So every `claimed` row present at the moment of expiry belongs to a dead process (subject to the limits below).
 - **Expiring claims** is what lets a redelivered update be reclaimed; without it, it would be
   dropped as "still running" for up to five minutes.
+- **Deploy configuration is not the guarantee.** `railway.json` asks Railway not to overlap
+  containers (`overlapSeconds: 0`), but that is a request whose behaviour is unverified; the lock
+  is what enforces it.
 - **One replica is still required**: Telegram long-polling allows one poller per token. The lock
   makes a second instance block and then fail, rather than expire the first one's live claims.
 
@@ -79,7 +82,7 @@ Limits you should know about:
 - **Migrations run before the lock**, so they execute while the old instance is still serving and
   must stay backward-compatible with it. Two new instances starting at the same moment are not
   serialised for migrations.
-- **The lock is lost silently** if its database connection drops mid-life: the process logs a
+- **The lock is lost without stopping the process** if its database connection drops mid-life: the process logs a
   fixed `instance-lock` line and carries on, and a later instance could then overlap until the
   process restarts. Re-acquiring is not built.
 - **Railway timing is not verified.** How long Railway waits between SIGTERM and SIGKILL (its
@@ -144,7 +147,9 @@ the bot only sees commands and replies there.
 ## Railway
 
 `Dockerfile` and `railway.json` are committed. `railway.json` pins `numReplicas: 1` and
-`overlapSeconds: 0` — the second prevents a rolling deploy briefly running two containers.
+`overlapSeconds: 0`, which asks Railway not to overlap containers during a deploy. That is a
+request, not a guarantee, and its behaviour has not been verified; the instance lock (see Deploys
+and shutdown) is what actually stops a second instance from expiring live claims.
 
 ### Deploying a change
 
@@ -221,7 +226,12 @@ for a recorded walkthrough; not adequate for "kept running while we review".
    railway logs --lines 20
    ```
 
-   Expect `Applying migrations… / Migrations up to date. / Instance lock acquired. / Listening as @divagentBot`.
+   Expect, in order: `Applying migrations…`, `Migrations up to date.`, (`Waiting for the previous
+   instance to exit…`), `Instance lock acquired.`, (`Expired N in-flight claim(s) from the
+   previous process.`), `Starting kirana agent (long-polling)…`, `Listening as @divagentBot`.
+   The two parenthesised lines are normal on an overlapping deploy or after a cut-off turn;
+   "Waiting…" is the lock working. A failure reading `Could not acquire the instance lock` after
+   about 180 s means another instance still holds the lock.
 
 3. Confirm the running build is the one you just shipped:
 

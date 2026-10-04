@@ -3,7 +3,7 @@
 Written so a cold-start session can resume. Update at every checkpoint.
 
 **Last updated:** 2026-10-04, after production-hardening sub-project B
-**Branch:** `production-hardening-b` — sub-project B implemented, stacked on `production-hardening` (PR #1, which is not merged); not pushed to main (`improvements` is already merged into `main`)
+**Branch:** `production-hardening-b` — sub-project B implemented, stacked on `production-hardening` (PR #1, which is not merged); not merged (`improvements` is already merged into `main`)
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
 ---
@@ -103,8 +103,8 @@ For B, in order:
    one deploy a live claim can still be expired.
 4. Then sub-project C.
 
-Still pending from sub-project A. Run these with real credentials, in order, then merge `production-hardening` (A is not done until
-they pass):
+Still pending from sub-project A: run these with real credentials, in order, then merge
+`production-hardening`. A is not done until they pass.
 
 1. `pnpm tsx src/agent/cost.probe.ts` — settles `SDK_COST_IS_CUMULATIVE`. Its header comment
    explains how to read an ambiguous result.

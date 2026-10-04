@@ -25,6 +25,7 @@ If a locked decision needs to change, change it here first and say so explicitly
 | AD-12 | Railway for deployment | Managed Postgres in one click, stays running through review. |
 | AD-13 | Price, GST rate and HSN **snapshotted onto `bill_items` at add time** | A bill built across several messages must not shift if the product is edited mid-build. |
 | AD-14 | Scope: §3 capabilities + §4 hard parts. **Zero §7 stretch items.** | 2-day fixed deadline. §4 is what is graded. |
+| AD-32 | **B keeps sequential polling and mirrors sessions in Postgres** (`session_entries` behind the SDK `sessionStore`). | The grammY runner confirms offsets early and can lose up to 100 updates on kill (from reading grammY's source). Sessions are expected to survive redeploys; unverified until `src/agent/session-store.probe.ts` passes. |
 
 ### Revised 2026-07-29 after spec review
 
@@ -60,8 +61,8 @@ If a locked decision needs to change, change it here first and say so explicitly
   drains instead and exits without `stop()` (`telegram/drain.ts`).
 - **`claimUpdate`'s 300 s stale window drops a redelivered update after a fast restart**, hence the
   boot-time claim expiry (`expireInFlightClaims`).
-- **The boot-time claim expiry is only safe because of the instance lock.** A Railway handoff can
-  run two containers briefly; `overlapSeconds` is not a guarantee. `db/instance-lock.ts` makes the
+- **The boot-time claim expiry is only safe because of the instance lock.** A Railway handoff may
+  run two containers briefly (not verified); `overlapSeconds` is not a guarantee. `db/instance-lock.ts` makes the
   new instance wait for the old one's connection to close. The lock is lost silently if its
   connection drops mid-life, and the first deploy that introduces it replaces code that holds no lock.
 - **The grammY runner confirms offsets early** (up to 100 updates lost on kill), which is why
@@ -105,4 +106,3 @@ _(empty — record the problem, the root cause, and the fix as they come up)_
 | AD-29 | **The allowlist genuinely blocks the filesystem.** Four direct attempts (read `.env`, run `ls -la`, list files, write a file) all refused with **zero tool calls** and no credential leaked. §4 is now empirically supported, not just designed for. | `security.probe.ts` |
 | AD-30 | **Tools must never return raw DB rows.** `JSON.stringify` throws outright on BigInt, so `get_stock` errored on every call in production while unit tests passed. Present a shaped view — which also stops leaking cost price and internal ids to the model. | live smoke run; regression test in `inventory.test.ts` |
 | AD-31 | **Pin `packageManager`.** Unpinned, container corepack pulled pnpm 11 against a pnpm-9 lockfile and the image would not build at all. | docker build failure |
-| AD-32 | **B keeps sequential polling and mirrors sessions in Postgres** (`session_entries` behind the SDK `sessionStore`). | The grammY runner confirms offsets early and can lose up to 100 updates on kill; Postgres sessions survive any redeploy. |
