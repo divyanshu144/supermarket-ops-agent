@@ -35,8 +35,11 @@ What A added:
 green, **307 tests in 35 files** (up from 236). `e2e.ts` and the live bot were **not** run on this
 branch (no credentials in the session that built it).
 
-Known limits: the rate limiter resets on restart; a turn aborted by the timeout reports no cost, so
-the daily budget can under-count by up to one per-run cap; a redeemed shop cannot be cut off.
+Known limits: the rate limiter resets on restart; a turn aborted by the timeout reports no cost,
+so it is charged the full per-run cap to the daily budget (a deliberate over-count; the next resumed
+turn may also over-count because the session total chain keeps the pre-timeout value); no store can
+be cut off with the CLI, including every chat that messaged the bot before invite-only access
+(revoke only affects unredeemed codes; removing a store is a manual delete).
 
 ## What landed on the `improvements` branch (now in `main`)
 

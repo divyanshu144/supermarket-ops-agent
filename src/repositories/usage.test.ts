@@ -37,6 +37,19 @@ describe('usage', () => {
     expect(await spentTodayMicroUsd(B)).toBe(0);
   });
 
+  it('stamps the row with the IST date, not the database session date', async () => {
+    await recordUsage(A, 1);
+    // Compared inside Postgres with the same IST expression the code uses. A `current_date`
+    // implementation would only disagree when the session timezone's date differs from IST's
+    // (e.g. UTC between 18:30 and 24:00), so this pins the contract rather than the clock. (Verified by mutation with
+    // PGOPTIONS='-c timezone=Pacific/Kiritimati', where `current_date` fails it.)
+    const { rows } = await pool.query(
+      `select (day = (now() at time zone 'Asia/Kolkata')::date) as ok from usage where store_id = $1`,
+      [A.toString()],
+    );
+    expect(rows).toEqual([{ ok: true }]);
+  });
+
   it("ignores a previous day's spend", async () => {
     await db.insert(usage).values({
       storeId: A,

@@ -4,6 +4,7 @@ import { db, pool } from '../db/client.js';
 import { inviteCodes, products, stores } from '../db/schema.js';
 import { createInvite, hasStore, redeemInvite } from '../repositories/access.js';
 import { provisionStore } from '../repositories/stores.js';
+import { getSessionCostMicroUsd, getSessionId, setSessionId } from '../repositories/updates.js';
 import { newCommand, resetCommand, startCommand } from './commands.js';
 import { INVALID_CODE, PRIVATE_MESSAGE, RESET_EXPLAINER, WELCOME } from './messages.js';
 
@@ -77,11 +78,32 @@ describe('resetCommand', () => {
     await resetCommand(OWNER, 'CONFIRM');
     expect(await edited()).toBe(0);
   });
+
+  it('clears the conversation session on /reset confirm but not on a bare /reset', async () => {
+    await provisionStore(OWNER);
+    await setSessionId(OWNER, 's', 123_456);
+
+    await resetCommand(OWNER, '');
+    expect(await getSessionId(OWNER)).toBe('s');
+    expect(await getSessionCostMicroUsd(OWNER)).toBe(123_456);
+
+    await resetCommand(OWNER, 'confirm');
+    expect(await getSessionId(OWNER)).toBeUndefined();
+    expect(await getSessionCostMicroUsd(OWNER)).toBe(0);
+  });
 });
 
 describe('newCommand', () => {
   it('confirms that stock and preferences are kept', async () => {
     await provisionStore(OWNER);
     expect(await newCommand(OWNER)).toMatch(/unchanged/i);
+  });
+
+  it('clears the conversation session and its cost total', async () => {
+    await provisionStore(OWNER);
+    await setSessionId(OWNER, 's', 123_456);
+    await newCommand(OWNER);
+    expect(await getSessionId(OWNER)).toBeUndefined();
+    expect(await getSessionCostMicroUsd(OWNER)).toBe(0);
   });
 });

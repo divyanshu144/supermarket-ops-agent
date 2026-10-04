@@ -61,12 +61,23 @@ In the production image the same commands run as `node dist/scripts/invite.js <c
 for example from a shell on the service. If you run it from your machine instead, use the public
 connection string for `DATABASE_URL` (the internal one is not reachable from outside Railway).
 
+The invite CLI loads the full app config, so `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY` (any
+non-empty values) must be set along with `DATABASE_URL` wherever you run it.
+
 Revoking stops an unredeemed code from being redeemed. It does not cut off a shop that already
-redeemed one; that is not built.
+redeemed one; that is not built. Removing a store is a manual delete.
+
+Every chat that has ever messaged the bot before invite-only access already owns a store and keeps
+access. Audit them with `SELECT id, name, created_at FROM stores ORDER BY created_at;` and delete
+any you do not recognise (deleting a store cascades to its data).
 
 Known limits: the per-chat rate limiter is in memory and resets on restart (fine for one
-replica); a turn that is aborted by the timeout reports no cost, so the daily budget can
-under-count by up to one per-run cap.
+replica); a turn that is aborted by the timeout is charged the full per-run cap to the daily
+budget (a deliberate over-count; the next resumed turn may also over-count because the session
+total keeps its pre-timeout value); a voice note uses two rate-limit slots; `/start <code>` posted
+in a CHANNEL would consume the code and create a store the bot cannot use (redeem only in a private
+chat or group); in a group chat every member acts as the owner and, with Telegram privacy mode on,
+the bot only sees commands and replies there.
 
 ---
 
