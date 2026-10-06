@@ -98,7 +98,8 @@ fixes from the final whole-branch review.
 
 ## Production hardening — sub-project A: guardrails and cost (branch `production-hardening`)
 
-Plan: `docs/plans/2026-10-04-guardrails-and-cost.md`. Implemented, not merged, not pushed.
+Plan: `docs/plans/2026-10-04-guardrails-and-cost.md`. Implemented and merged into `main`
+through `fa89f53` (PR #1). I verified the history on 2026-10-06; live checks remain pending.
 
 - [x] 1. Environment configuration (limits, budget, rate limit, models)
 - [x] 2. Schema and migration (`invite_codes`, `usage`, session cost)
@@ -113,11 +114,13 @@ Plan: `docs/plans/2026-10-04-guardrails-and-cost.md`. Implemented, not merged, n
 - [ ] Live: `pnpm tsx src/agent/cost.probe.ts` (settles `SDK_COST_IS_CUMULATIVE`) — needs credentials
 - [ ] Live: `pnpm tsx src/agent/e2e.ts`, 13 beats ok under the new limits — needs credentials
 - [ ] Live: Telegram checklist (stranger reply, code redeem, reuse rejected, `/reset` vs `/reset confirm`, `cost_usd`/`num_turns` in log) — needs a real bot token
-- [ ] Sub-projects B–F (see `HANDOFF.md`)
+- [x] Merge sub-project B through PR #2, then PR #1
+- [ ] Sub-project B live checks and sub-projects C–F (see `HANDOFF.md`)
 
 ## Production hardening — sub-project B: session durability and shutdown (branch `production-hardening-b`)
 
-Plan: `docs/plans/2026-10-04-session-durability-and-shutdown.md`. Implemented, stacked on PR #1, not merged.
+Plan: `docs/plans/2026-10-04-session-durability-and-shutdown.md`. Implemented and merged
+through `8536b3d` (PR #2) and `fa89f53` (PR #1).
 
 - [x] 1. Transcript table and repository
 - [x] 2. SDK session-store adapter
@@ -136,3 +139,14 @@ Plan: `docs/plans/2026-10-04-session-durability-and-shutdown.md`. Implemented, s
       before the redactor landed
 - [x] Merge `improvements` → `main` (redeploy still needed so Railway runs it)
 - [ ] Make the repo public (`gh repo edit … --visibility public`) — user runs this
+
+## Applied AI work, checkpoint 2026-10-06
+
+- [x] Read operating rules and tracking documents; reconcile A and B against git history
+- [x] Create `eval-harness` from working branch `readme-trim`, code commit `4359796`
+- [x] Run the current gate: 386 tests in 39 files, 2026-10-06, no model calls
+- [ ] Write Phase 1 spec in `docs/specs/` and plan in `docs/plans/`
+- [ ] Obtain approval of both documents before writing code
+- [ ] Run protected live prerequisites: cost, session store, e2e, security, in that order
+- [ ] Implement and verify Phase 1, including test mutations and live regression experiments
+- [ ] Prepare each later phase separately, with its own spec, plan and approval

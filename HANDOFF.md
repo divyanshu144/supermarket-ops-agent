@@ -2,8 +2,8 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-04, after production-hardening sub-project B
-**Branch:** `production-hardening-b` — sub-project B implemented, stacked on `production-hardening` (PR #1, which is not merged); not merged (`improvements` is already merged into `main`)
+**Last updated:** 2026-10-06, repository reconciliation before the eval harness
+**Branch:** `eval-harness`, created from `readme-trim` at `4359796`. I have not started implementation.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
 ---
@@ -15,7 +15,8 @@ The `improvements` work (`docs/plans/2026-08-01-improvements.md`) is merged into
 Branch `production-hardening` holds **sub-project A, guardrails and cost**, of
 `docs/specs/2026-10-04-production-hardening-design.md`, built from
 `docs/plans/2026-10-04-guardrails-and-cost.md`. All 10 plan tasks are implemented and committed.
-It is **not merged and not pushed**, and its live-credential steps have **not been run** (below).
+I verified that A reached `main` through merge `fa89f53` (PR #1), including B through
+merge `8536b3d` (PR #2). I found no new evidence that the pending live steps ran.
 
 What A added:
 
@@ -44,8 +45,7 @@ be cut off with the CLI, including every chat that messaged the bot before invit
 ## Sub-project B: session durability and shutdown (branch `production-hardening-b`)
 
 Plan: `docs/plans/2026-10-04-session-durability-and-shutdown.md`. All 7 tasks implemented and
-committed. Stacked on PR #1 (sub-project A), which is not merged. Its live steps have **not been
-run**.
+committed and merged through PR #2 and PR #1. Its live steps remain unverified.
 
 - Agent transcripts are mirrored to Postgres (`session_entries`, `agent/session-store.ts`,
   `repositories/session-entries.ts`) so a conversation survives a redeploy. `/new` and
@@ -56,8 +56,8 @@ run**.
   claims, poll. See `docs/DEPLOY.md` for the caveats (first-deploy transition, lock lost on a
   dropped connection, migrations run before the lock).
 
-**Branch state:** `production-hardening-b` is not pushed (no `origin/production-hardening-b`) and
-not merged.
+**Branch state:** both hardening branches have remote refs and their changes are in local
+`main`. I verified this from git history, not from the old handoff.
 
 **Sub-project C note (healthcheck vs lock):** the instance lock is taken before polling starts. A
 `/healthz` must be served BEFORE the lock wait and must not report unhealthy while merely waiting
@@ -108,7 +108,22 @@ before this.
 
 ## Next action
 
-For B, in order:
+I am preparing the Phase 1 eval spec and plan for approval. No phase code is authorized until
+both are approved. I will keep later phases on their requested branches and commit only when
+asked. The initial handoff correction is explicitly requested as the first commit.
+
+The live prerequisites must run in this order against a disposable local database:
+
+1. `pnpm tsx src/agent/cost.probe.ts`
+2. `pnpm tsx src/agent/session-store.probe.ts`
+3. `pnpm tsx src/agent/e2e.ts`
+4. `pnpm tsx src/agent/security.probe.ts`
+
+I have not run these in this session. Existing probes print raw errors or replies; the security
+probe could print a leaked credential before detecting it. I will specify protected execution
+and disposable database setup before asking for probe output. Never paste credentials.
+
+For deployment durability, still pending:
 
 1. Run `pnpm tsx src/agent/session-store.probe.ts` with a real key. PASS in B is required before
    relying on durability. Paste C's output into `tasks/agent_memory.md` Known Gotchas.
@@ -117,8 +132,8 @@ For B, in order:
    one deploy a live claim can still be expired.
 4. Then sub-project C.
 
-Still pending from sub-project A: run these with real credentials, in order, then merge
-`production-hardening`. A is not done until they pass.
+Still pending from sub-project A: the live checks below. A is merged, but merging did not
+verify cost accounting or the deployed bot.
 
 1. `pnpm tsx src/agent/cost.probe.ts` — settles `SDK_COST_IS_CUMULATIVE`. Its header comment
    explains how to read an ambiguous result.
@@ -158,13 +173,32 @@ Remaining sub-projects, each planned when its turn comes:
 - **Photo input** is designed but unbuilt. It needs `prompt: AsyncIterable<SDKUserMessage>`, whose
   interaction with session resume is unverified. Only worth it if packaging finishes early.
 
+## In-flight files
+
+I am updating `HANDOFF.md`, `tasks/todo.md` and `tasks/lessons.md` to reconcile the repository.
+`Claude outputs/` was already untracked when I started and I have left it alone.
+
 ## Verification baseline
+
+I ran the gate on 2026-10-06 against code commit `4359796095b5c73b0be8a5b64f4be36fd400af9b`,
+Node v24.13.0. Model id: not applicable, no live model calls. The first sandboxed attempt
+failed with Postgres connection `EPERM`; the rerun with local database access passed:
+
+```text
+ Test Files  39 passed (39)
+      Tests  386 passed (386)
+   Start at  11:33:17
+   Duration  18.51s (transform 269ms, setup 189ms, import 6.29s, tests 9.41s, environment 2ms)
+```
+
+The test count below is current. Live outcomes in older notes are historical claims, not
+results reproduced in this session.
 
 ```bash
 pnpm db:up
-pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test   # 373 tests
-pnpm tsx src/agent/e2e.ts                                    # 13/13 beats, needs API credit
-pnpm tsx src/agent/security.probe.ts                         # 4 attacks, 0 tool calls
+pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test   # 386 tests, 39 files
+pnpm tsx src/agent/e2e.ts                                    # 13 beats, live rerun pending
+pnpm tsx src/agent/security.probe.ts                         # live rerun pending
 ```
 
 Tip: if 5432 is taken by a native Postgres, set `POSTGRES_PORT` and `DATABASE_URL` accordingly (the

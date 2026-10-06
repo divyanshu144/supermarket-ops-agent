@@ -104,3 +104,15 @@ rather than anything enforced.
 **Next time:** Read the library source for the exact shutdown/confirmation semantics before designing
 recovery on top of it. A recovery step that assumes the previous process is dead must be backed by a
 mutual-exclusion primitive (here a Postgres advisory lock), not by deploy configuration.
+
+## 2026-10-06: merged status and verification evidence drifted
+
+I found that HANDOFF and todo still called A and B unmerged even though git records PR #2
+inside PR #1 and both in main. The handoff also mixed historical test counts. I checked the
+history and reran the gate before recording the current count. Next time I will distinguish
+merged code, a local passing gate and live deployment evidence at every checkpoint.
+
+I also found that the live probes print raw errors, stderr or model replies. In particular,
+the security probe prints its reply before checking for leaked credentials. I have not changed
+the probes. Their execution needs protected output and a disposable database; I must not ask
+someone to paste raw probe output or infer that an exit code alone proves a probe passed.
