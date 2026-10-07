@@ -1,7 +1,13 @@
 import { hasStore, isAuthorizedOwner, redeemInvite } from '../repositories/access.js';
 import { clearSession } from '../repositories/updates.js';
 import { reseedStore } from '../seed/index.js';
-import { INVALID_CODE, PRIVATE_MESSAGE, RESET_EXPLAINER, WELCOME } from './messages.js';
+import {
+  INVALID_CODE,
+  PRIVATE_MESSAGE,
+  RESET_EXPLAINER,
+  WELCOME,
+  privacyMessage,
+} from './messages.js';
 
 /**
  * Command logic as plain functions. bot.ts only adapts grammY to these, so they can be
@@ -24,6 +30,10 @@ export async function startCommand(
 export async function newCommand(chatId: bigint): Promise<string> {
   await clearSession(chatId);
   return 'Fresh chat. Your stock, khata and preferences are unchanged.';
+}
+
+export function privacyCommand(contact?: string): string {
+  return privacyMessage(contact);
 }
 
 /** Destructive, so it takes an explicit second word. Anything else explains and does nothing. */

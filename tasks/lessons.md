@@ -300,3 +300,10 @@ path persisted the original whitespace-padded input. Reads normalized it again, 
 storage inconsistency. The update now persists the parsed value; a database assertion checks the
 stored row itself. Review claims should be checked against the actual persistence path, not only
 the read API.
+
+## 2026-10-07: privacy copy must match both configured and fallback paths
+
+W5 review found the disclosure described export requests through a contact even when no contact was
+configured and no in-chat export existed. The copy now states the unavailable feature plainly and
+uses the exact invite-issuer fallback for privacy requests. Tests assert the literal fallback rather
+than importing the constant being tested, so an invented replacement cannot make the test pass.

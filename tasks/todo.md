@@ -7,7 +7,7 @@
 - [x] Owner approval and implementation decisions recorded in spec and plan
 - [x] W1: enforce single-use owner confirmation for high-impact exceptions (gate green; independent review complete)
 - [x] W2: constrain and safely render owner preferences (gate green; independent review complete)
-- [ ] W5: add accurate `/privacy` and onboarding disclosure
+- [x] W5: add accurate `/privacy` and onboarding disclosure (gate green; independent review complete)
 - [ ] W3: implement approved transcript and artifact retention
 - [ ] W4: export and erasure, blocked on legal/product record-retention decision
 - [ ] W6: data inventory, threat model, impact assessment, system card, risk register, incident runbook

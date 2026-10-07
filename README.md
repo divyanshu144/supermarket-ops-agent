@@ -10,6 +10,13 @@ close the day, and pull GST invoices and analysis decks — in plain terse Engli
 Deployed on Railway, one replica, long-polling. Deployment notes: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 The full reasoning behind everything below: [`docs/DESIGN.md`](docs/DESIGN.md).
 
+## Privacy and AI use
+
+The owner sees an AI-processing notice during onboarding. `/privacy` explains what the app stores,
+where text and voice are processed, and the current app retention behavior. Set the optional
+`PRIVACY_CONTACT` to a Telegram username or email; if unset, the bot says to ask whoever gave the
+owner their invite. Store export and customer pseudonymisation are not yet available in the bot.
+
 ## Setup
 
 ```bash

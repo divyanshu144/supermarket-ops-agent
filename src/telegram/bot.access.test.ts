@@ -293,6 +293,18 @@ describe('access gate', () => {
     await bot.handleUpdate(textUpdate(OWNER, 'hello') as never);
     expect(runAgent).toHaveBeenCalledTimes(1);
   });
+
+  it('serves /privacy to the owner as plain text', async () => {
+    await provisionStore(OWNER, OWNER);
+    const bot = makeBot();
+    await bot.handleUpdate(textUpdate(OWNER, '/privacy') as never);
+
+    expect(replies().join('\n')).toContain('Anthropic');
+    expect(replies().join('\n')).toContain('OpenAI');
+    expect(replies().join('\n')).toContain('no automatic expiry');
+    expect(sent.at(-1)?.method).toBe('sendMessage');
+    expect(sent.at(-1)?.payload.parse_mode).toBeUndefined();
+  });
 });
 
 describe('turn to ledger wiring', () => {

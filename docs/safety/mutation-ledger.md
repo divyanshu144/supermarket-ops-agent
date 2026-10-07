@@ -37,3 +37,21 @@ Run on 2026-10-07, branch `responsible-ai`, disposable database target
 
 All W2 mutations were restored. Initial W2 focused tests passed (37 tests across 2 files); the
 normalized-upsert regression adds one more test. Final W2 gate output is recorded in `HANDOFF.md`.
+
+## W5: owner-facing AI and privacy disclosure
+
+Run on 2026-10-07, branch `responsible-ai`, disposable database target
+`127.0.0.1:55439/rai_test`. Telegram tests use the mocked model and Telegram API; no live calls.
+
+| Guard | Deliberate mutation | Test and observed result | Final state |
+|---|---|---|---|
+| Provider disclosure | Replaced Anthropic with a fictitious provider in `/privacy`. | `pnpm exec vitest run src/telegram/privacy.test.ts -t 'discloses AI providers' --reporter=dot` failed because the expected provider was absent. | Restored actual provider disclosure. |
+| Accurate retention | Claimed generated files expire after 30 days before W3 implements cleanup. | The same privacy test failed because it requires the current “no automatic expiry” behavior. | Restored current-state wording; W3 will update it after implementation. |
+| Required fallback | Replaced the fallback with an invented email. The first check used the exported constant as its expectation and therefore survived. The test was corrected to assert the exact approved phrase. | `pnpm exec vitest run src/telegram/privacy.test.ts -t 'discloses AI providers' --reporter=dot` then failed because “ask whoever gave you your invite” was absent. | Restored the exact approved fallback and fixed the test to use a literal. |
+| Plain-text Telegram delivery | Added `parse_mode: 'HTML'` to `/privacy`. | `pnpm exec vitest run src/telegram/bot.access.test.ts -t 'serves /privacy' --reporter=dot` failed because `parse_mode` was present. | Restored plain-text sending. |
+| Contact validation | Replaced the email/Telegram-handle validator with any string. | `pnpm exec vitest run src/config/env.test.ts -t 'malformed privacy contact' --reporter=dot` failed because malformed markup was accepted. | Restored strict validation. |
+| Onboarding notice | Removed the AI-processing notice from `WELCOME`. | `pnpm exec vitest run src/telegram/privacy.test.ts -t 'onboarding' --reporter=dot` failed because the notice was absent. | Restored onboarding disclosure and `/privacy` link. |
+
+All W5 mutations were restored. The initial focused suite passed 39 tests across three files; an
+independent review then led to a copy change that removes any suggestion that export is already
+available through a contact. The final gate is recorded in `HANDOFF.md`.

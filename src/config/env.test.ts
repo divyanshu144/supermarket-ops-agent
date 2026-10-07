@@ -27,6 +27,21 @@ describe('loadEnv', () => {
     const { AGENT_EFFORT, ...rest } = valid;
     expect(loadEnv(rest).AGENT_EFFORT).toBe('medium');
   });
+
+  it('accepts an optional privacy contact as an email or Telegram username', () => {
+    expect(loadEnv({ ...valid, PRIVACY_CONTACT: 'privacy@example.com' }).PRIVACY_CONTACT).toBe(
+      'privacy@example.com',
+    );
+    expect(loadEnv({ ...valid, PRIVACY_CONTACT: '@privacy_owner' }).PRIVACY_CONTACT).toBe(
+      '@privacy_owner',
+    );
+  });
+
+  it('rejects malformed privacy contact text', () => {
+    expect(() => loadEnv({ ...valid, PRIVACY_CONTACT: '<b>fake contact</b>' })).toThrow(
+      /PRIVACY_CONTACT/,
+    );
+  });
 });
 
 describe('shouldLogMessageText', () => {

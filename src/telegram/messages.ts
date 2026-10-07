@@ -8,7 +8,27 @@ export const WELCOME = [
   '',
   '/new — fresh conversation (your stock, khata and preferences stay)',
   '/reset — restore this shop to its starting state (asks you to confirm)',
+  '',
+  'AI notice: messages and relevant shop data may be processed by Anthropic. Voice audio goes to OpenAI for transcription.',
+  'Send /privacy for app storage, current retention, and privacy contact details.',
 ].join('\n');
+
+export const PRIVACY_CONTACT_FALLBACK = 'ask whoever gave you your invite';
+
+export function privacyMessage(contact?: string): string {
+  const contactLine = contact
+    ? `For privacy requests, contact ${contact}.`
+    : `For privacy requests, ${PRIVACY_CONTACT_FALLBACK}.`;
+  return [
+    'Privacy and AI use',
+    '',
+    'This bot uses Anthropic to process owner messages and relevant shop data for replies and tool use. If you send a voice note, its audio is sent to OpenAI for transcription.',
+    'The app stores shop and product records, bills, customer names and khata records, preferences, conversation transcripts, usage records, and generated invoice/deck files.',
+    'Current app retention: transcripts remain until /new or /reset confirm. Generated files currently have no automatic expiry. Telegram and AI-provider retention is outside this app and is not stated here.',
+    'In-chat store export and customer pseudonymisation are not yet available.',
+    contactLine,
+  ].join('\n');
+}
 
 export const PRIVATE_MESSAGE =
   'This is a private bot. If you have an invite code, send /start <your code>.';

@@ -2,7 +2,7 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-07, W1 and W2 implemented, reviewed, and locally verified
+**Last updated:** 2026-10-07, W1, W2, and W5 implemented, reviewed, and locally verified
 **Branch:** `responsible-ai`, created from `eval-harness` at `c435f26`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
@@ -57,9 +57,24 @@ Seven W2 mutations and their outcomes are recorded in `docs/safety/mutation-ledg
 independent review caught raw-value persistence on conflict update; it is fixed and a fresh review
 found no blocker. No live model call, probe, or `.env` access occurred.
 
+W5 is complete. Invite onboarding now includes an AI-processing notice and `/privacy` gives the
+current app data categories, actual current retention, provider flows, and optional contact. It
+does not promise provider retention or legal compliance. Before W3, the message truthfully says
+transcripts last until `/new` or `/reset confirm` and generated files have no automatic expiry.
+Store export and customer pseudonymisation are identified as not yet available; W4 will update the
+copy after those controls exist. `PRIVACY_CONTACT` accepts an email or Telegram username and falls
+back to “ask whoever gave you your invite”. `/privacy` is sent as plain text with no Telegram
+parse_mode.
+
+W5 focused tests passed (39 tests across 3 files). The required gate on disposable
+`127.0.0.1:55439/rai_test` passed: `pnpm fmt:check`, `pnpm lint`, `pnpm typecheck`, and `pnpm test`
+(489 passed, 13 skipped; 53 files). Six mutations are recorded in
+`docs/safety/mutation-ledger.md`. Independent review found no remaining issue. No live call, probe,
+or `.env` access occurred.
+
 Every DB command and gate must use an explicitly disposable `DATABASE_URL`. Each completed task
 gets a local commit on this branch; never push. Independent review is required at each task
-checkpoint. Any hard stop is recorded here before proceeding to independent work. W5, W3, the W4
+checkpoint. Any hard stop is recorded here before proceeding to independent work. W3, the W4
 export/customer-pseudonymisation slice, W6, and W7 remain pending. Store erasure remains NOT DONE
 pending legal review.
 

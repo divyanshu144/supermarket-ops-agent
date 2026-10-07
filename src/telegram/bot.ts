@@ -6,7 +6,7 @@ import { downloadTelegramFile } from '../media/download.js';
 import { transcribe, whisperCostMicroUsd } from '../media/transcribe.js';
 import { claimUpdate, completeUpdate } from '../repositories/updates.js';
 import { recordUsage } from '../repositories/usage.js';
-import { newCommand, resetCommand, startCommand } from './commands.js';
+import { newCommand, privacyCommand, resetCommand, startCommand } from './commands.js';
 import { drainGate } from './drain.js';
 import { accessGate } from './gate.js';
 import { DAILY_CAP_REPLY, PRIVATE_MESSAGE, RATE_LIMITED_REPLY, WELCOME } from './messages.js';
@@ -105,6 +105,13 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
     'help',
     guarded(async (ctx) => {
       await ctx.reply(WELCOME);
+    }),
+  );
+
+  bot.command(
+    'privacy',
+    guarded(async (ctx) => {
+      await ctx.reply(privacyCommand(env.PRIVACY_CONTACT));
     }),
   );
 
