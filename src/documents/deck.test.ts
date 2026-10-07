@@ -6,6 +6,7 @@ import { stores } from '../db/schema.js';
 import { seedStore } from '../seed/index.js';
 import { salesReport } from '../repositories/analytics.js';
 import { generateAnalysisDeck } from './deck.js';
+import { gradeDeterministically } from '../evals/assertions.js';
 
 const STORE = 999000031n;
 const generated: string[] = [];
@@ -43,6 +44,68 @@ describe('generateAnalysisDeck', () => {
     const raw = (await readFile(result.artifact.path)).toString('latin1');
     expect(raw).toContain('ppt/charts/chart');
     expect(raw).not.toContain('ppt/media/image');
+
+    const emptyState = {
+      products: [],
+      movements: [],
+      bills: [],
+      billItems: [],
+      accounts: [],
+      ledger: [],
+      preferences: [],
+      artifacts: [],
+      sentinel: {
+        products: [],
+        movements: [],
+        bills: [],
+        billItems: [],
+        accounts: [],
+        ledger: [],
+        preferences: [],
+      },
+    };
+    const graded = await gradeDeterministically(
+      {
+        tools: { ordered: [], forbidden: [] },
+        refusalCodes: [],
+        state: {
+          stock: [],
+          movements: [],
+          bills: [],
+          accounts: [],
+          preferences: [],
+          artifacts: [
+            {
+              ref: 'deck',
+              mediaType:
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+              contains: ['Sales by day', 'Top selling items'],
+              nativeChartCount: 3,
+            },
+          ],
+        },
+        noBusinessStateChange: false,
+      },
+      {
+        before: emptyState,
+        after: {
+          ...emptyState,
+          artifacts: [
+            {
+              ref: 'deck',
+              mediaType:
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+              path: result.artifact.path,
+            },
+          ],
+        },
+        tools: [],
+        reply: '',
+        askedClarifyingQuestion: false,
+      },
+      { storeIds: {}, productIds: {}, customerIds: {}, billIds: {}, sentinelProductId: '' },
+    );
+    expect(graded).toEqual({ pass: true, failures: [] });
   });
 
   it('reports the same bill count the analytics query does', async () => {

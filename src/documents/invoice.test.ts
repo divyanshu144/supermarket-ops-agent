@@ -6,6 +6,7 @@ import { products, stores } from '../db/schema.js';
 import { addBillItem, finalizeBill, getBill, openBill } from '../repositories/bills.js';
 import { buildInvoiceDoc, generateInvoicePdf } from './invoice.js';
 import { formatPaise } from '../domain/money.js';
+import { extractPdfText } from '../evals/assertions.js';
 
 /** Mirrors the PDF's currency rendering — Helvetica has no glyph for the rupee sign. */
 const rupees = (paise: number) => formatPaise(paise).replace('₹', 'Rs.');
@@ -77,6 +78,16 @@ describe('generateInvoicePdf', () => {
     expect(bytes.length).toBeGreaterThan(1000);
     expect(result.artifact.mime).toBe('application/pdf');
     expect(result.artifact.filename).toMatch(/^invoice-INV-\d+\.pdf$/);
+
+    const extracted = await extractPdfText(bytes);
+    const bill = await getBill(STORE, billId);
+    expect(extracted).toContain('Sharma Kirana Store');
+    expect(extracted).toContain('27AAAAA0000A1Z5');
+    expect(extracted).toContain('TAX INVOICE');
+    expect(extracted).toContain(bill!.invoiceNumber!);
+    expect(extracted).toContain('Walk-in');
+    expect(extracted).toContain('Maggi Noodles 70g');
+    expect(extracted).toContain(rupees(bill!.totals.totalPaise));
   });
 
   it('puts totals in the document that match the database exactly', async () => {
