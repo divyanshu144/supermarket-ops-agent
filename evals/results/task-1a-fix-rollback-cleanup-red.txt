@@ -1,0 +1,30 @@
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+ ❯ src/evals/database.test.ts (14 tests | 1 failed | 13 skipped) 108ms
+     × cleans exact resources after rollback provisioning failure 107ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  22:49:27
+   Duration  458ms (transform 37ms, setup 16ms, import 255ms, tests 108ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/evals/database.test.ts > dedicated Postgres isolation (real integration) > cleans exact resources after rollback provisioning failure
+AssertionError: expected 'Error: injected rollback failure' to contain 'provisioning failed'
+
+Expected: "provisioning failed"
+Received: "Error: injected rollback failure"
+
+ ❯ src/evals/database.test.ts:259:33
+    257|       const admin = await connect(adminUrl!);
+    258|       try {
+    259|         expect(String(failure)).toContain(boundary === 'rollback' ? 'p…
+       |                                 ^
+    260|         expect(
+    261|           (
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

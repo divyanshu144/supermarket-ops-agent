@@ -1,0 +1,42 @@
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+ ❯ src/evals/database.test.ts (14 tests | 1 failed | 13 skipped) 202ms
+     × uses captured identities after returned manifest mutation 201ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  22:49:33
+   Duration  495ms (transform 25ms, setup 13ms, import 207ms, tests 202ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/evals/database.test.ts > dedicated Postgres isolation (real integration) > uses captured identities after returned manifest mutation
+AssertionError: expected { version: 1, …(5) } to deeply equal { version: 1, …(5) }
+
+- Expected
++ Received
+
+  {
+    "createdAt": "2026-10-06T21:49:34.146Z",
+-   "database": "eval_db_a43bdfe747f24979b6cd6413582613e7",
+-   "ownerToken": "eval-owner:1b91f9a1-3cfd-4c7f-8947-15a2730e12ea",
+-   "role": "eval_role_a43bdfe747f24979b6cd6413582613e7",
++   "database": "not_owned",
++   "ownerToken": "tampered",
++   "role": "not_owned",
+    "state": "cleaned",
+    "version": 1,
+  }
+
+ ❯ src/evals/database.test.ts:335:20
+    333|       await sandbox.cleanup();
+    334|       const disk = JSON.parse(await readFile(sandbox.manifestPath, 'ut…
+    335|       expect(disk).toEqual({ ...original, state: 'cleaned' });
+       |                    ^
+    336|     } finally {
+    337|       Object.assign(sandbox.manifest, original);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

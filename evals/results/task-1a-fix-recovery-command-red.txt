@@ -1,0 +1,30 @@
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+ ❯ src/evals/database.test.ts (14 tests | 1 failed | 13 skipped) 210ms
+     × preserves recovery identity and command on cleanup failure 209ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  22:49:31
+   Duration  555ms (transform 33ms, setup 16ms, import 237ms, tests 210ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/evals/database.test.ts > dedicated Postgres isolation (real integration) > preserves recovery identity and command on cleanup failure
+AssertionError: expected 'AggregateError: Sandbox cleanup faile…' to contain 'DROP DATABASE "eval_db_fa98c37d2a0649…'
+
+Expected: "DROP DATABASE "eval_db_fa98c37d2a06490798b1d9c591110c19" WITH (FORCE)"
+Received: "AggregateError: Sandbox cleanup failed: Manifest /var/folders/gs/6gjhnpdn0zd0p99jkjwdr0700000gn/T/eval-db-test-gq3duO/fa98c37d2a06490798b1d9c591110c19.json; manual recovery required"
+
+ ❯ src/evals/database.test.ts:315:29
+    313|       expect(error).toBeInstanceOf(AggregateError);
+    314|       expect(String(error)).toContain(sandbox.manifestPath);
+    315|       expect(String(error)).toContain(`DROP DATABASE "${sandbox.manife…
+       |                             ^
+    316|       expect(String(error)).toContain(`DROP ROLE "${sandbox.manifest.r…
+    317|       expect(String(error)).not.toContain('postgres://');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

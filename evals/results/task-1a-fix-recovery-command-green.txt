@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 13 skipped (14)
+   Start at  22:49:32
+   Duration  766ms (transform 43ms, setup 17ms, import 288ms, tests 363ms, environment 0ms)
+

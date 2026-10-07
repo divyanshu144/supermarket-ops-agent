@@ -1,0 +1,30 @@
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+ ❯ src/evals/database.test.ts (14 tests | 1 failed | 13 skipped) 171ms
+     × cleans exact resources after comment provisioning failure 170ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  22:49:26
+   Duration  470ms (transform 30ms, setup 15ms, import 208ms, tests 171ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/evals/database.test.ts > dedicated Postgres isolation (real integration) > cleans exact resources after comment provisioning failure
+AssertionError: expected 'AggregateError: Sandbox provisioning …' to contain 'injected'
+
+Expected: "injected"
+Received: "AggregateError: Sandbox provisioning and cleanup failed: Manifest /var/folders/gs/6gjhnpdn0zd0p99jkjwdr0700000gn/T/eval-db-test-mTTwxI/44871308848d40ee9ed283d222a1d4bb.json; after verifying ownership, run: DROP DATABASE "eval_db_44871308848d40ee9ed283d222a1d4bb" WITH (FORCE); DROP ROLE "eval_role_44871308848d40ee9ed283d222a1d4bb";"
+
+ ❯ src/evals/database.test.ts:259:33
+    257|       const admin = await connect(adminUrl!);
+    258|       try {
+    259|         expect(String(failure)).toContain(boundary === 'rollback' ? 'p…
+       |                                 ^
+    260|         expect(
+    261|           (
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

@@ -1,0 +1,104 @@
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+ ❯ src/evals/database.test.ts (13 tests | 5 failed) 1929ms
+     × requires explicit database names on both URLs 2ms
+     × rejects connection overrides on either URL 0ms
+     × cleans exact resources after comment provisioning failure 70ms
+     × cleans exact resources after rollback provisioning failure 62ms
+     × uses captured identities after returned manifest mutation 189ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/evals/database.test.ts > eval database admission > requires explicit database names on both URLs
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ src/evals/database.test.ts:53:88
+     51|   it('requires explicit database names on both URLs', () => {
+     52|     for (const path of ['', '/']) {
+     53|       expect(() => validateAdminUrl(`postgres://pg@localhost:5435${pat…
+       |                                                                                        ^
+     54|       expect(() => validateAdminUrl('postgres://pg@localhost:5435/eval…
+     55|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/evals/database.test.ts > eval database admission > rejects connection overrides on either URL
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ src/evals/database.test.ts:63:94
+     61|     for (const query of ['?host=elsewhere', '?port=9999', '?dbname=oth…
+     62|       expect(() => validateAdminUrl(`postgres://pg@localhost/eval${que…
+     63|       expect(() => validateAdminUrl('postgres://pg@localhost/eval', `$…
+       |                                                                                              ^
+     64|     }
+     65|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/evals/database.test.ts > dedicated Postgres isolation (real integration) > cleans exact resources after comment provisioning failure
+AssertionError: expected [Function] to throw error including 'injected' but got 'Sandbox provisioning and cleanup fail…'
+
+Expected: "injected"
+Received: "Sandbox provisioning and cleanup failed; inspect manifest"
+
+ ❯ src/evals/database.test.ts:200:39
+    198|     } as typeof original);
+    199|     try {
+    200|       await expect(createSandbox(cfg)).rejects.toThrow('injected');
+       |                                       ^
+    201|     } finally { spy.mockRestore(); }
+    202|     const files = await readdir(cfg.manifestDirectory);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/evals/database.test.ts > dedicated Postgres isolation (real integration) > cleans exact resources after rollback provisioning failure
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/evals/database.test.ts:206:119
+    204|     const admin = await connect(adminUrl!);
+    205|     try {
+    206|       expect((await admin.query('SELECT datname FROM pg_database WHERE…
+       |                                                                                                                       ^
+    207|       expect((await admin.query('SELECT rolname FROM pg_roles WHERE ro…
+    208|       expect(manifest.state).toBe('cleaned');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/evals/database.test.ts > dedicated Postgres isolation (real integration) > uses captured identities after returned manifest mutation
+Error: Sandbox manifest ownership mismatch
+ ❯ Object.cleanup src/evals/database.ts:126:43
+    124|     const disk: SandboxManifest = JSON.parse(await readFile(manifestPa…
+    125|     for (const key of ['database', 'role', 'ownerToken'] as const) {
+    126|       if (disk[key] !== owned[key]) throw new Error('Sandbox manifest …
+       |                                           ^
+    127|     }
+    128|     const client = new pg.Client({
+ ❯ src/evals/database.test.ts:239:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 8 passed (13)
+   Start at  22:46:52
+   Duration  2.24s (transform 27ms, setup 17ms, import 215ms, tests 1.93s, environment 0ms)
+

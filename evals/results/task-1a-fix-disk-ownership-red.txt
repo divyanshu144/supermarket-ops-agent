@@ -1,0 +1,35 @@
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+ ❯ src/evals/database.test.ts (14 tests | 1 failed | 13 skipped) 290ms
+     × refuses on-disk manifest tampering and recovers after restoration 289ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  22:49:29
+   Duration  694ms (transform 30ms, setup 14ms, import 319ms, tests 290ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/evals/database.test.ts > dedicated Postgres isolation (real integration) > refuses on-disk manifest tampering and recovers after restoration
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ src/evals/database.test.ts:286:38
+    284|       disk.ownerToken = 'tampered';
+    285|       await writeFile(sandbox.manifestPath, JSON.stringify(disk));
+    286|       await expect(sandbox.cleanup()).rejects.toThrow('ownership');
+       |                                      ^
+    287|       expect(await readFile(sandbox.manifestPath, 'utf8')).toContain('…
+    288|       const client = await connect(sandbox.workerUrl);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

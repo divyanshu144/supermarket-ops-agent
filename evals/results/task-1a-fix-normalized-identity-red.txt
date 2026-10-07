@@ -1,0 +1,33 @@
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+ ❯ src/evals/database.test.ts (14 tests | 1 failed | 13 skipped) 4ms
+     × normalizes the default port and decoded database with localhost aliases 3ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  22:49:24
+   Duration  275ms (transform 24ms, setup 14ms, import 190ms, tests 4ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/evals/database.test.ts > eval database admission > normalizes the default port and decoded database with localhost aliases
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ src/evals/database.test.ts:75:7
+     73|         'postgresql://normal@localhost:5432/kirana',
+     74|       ),
+     75|     ).toThrow('normal database');
+       |       ^
+     76|   });
+     77|   it('rejects connection overrides on either URL', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+

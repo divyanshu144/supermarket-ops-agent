@@ -1,0 +1,33 @@
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+ ❯ src/evals/database.test.ts (14 tests | 1 failed | 13 skipped) 3ms
+     × requires explicit database names on both URLs 3ms
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  22:49:22
+   Duration  319ms (transform 28ms, setup 16ms, import 215ms, tests 3ms, environment 0ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/evals/database.test.ts > eval database admission > requires explicit database names on both URLs
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ src/evals/database.test.ts:58:88
+     56|   it('requires explicit database names on both URLs', () => {
+     57|     for (const path of ['', '/']) {
+     58|       expect(() => validateAdminUrl(`postgres://pg@localhost:5435${pat…
+       |                                                                                        ^
+     59|         'explicit database',
+     60|       );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
