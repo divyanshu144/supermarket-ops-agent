@@ -356,6 +356,39 @@ describe('replay recording integrity', () => {
     }
   });
 
+  it('injects the synthetic owner identity into a test replay context when supplied', async () => {
+    const registry: ReplayTool[] = [
+      {
+        name: 'get_stock',
+        inputSchema: {},
+        handler: async () => {
+          const { requireContext } = await import('../tools/context.js');
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({ owner_user_id: requireContext().ownerUserId?.toString() }),
+              },
+            ],
+          };
+        },
+      },
+    ];
+    const recording = {
+      version: 1,
+      id: 'owner-context',
+      provenance: 'synthetic',
+      storeId: '920001',
+      updateId: '107',
+      ownerUserId: '77001',
+      steps: [{ id: 'identity', tool: 'get_stock', args: {}, expect: { owner_user_id: '77001' } }],
+    };
+
+    await expect(replayWithInjectedToolsForTest(recording, registry)).resolves.toMatchObject({
+      calls: [{ result: { owner_user_id: '77001' } }],
+    });
+  });
+
   it.skipIf(!adminUrl)(
     'builds and finalizes a bill through real handlers, validates results and scopes foreign IDs',
     async () => {

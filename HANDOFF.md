@@ -153,8 +153,37 @@ All matched files use Prettier code style!
    Duration  30.54s (transform 518ms, setup 347ms, import 12.07s, tests 13.46s, environment 3ms)
 ```
 Each gate command used the disposable database URL and dummy test tokens. No live model call, probe,
-or `.env` access occurred. W7 synthetic safety replay remains. Store erasure remains **NOT DONE**
-pending legal review; do not implement it.
+or `.env` access occurred. W7 is implemented. The first trace-grader draft was rejected because it
+graded self-authored state fingerprints without executing production tools. The final version has
+synthetic grader tests plus DB-backed replay cases that invoke registered handlers against unique
+stores in the disposable test database. The independent final review found no blockers. CI uses its
+existing single Postgres service for these cases and the offline replay; neither path calls a model.
+The final gate passed:
+```
+> Newpage_assignment@1.0.0 fmt:check
+> prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+
+> Newpage_assignment@1.0.0 lint
+> eslint .
+
+> Newpage_assignment@1.0.0 typecheck
+> tsc --noEmit
+
+> Newpage_assignment@1.0.0 test
+> vitest run
+
+ Test Files  61 passed (61)
+      Tests  541 passed | 13 skipped (554)
+   Start at  23:26:55
+   Duration  28.11s (transform 461ms, setup 293ms, import 10.57s, tests 13.08s, environment 3ms)
+```
+`pnpm eval:safety` reported six synthetic cases passing with no violations. The test-only tool-call
+bound does not enforce production rate or cost limits; those semantics remain unverified. Mutation
+results and synthetic output are in `evals/results/w7-safety-replay-synthetic.md`. No paid model call,
+probe, or `.env` access occurred. Store erasure remains **NOT DONE** pending legal review; do not
+implement it.
 
 Every DB command and gate must use an explicitly disposable `DATABASE_URL`. Each completed task
 gets a local commit on this branch; never push. Independent review is required at each task

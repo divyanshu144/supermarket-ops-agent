@@ -8,6 +8,7 @@ const safetyDocs = [
   'docs/safety/system-card.md',
   'docs/safety/risk-register.md',
   'docs/safety/incident-runbook.md',
+  'docs/safety/synthetic-replay.md',
 ];
 
 describe('responsible-AI documentation consistency', () => {

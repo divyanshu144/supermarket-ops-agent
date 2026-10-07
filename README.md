@@ -23,7 +23,9 @@ does not rewrite historical transcript mentions, and does not erase a whole stor
 The safety and data-protection notes are engineering documentation, not legal or compliance claims:
 [threat model](docs/safety/threat-model.md), [impact-assessment notes](docs/safety/dpia-lite.md),
 [system card](docs/safety/system-card.md), [risk register](docs/safety/risk-register.md), and
-[incident runbook](docs/safety/incident-runbook.md).
+[incident runbook](docs/safety/incident-runbook.md). The offline [synthetic safety replay](docs/safety/synthetic-replay.md)
+checks recorded tool traces and state assertions without a model call; it does not measure live
+agent quality.
 
 ## Setup
 

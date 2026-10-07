@@ -29,6 +29,10 @@ export const ReplayRecordingSchema = z
     provenance: z.literal('synthetic'),
     storeId: z.string().regex(/^[1-9][0-9]*$/),
     updateId: z.string().regex(/^[1-9][0-9]*$/),
+    ownerUserId: z
+      .string()
+      .regex(/^[1-9][0-9]*$/)
+      .optional(),
     steps: z.array(replayStepSchema).min(1),
   })
   .strict()
@@ -126,7 +130,12 @@ export async function executeReplayWithTools(
 ): Promise<ReplayResult> {
   const recording = ReplayRecordingSchema.parse(input);
   const tools = new Map(registeredTools.map((tool) => [tool.name, tool]));
-  const context = newToolContext(BigInt(recording.storeId), BigInt(recording.updateId));
+  const context = newToolContext(
+    BigInt(recording.storeId),
+    BigInt(recording.updateId),
+    undefined,
+    recording.ownerUserId === undefined ? undefined : BigInt(recording.ownerUserId),
+  );
   const results = new Map<string, unknown>();
   const calls: ReplayResult['calls'] = [];
 

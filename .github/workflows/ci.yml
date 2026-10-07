@@ -36,6 +36,7 @@ jobs:
 
     env:
       DATABASE_URL: postgres://kirana:kirana@localhost:5432/kirana
+      EVAL_SAFETY_TEST_DATABASE_URL: postgres://kirana:kirana@localhost:5432/kirana
       # The tool layer is exercised directly, so no live model call is made and no real key is
       # needed. Config validation is fail-fast at import, so these must be present and non-empty.
       TELEGRAM_BOT_TOKEN: ci-placeholder-not-a-real-token
@@ -75,3 +76,6 @@ jobs:
         # trigger on khata_entries to prove the khata write is inside the finalize transaction,
         # and while it exists any parallel file inserting there fails.
         run: pnpm test
+
+      - name: Offline safety replay
+        run: pnpm eval:safety

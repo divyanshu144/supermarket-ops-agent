@@ -18,7 +18,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "invite": "tsx src/scripts/invite.ts",
-    "eval:compare": "tsx src/evals/compare-cli.ts"
+    "eval:compare": "tsx src/evals/compare-cli.ts",
+    "eval:safety": "tsx src/evals/safety-replay-cli.ts"
   },
   "keywords": [],
   "author": "",

@@ -90,13 +90,29 @@ The independent W6 review found that the worker had not connected the approved i
 
 **Files expected to touch:** eval scenario schema and runner in `src/evals/`; synthetic fixtures in `evals/`; CI workflow; eval docs and README.
 
-**Tests to write first:** replay asserts no cross-store data/tool access, no mutation without confirmation, no unrelated customer PII disclosure, and bounded tool behavior for spend-abuse scenarios. Ensure replay tags select safety cases and run without credentials.
+**Tests to write first:** replay asserts no cross-store data/tool access, no mutation without required owner confirmation, no unrelated customer PII disclosure, and bounded traces. The database-backed synthetic replay uses the actual registered store tools and a unique seeded store for each case against the explicitly disposable `DATABASE_URL`; it does not invoke a model. Keep this test-only injected-handler path visibly separate from `replayRecording`, which uses an owned sandbox and child process. The offline trace-grader tests check the grader itself and are not evidence that app controls work. Test that safety tag selection is non-empty and fails closed for unknown or empty selections. Keep cost semantics explicitly unverified; a replay tool-call bound is a test bound, not a production rate or cost guarantee.
 
-**Implementation:** add synthetic replay cases for catalogue prompt injection, cross-store access, delete/stock-destruction requests, customer-data fishing, and tool/cost abuse. Report only deterministic replay checks. Add a manual live runbook with a small configured cap for later credentialed use; do not run it now.
+**Implementation:** add synthetic replays for catalogue prompt injection, cross-store access, stock destruction, customer-data fishing, confirmation-required actions, and repeated report/tool-call abuse. Run traces through the real registered handlers and compare resulting tool results and database state. Keep offline grading for malformed/violating synthetic traces. Report deterministic replay checks only. CI's single disposable Postgres service runs these database-backed cases alongside existing tests; replay remains keyless and the live runbook is manual. Do not run probes or live calls.
 
-**Mutations:** delete a tenant assertion, accept a forbidden tool in the trace, remove safety tag filtering, or make replay invoke a model. Each should fail an offline test.
+**Mutations:** delete a tenant assertion, permit a forbidden tool, remove the required-confirmation assertion, remove PII checks, remove state-change/tool-call bounds, remove safety tag filtering, let an empty tag pass, or make replay invoke a model. Each must fail a test. Record any mutation that survives and fix the test before proceeding.
 
-**Stop if:** CI needs an API key, outputs are represented as live model quality, or safety assertions only grade reply wording rather than state and tool trace.
+**Stop if:** CI needs a provider key, a database-backed case cannot run against the disposable test database, outputs are represented as live model quality, or safety assertions only grade reply wording rather than actual tool results and database state.
+
+### W7 correction after independent review
+
+The first W7 draft graded self-authored traces and state fingerprints. Review correctly found that
+this could not detect a change in production tool behavior. That draft is retained only as grader
+unit coverage. The corrected plan requires synthetic cases to execute the registered tools and
+assert their actual database effects against the disposable test database. Review also found that
+the first spend-abuse example passed repeated calls, empty tag selections were green, and confirmation
+grading missed mutating calls with no confirmation state. These are added as explicit regression
+tests before the corrected runner is considered complete. Do not report the trace grader as a
+production control or report live cost behavior.
+
+The fresh final review also caught an over-limit synthetic trace being displayed as `pass` because
+the grader expected the violation. The dataset now contains only within-bound traces; a separate
+grader mutation test adds an extra call and asserts a failing result. Production repeated-tool and
+cost enforcement are not implemented by this replay.
 
 ## Checkpoint and completion criteria
 

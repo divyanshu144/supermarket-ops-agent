@@ -365,3 +365,24 @@ legacy artifact backfill is safe because old filenames do not identify a store o
 - A documentation guard must assert the relevant table row, not only match equivalent wording in a
   separate paragraph. The first stale-inventory mutation survived because of that loose match; a
   row-scoped assertion then failed on the same mutation as intended.
+
+## 2026-10-07: W7 synthetic replay must execute app behavior
+
+The first W7 draft compared self-authored tool traces and state fingerprints. Fresh review correctly
+rejected it: changing the production tool or tenant predicate would not change those supplied
+strings. Keep trace-grader tests as grader tests only; acceptance cases must invoke the registered
+tools and assert actual database state. Review also caught a spend-abuse fixture that passed repeated
+calls and an empty tag selection that returned green. Add tests for those behaviors before restoring
+the W7 implementation path. A replay's fixture cap must not be described as a production cost
+limit.
+
+During the handler integration test, the first PII assertion treated the customer's requested name
+as leaked data. That was a false positive because the handler echoed the query; the protected phone
+number is the sensitive value under test. I narrowed the assertion and then the actual handler test
+passed. I also verified the owner identity is carried into the synthetic test context so the replay
+uses the same owner-scoped code path.
+
+Fresh final review caught an intentionally over-limit trace being reported as a passing safety case
+because the grader treated its expected violation as success. Keep safety outcome reports green only
+for traces with no violations. Test violation detection by mutating an otherwise safe fixture in a
+unit test, and state clearly that the test-only tool-call bound does not constrain production spend.

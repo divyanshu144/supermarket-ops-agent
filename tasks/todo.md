@@ -12,7 +12,7 @@
 - [x] W3 corrective follow-up: indexed artifact activity, invoice regeneration before expiry, active-claim protection, exact session predicate, and store-scoped artifact metadata export (additive migration; mutation ledger and fresh review recorded; required gate green)
 - [x] W4: implement store export and customer pseudonymisation (gate green; independent review complete); store erasure stays NOT DONE pending legal review
 - [x] W6: data inventory, threat model, impact assessment, system card, risk register, incident runbook (gate green; mutation ledger and fresh independent review complete)
-- [ ] W7: synthetic safety replay scenarios and CI coverage
+- [x] W7: synthetic safety replay scenarios and CI coverage (real registered-tool handler replay against disposable Postgres, deterministic offline grader, mutation ledger, fresh independent review, final gate green; no live model calls)
 
 Checklist written **before** implementing. Mark `[x]` as each item finishes — don't batch.
 Milestones from the design spec §13. The detailed per-task breakdown comes from
