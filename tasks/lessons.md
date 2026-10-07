@@ -307,3 +307,19 @@ W5 review found the disclosure described export requests through a contact even 
 configured and no in-chat export existed. The copy now states the unavailable feature plainly and
 uses the exact invite-issuer fallback for privacy requests. Tests assert the literal fallback rather
 than importing the constant being tested, so an invented replacement cannot make the test pass.
+
+## 2026-10-07: retention claims must reflect configuration and actual activity clocks
+
+W3 made the privacy response read the configured retention period; a hard-coded “30 days” would have
+been false when the owner overrides it. Transcript expiry uses the later of the session update and
+its newest mirrored entry. Artifact expiry uses file modification time. Active claims and cleanup
+share a store-row lock, and a database race test verifies the cleanup waits. The test role could not
+reliably inspect another connection's query text through `pg_stat_activity`; `pg_locks` exposed the
+blocked lock requests and gave the test a deterministic condition instead. The transcript mirror
+has no store foreign key, so its test fixture explicitly removes its own `project_key` rows between
+tests. Prettier has no parser for `.env.example`; format source/docs separately and edit that example
+file directly, or the command stops before later validation.
+
+The first W3 full gate also found a Telegram adapter test that still asserted W5's old “no automatic
+expiry” wording after the `/privacy` response changed. Update integration assertions when changing
+user-facing copy; the unit test alone did not cover the route through the real bot handler.

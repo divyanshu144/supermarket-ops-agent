@@ -73,6 +73,17 @@ describe('loadEnv limits', () => {
     expect(env.STORE_DAILY_BUDGET_USD).toBe(5);
     expect(env.RATE_LIMIT_TURNS).toBe(20);
     expect(env.RATE_LIMIT_WINDOW_S).toBe(600);
+    expect(env.APP_DATA_RETENTION_DAYS).toBe(30);
+  });
+
+  it('accepts a bounded data retention override and rejects unsafe values', () => {
+    expect(loadEnv({ ...valid, APP_DATA_RETENTION_DAYS: '45' }).APP_DATA_RETENTION_DAYS).toBe(45);
+    expect(() => loadEnv({ ...valid, APP_DATA_RETENTION_DAYS: '0' })).toThrow(
+      /APP_DATA_RETENTION_DAYS/,
+    );
+    expect(() => loadEnv({ ...valid, APP_DATA_RETENTION_DAYS: '3651' })).toThrow(
+      /APP_DATA_RETENTION_DAYS/,
+    );
   });
 
   it('coerces numeric strings from the environment', () => {

@@ -5,6 +5,7 @@ import { acquireInstanceLock } from './db/instance-lock.js';
 import { runMigrations } from './db/migrate.js';
 import { expireInFlightClaims } from './repositories/updates.js';
 import { beginDrain } from './telegram/drain.js';
+import { startRetentionScheduler } from './retention/worker.js';
 
 // Fail fast before opening any connection or long-poll.
 const env = loadEnv();
@@ -38,6 +39,10 @@ await acquireInstanceLock({
 // reclaimed instead of dropped as "in flight".
 const expired = await expireInFlightClaims();
 if (expired > 0) console.log(`Expired ${expired} in-flight claim(s) from the previous process.`);
+
+// The single-instance lock and claim recovery are complete. Run app-owned retention in the
+// background so cleanup never delays Telegram polling or makes lock waiting look unhealthy.
+startRetentionScheduler(env.APP_DATA_RETENTION_DAYS);
 
 async function shutdown(signal: string): Promise<void> {
   if (shuttingDown) return;

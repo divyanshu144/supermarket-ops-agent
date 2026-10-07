@@ -1,6 +1,6 @@
 import { and, eq, lt, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
-import { processedUpdates, sessions } from '../db/schema.js';
+import { processedUpdates, sessions, stores } from '../db/schema.js';
 import { deleteSessionEntries } from './session-entries.js';
 
 /** A turn still 'claimed' after this long is assumed to have died mid-handling. */
@@ -23,27 +23,35 @@ export type ClaimResult = 'claimed' | 'duplicate' | 'reclaimed';
  *   row claimed, fresh    → 'duplicate' still in flight elsewhere, skip
  */
 export async function claimUpdate(updateId: bigint, chatId: bigint): Promise<ClaimResult> {
-  const inserted = await db
-    .insert(processedUpdates)
-    .values({ updateId, chatId, status: 'claimed' })
-    .onConflictDoNothing()
-    .returning({ updateId: processedUpdates.updateId });
+  return db.transaction(async (tx) => {
+    // Retention locks store rows before checking claims. Use the same lock order so a message
+    // cannot arrive between the cleanup's in-flight check and transcript deletion.
+    await tx.select({ id: stores.id }).from(stores).where(eq(stores.id, chatId)).for('update');
+    const inserted = await tx
+      .insert(processedUpdates)
+      .values({ updateId, chatId, status: 'claimed' })
+      .onConflictDoNothing()
+      .returning({ updateId: processedUpdates.updateId });
 
-  if (inserted.length > 0) return 'claimed';
+    if (inserted.length > 0) return 'claimed';
 
-  const reclaimed = await db
-    .update(processedUpdates)
-    .set({ claimedAt: sql`now()` })
-    .where(
-      and(
-        eq(processedUpdates.updateId, updateId),
-        eq(processedUpdates.status, 'claimed'),
-        lt(processedUpdates.claimedAt, sql`now() - make_interval(secs => ${STALE_AFTER_SECONDS})`),
-      ),
-    )
-    .returning({ updateId: processedUpdates.updateId });
+    const reclaimed = await tx
+      .update(processedUpdates)
+      .set({ claimedAt: sql`now()` })
+      .where(
+        and(
+          eq(processedUpdates.updateId, updateId),
+          eq(processedUpdates.status, 'claimed'),
+          lt(
+            processedUpdates.claimedAt,
+            sql`now() - make_interval(secs => ${STALE_AFTER_SECONDS})`,
+          ),
+        ),
+      )
+      .returning({ updateId: processedUpdates.updateId });
 
-  return reclaimed.length > 0 ? 'reclaimed' : 'duplicate';
+    return reclaimed.length > 0 ? 'reclaimed' : 'duplicate';
+  });
 }
 
 export async function completeUpdate(updateId: bigint): Promise<void> {

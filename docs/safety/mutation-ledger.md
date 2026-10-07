@@ -55,3 +55,29 @@ Run on 2026-10-07, branch `responsible-ai`, disposable database target
 All W5 mutations were restored. The initial focused suite passed 39 tests across three files; an
 independent review then led to a copy change that removes any suggestion that export is already
 available through a contact. The final gate is recorded in `HANDOFF.md`.
+
+## W3: transcript and artifact retention
+
+Run on 2026-10-07, branch `responsible-ai`, disposable database target
+`127.0.0.1:55439/rai_test`. Voice and invoice tests use fake transport and local temporary files;
+no model call was made.
+
+| Guard | Deliberate mutation | Test and observed result | Final state |
+|---|---|---|---|
+| Claimed session protection | Removed the check that skips a session with a claimed Telegram update. | `pnpm exec vitest run src/retention/worker.test.ts -t 'in-flight Telegram claim'` failed: expected zero sessions deleted, got one. | Restored claimed-store check. |
+| Claim/cleanup serialization | Removed the worker's store-row `FOR UPDATE` lock. | `pnpm exec vitest run src/retention/worker.test.ts -t 'serializes a pending update claim'` failed because the stale `claim-race-session` disappeared while another transaction held the store lock. | Restored explicit lock; the passing race test confirms claim completion precedes cleanup's claim check. |
+| Exact retention boundary | Changed the inclusive cutoff comparison to strict `>`. | `pnpm exec vitest run src/retention/worker.test.ts -t 'last activity'` failed: the session exactly at the cutoff was deleted. | Restored `>=`; exact-boundary activity is retained. |
+| Mapped-session/orphan distinction | Removed the `NOT EXISTS` mapping condition from orphan cleanup. | `pnpm exec vitest run src/retention/worker.test.ts -t 'in-flight Telegram claim'` failed because its transcript entry was deleted despite the session being protected. | Restored mapping exclusion. |
+| Artifact expiry | Changed the expiry predicate to delete every regular file. | `pnpm exec vitest run src/retention/worker.test.ts -t 'expires old artifacts'` failed: two files were deleted instead of one and the recent PDF was gone. | Restored cutoff predicate. |
+| Count-only logging | Added a private session ID to the cleanup log. | `pnpm exec vitest run src/retention/worker.test.ts -t 'logs counts only'` failed because output contained `private-session`. | Restored count-only fields. |
+| Audio in-memory handling | Wrote the voice buffer to `voice.oga` in the isolated working directory. | `pnpm exec vitest run src/media/transcribe.test.ts -t 'writes no audio to disk'` failed because the file appeared. | Removed disk write; temporary directory was cleaned in test `finally`. |
+| Telegram voice-handler memory boundary | Wrote downloaded bytes to `voice-handler.oga` in the handler's isolated working directory. | `pnpm exec vitest run src/telegram/bot.access.test.ts -t 'voice handler in memory'` failed because the file appeared. | Removed the handler write; full handler test remains with mocked Telegram download and Whisper call. |
+| Telegram downloader memory boundary | Wrote fetched bytes to `voice-download.oga` in the downloader's isolated working directory. | `pnpm exec vitest run src/media/download.test.ts -t 'without persisting'` failed because the file appeared. | Removed downloader write; real downloader test mocks `fetch` and `getFile`. |
+| Invoice regeneration | Made `generateInvoicePdf` return `bill_not_found` for a finalized bill. | `pnpm exec vitest run src/documents/invoice.test.ts -t 'regenerates an expired invoice'` failed because regeneration did not return `generated`. | Restored generation from persisted bill records. |
+| Retention default | Changed the default from 30 to 31. | `pnpm exec vitest run src/config/env.test.ts -t 'documented defaults'` failed: expected 30, received 31. | Restored proposed default 30. |
+| Owner-facing retention statement | Replaced the configured retention disclosure with “no automatic expiry”. | `pnpm exec vitest run src/telegram/privacy.test.ts -t 'current retention'` failed because it required “30 days without activity”. | Restored the configured duration in the privacy response. |
+| Idempotent cleanup result | Made an empty follow-up sweep report one deleted transcript entry. | `pnpm exec vitest run src/retention/worker.test.ts -t 'idempotent'` failed: expected zero additional deletions, received one. | Restored the result count to actual deleted rows. |
+
+All W3 mutations were restored. The repeated-sweep assertion checks that a second run reports zero
+additional transcript deletions; the database row is absent after the first run. No output is
+presented as a live-model result.

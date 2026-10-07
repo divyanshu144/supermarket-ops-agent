@@ -21,6 +21,7 @@ const schema = z
         .regex(/^(?:@[A-Za-z0-9_]{5,32}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})$/)
         .optional(),
     ),
+    APP_DATA_RETENTION_DAYS: z.coerce.number().int().min(1).max(3650).default(30),
 
     AGENT_MODEL: z.string().min(1).default('claude-opus-5'),
     // Empty string is treated as unset by agent/limits.ts, so `AGENT_FALLBACK_MODEL=` in a

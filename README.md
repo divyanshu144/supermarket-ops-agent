@@ -105,7 +105,8 @@ from the verified chat, so no prompt can address another shop.
 - Full agent behaviour is not yet measured in CI. Synthetic replay checks registered tool
   behavior without a model; `e2e.ts` remains a live script, and no live baseline is accepted.
 - One slow turn delays other shops, because polling is sequential on purpose (the runner can lose
-  updates when killed). Conversation transcripts also grow until `/new`; there is no retention job.
+  updates when killed). App-owned transcripts and generated files are removed after the configured
+  inactivity period; Telegram and AI-provider retention is outside this cleanup.
 
 The full list, how I used AI tools, and what I'd do with more time are in
 [`docs/DESIGN.md`](docs/DESIGN.md#edge-cases-not-handled).

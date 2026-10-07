@@ -111,7 +111,7 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
   bot.command(
     'privacy',
     guarded(async (ctx) => {
-      await ctx.reply(privacyCommand(env.PRIVACY_CONTACT));
+      await ctx.reply(privacyCommand(env.PRIVACY_CONTACT, env.APP_DATA_RETENTION_DAYS));
     }),
   );
 

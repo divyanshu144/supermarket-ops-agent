@@ -48,11 +48,11 @@ Status: approved by the owner on 2026-10-07. Work is split into reviewable tasks
 
 ## W3: retention and artifact lifecycle
 
-**Files expected to touch:** `src/config/env.ts`; `src/db/schema.ts` and additive migration if needed; session-store repository; a retention worker and scheduler/deployment configuration; `src/documents/artifacts.ts`; audio path tests; docs and tests.
+**Files expected to touch:** `src/config/env.ts`, `.env.example`, `src/repositories/updates.ts`, `src/retention/worker.ts`, `src/index.ts`, `src/telegram/bot.ts`, `src/telegram/commands.ts`, `src/telegram/messages.ts`, `src/media/download.ts`, `src/media/transcribe.ts`, relevant tests, README and handoff docs. No schema migration is expected.
 
 **Tests to write first:** injected-clock cleanup at the configured age; claimed/recovering sessions are retained; repeated cleanup is idempotent; generated artifacts expire; cleanup logs counts only; voice path creates no persistent audio file.
 
-**Implementation:** add validated configurable retention at 30 days since last activity for transcripts and artifacts. Make cleanup tenant-aware and safe around in-flight update claims. Regenerate invoices from finalized bills before deleting expired PDFs. Delete JSON export files immediately after send or failure. Keep transcription buffers in memory. Document that external providers’ retention is outside this cleanup.
+**Implementation:** add validated configurable retention at 30 days since last activity for transcripts and artifacts. Make cleanup tenant-aware and safe around in-flight update claims by taking an explicit PostgreSQL row lock on stores in ascending order, shared with `claimUpdate`. Regenerate invoices from finalized bills before deleting expired PDFs. Delete JSON export files immediately after send or failure (the export path lands in W4). Keep transcription buffers in memory. Document that external providers’ retention is outside this cleanup.
 
 **Mutations:** delete a claimed session; remove tenant filtering; log the deleted transcript or customer field; skip artifact cleanup; write voice audio to disk. Each guard test must fail.
 

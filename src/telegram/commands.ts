@@ -32,8 +32,8 @@ export async function newCommand(chatId: bigint): Promise<string> {
   return 'Fresh chat. Your stock, khata and preferences are unchanged.';
 }
 
-export function privacyCommand(contact?: string): string {
-  return privacyMessage(contact);
+export function privacyCommand(contact?: string, retentionDays = 30): string {
+  return privacyMessage(contact, retentionDays);
 }
 
 /** Destructive, so it takes an explicit second word. Anything else explains and does nothing. */

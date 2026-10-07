@@ -90,6 +90,23 @@ describe('generateInvoicePdf', () => {
     expect(extracted).toContain(rupees(bill!.totals.totalPaise));
   });
 
+  it('regenerates an expired invoice PDF from its finalized bill', async () => {
+    const billId = await finalizedBill();
+    const first = await generateInvoicePdf(STORE, billId);
+    expect(first.status).toBe('generated');
+    if (first.status !== 'generated') return;
+    generated.push(first.artifact.path);
+    await rm(first.artifact.path, { force: true });
+
+    const regenerated = await generateInvoicePdf(STORE, billId);
+    expect(regenerated.status).toBe('generated');
+    if (regenerated.status !== 'generated') return;
+    generated.push(regenerated.artifact.path);
+    const bytes = await readFile(regenerated.artifact.path);
+    expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    expect(regenerated.artifact.filename).toBe(first.artifact.filename);
+  });
+
   it('puts totals in the document that match the database exactly', async () => {
     const billId = await finalizedBill();
     const bill = await getBill(STORE, billId);

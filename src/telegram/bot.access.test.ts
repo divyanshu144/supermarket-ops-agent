@@ -1,5 +1,8 @@
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { eq, inArray } from 'drizzle-orm';
+import { mkdtemp, readdir, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { db, pool } from '../db/client.js';
 import { inviteCodes, processedUpdates, stores } from '../db/schema.js';
 
@@ -301,7 +304,8 @@ describe('access gate', () => {
 
     expect(replies().join('\n')).toContain('Anthropic');
     expect(replies().join('\n')).toContain('OpenAI');
-    expect(replies().join('\n')).toContain('no automatic expiry');
+    expect(replies().join('\n')).toContain('30 days without activity');
+    expect(replies().join('\n')).not.toContain('no automatic expiry');
     expect(sent.at(-1)?.method).toBe('sendMessage');
     expect(sent.at(-1)?.payload.parse_mode).toBeUndefined();
   });
@@ -344,6 +348,21 @@ describe('turn to ledger wiring', () => {
     // 3 s of audio = 300 micro-USD of Whisper, plus the mocked agent turn's 10_000.
     expect((await spentTodayMicroUsd(OWNER)) - before).toBe(10_300);
     expect(runAgent).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the Telegram voice handler in memory without writing audio files', async () => {
+    await provisionStore(OWNER, OWNER);
+    const originalCwd = process.cwd();
+    const isolated = await mkdtemp(join(tmpdir(), 'rai-telegram-audio-'));
+    try {
+      process.chdir(isolated);
+      const bot = makeBot();
+      await bot.handleUpdate(voiceUpdate(OWNER) as never);
+      expect(await readdir(isolated)).toEqual([]);
+    } finally {
+      process.chdir(originalCwd);
+      await rm(isolated, { recursive: true, force: true });
+    }
   });
 });
 

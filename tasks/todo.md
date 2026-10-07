@@ -8,8 +8,8 @@
 - [x] W1: enforce single-use owner confirmation for high-impact exceptions (gate green; independent review complete)
 - [x] W2: constrain and safely render owner preferences (gate green; independent review complete)
 - [x] W5: add accurate `/privacy` and onboarding disclosure (gate green; independent review complete)
-- [ ] W3: implement approved transcript and artifact retention
-- [ ] W4: export and erasure, blocked on legal/product record-retention decision
+- [x] W3: implement approved transcript and artifact retention (gate green; independent review complete)
+- [ ] W4: implement store export and customer pseudonymisation; store erasure stays NOT DONE pending legal review
 - [ ] W6: data inventory, threat model, impact assessment, system card, risk register, incident runbook
 - [ ] W7: synthetic safety replay scenarios and CI coverage
 

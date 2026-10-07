@@ -8,7 +8,8 @@ describe('privacy disclosure', () => {
     expect(reply).toContain('Anthropic');
     expect(reply).toContain('OpenAI');
     expect(reply).toContain('conversation transcripts');
-    expect(reply).toContain('no automatic expiry');
+    expect(reply).toContain('30 days without activity');
+    expect(reply).not.toContain('no automatic expiry');
     expect(reply).toContain('not yet available');
     expect(reply).not.toContain('request an export through');
     expect(reply).not.toMatch(/compliant|legal basis|provider retention period/i);
@@ -19,6 +20,10 @@ describe('privacy disclosure', () => {
     const reply = privacyCommand('@privacy_owner');
     expect(reply).toContain('@privacy_owner');
     expect(reply).not.toContain('ask whoever gave you your invite');
+  });
+
+  it('reports the configured application retention period', () => {
+    expect(privacyCommand(undefined, 45)).toContain('45 days without activity');
   });
 
   it('introduces AI processing and points owners to /privacy during onboarding', () => {
