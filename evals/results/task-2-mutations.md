@@ -88,3 +88,16 @@ After restoring both guards, `pnpm exec vitest run src/agent/runtime.test.ts` pa
 `pnpm typecheck` exited 0, `pnpm exec eslint src/agent/runtime.ts src/agent/runtime.test.ts`
 exited 0, and `pnpm exec prettier --check src/agent/runtime.ts src/agent/runtime.test.ts`
 reported all matched files formatted.
+
+### Failed-retry daily-ledger follow-up
+
+The runtime's `AgentRunFailure` already carried a conservative charge, but the Telegram adapter
+did not persist it when the fresh retry also failed. I added a database-backed turn test and
+recorded the correction in `DESIGN.md`.
+
+| Guard | Mutation | Red output | Restored output |
+| --- | --- | --- | --- |
+| Error-path conservative charge reaches the daily usage ledger | Disabled the `AgentRunFailure` accounting branch in `src/telegram/turn.ts` | `node /private/tmp/supermarket-run-targeted.mjs src/telegram/turn.test.ts -t 'records the conservative charge'` failed: expected `1000000`, received `0` | Same command passed 1 test, 8 skipped; the ledger contained `1000000` micro-USD |
+
+Both runs used the disposable `eval_control` database. The focused test also confirms the update
+remains claimed for redelivery and the owner receives the generic error reply.

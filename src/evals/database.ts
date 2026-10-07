@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,6 +25,105 @@ export interface Sandbox {
   manifest: SandboxManifest;
   manifestPath: string;
   cleanup: () => Promise<void>;
+}
+
+export interface DatabaseTarget {
+  host: string;
+  port: number;
+  database: string;
+  user: string;
+}
+
+interface SandboxBinding {
+  workerUrl: string;
+  database: string;
+  role: string;
+  manifestPath: string;
+  ownerToken: string;
+}
+
+export interface SandboxOwnershipProof {
+  manifestPath: string;
+  database: string;
+  role: string;
+  ownerTokenSha256: string;
+}
+
+const sandboxBindings = new WeakMap<object, SandboxBinding>();
+
+/** Parse only the non-secret target tuple; password and query values are deliberately ignored. */
+export function databaseTarget(url: string): DatabaseTarget {
+  const parsed = new URL(url);
+  if (!['postgres:', 'postgresql:'].includes(parsed.protocol) || parsed.search)
+    throw new Error('Invalid eval database target');
+  const database = decodeURIComponent(parsed.pathname.slice(1));
+  const user = decodeURIComponent(parsed.username);
+  if (!database || !user) throw new Error('Invalid eval database target');
+  return {
+    host: parsed.hostname.toLowerCase(),
+    port: Number(parsed.port || 5432),
+    database,
+    user,
+  };
+}
+
+/** Return the target only for the exact live sandbox object issued by createSandbox(). */
+export function ownedSandboxTarget(value: unknown): DatabaseTarget {
+  if (typeof value !== 'object' || value === null) throw new Error('Unowned eval sandbox');
+  const binding = sandboxBindings.get(value);
+  const sandbox = value as Sandbox;
+  if (
+    !binding ||
+    sandbox.workerUrl !== binding.workerUrl ||
+    sandbox.manifest?.database !== binding.database ||
+    sandbox.manifest?.role !== binding.role ||
+    sandbox.manifest?.ownerToken !== binding.ownerToken ||
+    sandbox.manifestPath !== binding.manifestPath ||
+    sandbox.manifest?.state !== 'ready'
+  ) {
+    throw new Error('Unowned or invalid eval sandbox');
+  }
+  const target = databaseTarget(binding.workerUrl);
+  if (target.database !== binding.database || target.user !== binding.role)
+    throw new Error('Invalid eval sandbox binding');
+  return target;
+}
+
+/** Build a non-password proof from the exact object returned by createSandbox(). */
+export function ownedSandboxProof(value: unknown): SandboxOwnershipProof {
+  ownedSandboxTarget(value);
+  const binding = sandboxBindings.get(value as object);
+  if (!binding) throw new Error('Unowned eval sandbox');
+  return {
+    manifestPath: binding.manifestPath,
+    database: binding.database,
+    role: binding.role,
+    ownerTokenSha256: createHash('sha256').update(binding.ownerToken).digest('hex'),
+  };
+}
+
+/** Check that the durable sandbox ownership record remains live. Failures are deliberately generic. */
+export function sandboxOwnershipVerifier(proof: SandboxOwnershipProof): () => Promise<void> {
+  return async () => {
+    try {
+      const manifest = JSON.parse(
+        await readFile(proof.manifestPath, 'utf8'),
+      ) as Partial<SandboxManifest>;
+      const ownerToken = manifest.ownerToken;
+      if (
+        manifest.version !== 1 ||
+        manifest.state !== 'ready' ||
+        manifest.database !== proof.database ||
+        manifest.role !== proof.role ||
+        typeof ownerToken !== 'string' ||
+        createHash('sha256').update(ownerToken).digest('hex') !== proof.ownerTokenSha256
+      ) {
+        throw new Error();
+      }
+    } catch {
+      throw new Error('Replay sandbox ownership check failed');
+    }
+  };
 }
 
 /** Only literal loopback aliases are normalized; DNS/private routing aliases cannot be
@@ -237,7 +336,15 @@ export async function createSandbox(config: SandboxConfig): Promise<Sandbox> {
     }
     manifest.state = 'ready';
     await saveManifest(manifestPath, manifest);
-    return { workerUrl: worker.toString(), manifest, manifestPath, cleanup };
+    const sandbox = { workerUrl: worker.toString(), manifest, manifestPath, cleanup };
+    sandboxBindings.set(sandbox, {
+      workerUrl: sandbox.workerUrl,
+      database: manifest.database,
+      role: manifest.role,
+      manifestPath,
+      ownerToken: owned.ownerToken,
+    });
+    return sandbox;
   } catch (error) {
     const failures = [error];
     try {

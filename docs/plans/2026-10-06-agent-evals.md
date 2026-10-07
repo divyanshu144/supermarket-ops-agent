@@ -210,9 +210,17 @@ src/evals/report.test.ts` (one shell line).
   Use installed inspection helpers. If insufficient, pause for a dependency amendment.
 - [ ] Add inventory coverage tests and negative evidence fixtures for every assertion family.
   Do not count schema/count tests as behavioural evidence.
-- [ ] Run focused live smoke selections after prerequisites, then the full suite with N=3
-  under the approved spend cap. If interrupted, retain partial evidence and request a revised
-  cap only with actual spend and remaining workload stated.
+- [ ] As soon as the protected runner and cost semantics are ready, run one live smoke with
+  approximately five representative scenarios and one attempt each under the user's aggregate
+  cap. Run `cost.probe.ts` first to verify SDK cost and budget semantics; do not launch the smoke
+  until its real provider spend is known and the cap covers the remaining work. Include at least
+  one mutation refusal, one multi-step bill, one ambiguity case, one preference/session case and
+  one Hindi/Hinglish case if those fixtures are ready. Call this a smoke result, not the accepted
+  live baseline.
+- [ ] After the smoke findings are addressed, run the full suite with N=3 under the same
+  explicitly approved spend cap, updating the user with actual spend and remaining workload before
+  any cap extension. If interrupted, retain partial evidence and request a revised cap only with
+  actual spend and remaining workload stated.
 - [ ] Capture and review real golden recordings; store source run, model and hashes. Require
   recordings for all accepted scenarios before claiming the full replay tier exists.
 

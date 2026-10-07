@@ -2,8 +2,8 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-06, repository reconciliation before the eval harness
-**Branch:** `eval-harness`, created from `readme-trim` at `4359796`. I have not started implementation.
+**Last updated:** 2026-10-06, Phase 1 approved and offline implementation started
+**Branch:** `eval-harness`, created from `readme-trim` at `4359796`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
 ---
@@ -108,8 +108,12 @@ before this.
 
 ## Next action
 
-I am preparing the Phase 1 eval spec and plan for approval. No phase code is authorized until
-both are approved. I will keep later phases on their requested branches and commit only when
+The user approved `docs/specs/2026-10-06-agent-evals.md` and
+`docs/plans/2026-10-06-agent-evals.md` with “looks good, goahead”. The database isolation code
+passed a fresh review with 14 dedicated-instance tests. Protected child capture and its
+redaction policy passed scoped review with 13 behavior tests and mutation evidence. Live calls
+still need an explicit spending cap; query-level budget accounting is not yet implemented.
+I will keep later phases on their requested branches and commit only when
 asked. The initial handoff correction is explicitly requested as the first commit.
 
 The live prerequisites must run in this order against a disposable local database:
@@ -119,7 +123,9 @@ The live prerequisites must run in this order against a disposable local databas
 3. `pnpm tsx src/agent/e2e.ts`
 4. `pnpm tsx src/agent/security.probe.ts`
 
-I have not run these in this session. Existing probes print raw errors or replies; the security
+I have not run these in this session. Credential presence checks returned true for the model
+key, bot token and DB URL; I did not print values or validate authentication. Existing probes
+print raw errors or replies; the security
 probe could print a leaked credential before detecting it. I will specify protected execution
 and disposable database setup before asking for probe output. Never paste credentials.
 
@@ -167,6 +173,9 @@ Remaining sub-projects, each planned when its turn comes:
 
 ## Open questions
 
+- What live dollar cap is authorized? The SDK stops after exceeding `maxBudgetUsd`; I have
+  proposed strict admission accounting with that billing limitation disclosed, not a guaranteed
+  provider-charge ceiling. See the spec before approving.
 - **Recording script.** Seven graded beats plus voice, Hindi and reorder is too much for five
   minutes. Suggest featuring the two strongest — the oversell guard and the mid-build bill edit —
   and showing voice and Hindi briefly rather than fully.
@@ -175,24 +184,108 @@ Remaining sub-projects, each planned when its turn comes:
 
 ## In-flight files
 
-I am updating `HANDOFF.md`, `tasks/todo.md` and `tasks/lessons.md` to reconcile the repository.
+I committed the requested reconciliation as `b6ac0af`. The approved Phase 1 spec, plan and
+checkpoint updates remain uncommitted. `src/evals/database.ts` and its tests currently exist.
+Task 1a has 14 dedicated-instance tests and a fresh review passing; evidence is in
+`evals/results/task-1a-fix-*`. Protected subprocess capture and task 2 tool/model observation
+are implemented and reviewed; evidence is in `evals/results/task-1b-mutations.md` and
+`evals/results/task-2-mutations.md`. Task 3's amended deterministic oracle is implemented and
+has a fresh independent review passing. It reads actual generated PDF text and PPTX XML, checks
+persisted bill inputs and aggregates, and verifies store-scoped movement snapshots. Its final
+gate passed with 46 files and 453 tests on the disposable `eval_control` database; exact output
+and mutation evidence are in `.superpowers/sdd/2026-10-06-agent-evals/task-3-report.md` and
+`evals/results/task-3-mutations.md`. It has no live agent run or measured model outcome.
+
+Task 4 replay isolation amendment is approved and implemented in the working tree. Real-handler replay now requires
+an owned sandbox and runs in a fresh child process with that sandbox's worker URL. It compares
+host, port, database and user for process and pool targets, and repeats those checks before each
+step. The separate injected-tools API is explicitly test-only. Connection failures are serialized
+without their messages or connection strings. The initial focused replay run passed 6/6. The
+retry-accounting correction adds a Telegram ledger test. A fresh independent review found two
+issues, then passed after both fixes: CI skips only the two separate-sandbox integration tests
+when `EVAL_TEST_DATABASE_ADMIN_URL` is absent, and the child revalidates its persisted ownership
+manifest before each step. The approved amendment documents those changes. Task 4 replay is
+available to synthetic work; the complete eval runner and live baseline remain pending.
+
+During Task 3, `pnpm db:migrate` was run without a URL override; drizzle-kit loaded `.env` and
+reported success against the configured localhost port 5435. A later invoice test failed with
+`EPERM` before connecting to port 5435; no query succeeded. With user approval, I later ran one
+read-only transaction querying only `drizzle.__drizzle_migrations` on localhost:5435. Its six
+rows match all six entries in the current migration journal, establishing that the database was
+at the journal head when checked. This does not establish whether the earlier command changed it.
+No rollback was attempted and no credentials were printed. No database commands should run
+without explicit disposable URL overrides.
+The execution ledger is `.superpowers/sdd/2026-10-06-agent-evals/progress.md`.
 `Claude outputs/` was already untracked when I started and I have left it alone.
 
 ## Verification baseline
 
-I ran the gate on 2026-10-06 against code commit `4359796095b5c73b0be8a5b64f4be36fd400af9b`,
-Node v24.13.0. Model id: not applicable, no live model calls. The first sandboxed attempt
-failed with Postgres connection `EPERM`; the rerun with local database access passed:
+I reran the gate on 2026-10-06 at commit `b6ac0af`, with only the proposal and tracking docs
+uncommitted, Node v24.13.0. Model id: not applicable, no live model calls. The first sandboxed
+attempt failed with Postgres connection `EPERM`; both reruns with local database access passed.
+The final run reported:
 
 ```text
  Test Files  39 passed (39)
       Tests  386 passed (386)
-   Start at  11:33:17
-   Duration  18.51s (transform 269ms, setup 189ms, import 6.29s, tests 9.41s, environment 2ms)
+   Start at  11:53:14
+   Duration  19.06s (transform 275ms, setup 208ms, import 6.68s, tests 9.32s, environment 2ms)
 ```
 
 The test count below is current. Live outcomes in older notes are historical claims, not
 results reproduced in this session.
+
+Current Phase 1 checkpoint: Tasks 1a, 1b, 2, and 3 are complete. The approved Task 4 replay
+isolation amendment passed fresh independent review; Tasks 5–8 are still incomplete. The latest
+required full gate passed on 2026-10-07 with
+both database URL variables explicitly set to the disposable `eval_control` service, Node
+v24.13.0, model id not applicable:
+
+```text
+> pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test
+> Newpage_assignment@1.0.0 fmt:check /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> Newpage_assignment@1.0.0 lint /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+> eslint .
+
+
+> Newpage_assignment@1.0.0 typecheck /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+> tsc --noEmit
+
+
+> Newpage_assignment@1.0.0 test /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+> vitest run
+
+
+ RUN  v4.1.10 /Users/divyanshu/Desktop/All Projects/supermarket-ops-agent
+
+
+ Test Files  47 passed (47)
+      Tests  460 passed (460)
+   Start at  15:11:11
+   Duration  27.16s (transform 391ms, setup 213ms, import 8.06s, tests 15.82s, environment 2ms)
+```
+
+The first attempt was blocked by sandbox EPERM to local Postgres; the same command was
+rerun with approved local database access and passed. This is not a live eval result.
+
+Before any push, I also ran the same gate in clean detached worktrees at each of the three
+requested commits. Each run used the disposable single Postgres service with
+`EVAL_TEST_DATABASE_ADMIN_URL` unset, matching CI's service shape. Results:
+
+```text
+522028d Task 1: 41 files passed; 404 passed, 9 skipped (413 total)
+91dd8f4 Task 2: 42 files passed; 416 passed, 9 skipped (425 total)
+bb5ab8e Task 3: 46 files passed; 442 passed, 11 skipped (453 total)
+```
+
+Formatting, lint and typecheck passed in all three worktrees. The database-isolation integration
+cases skipped cleanly without the dedicated admin URL. The Task 4 replay suite also skips its
+two sandbox-provisioning tests with this CI shape; see the Task 4 replay report for exact output.
 
 ```bash
 pnpm db:up
@@ -208,3 +301,20 @@ Voice needs `OPENAI_API_KEY`; without it the bot runs normally and replies that 
 configured. The execution ledger for the improvements branch is at
 `.superpowers/sdd/2026-08-01-improvements/progress.md`; for sub-project A at
 `.superpowers/sdd/2026-10-04-guardrails-and-cost/`.
+
+## 2026-10-07 eval-harness checkpoint
+
+The Task 4 replay-isolation amendment is approved and has a fresh independent PASS. The worker
+uses a proof derived from the exact owned sandbox, compares host/port/database/user without
+passwords, and revalidates the persisted manifest and DB target before every step. On the
+single-Postgres CI shape, replay reports 5 passed and 2 sandbox provisioning tests skipped;
+with the disposable eval admin service, all 7 replay tests pass. The current `runtime.ts`
+default production call path was reviewed and remains unchanged; retry-cap failure accounting
+is handled in the Telegram adapter and covered by its own DB-backed test.
+
+The latest user instruction set the live budget to zero. No live calls or probes ran, and
+`cost.probe.ts` was not run. Tasks 5–8 have synthetic budget/report primitives and a comparison
+command that refuses because SDK cost semantics are unverified. This is not a full eval runner:
+the complete coordinator/CLI, 50 reviewed scenarios, blind judge calibration, regression
+demonstrations and live baseline are still open. Details and exact future runbook are in
+`evals/results/task-5-to-8-synthetic.md`. Synthetic results are never eligible as a baseline.

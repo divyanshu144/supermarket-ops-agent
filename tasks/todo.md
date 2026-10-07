@@ -145,8 +145,38 @@ through `8536b3d` (PR #2) and `fa89f53` (PR #1).
 - [x] Read operating rules and tracking documents; reconcile A and B against git history
 - [x] Create `eval-harness` from working branch `readme-trim`, code commit `4359796`
 - [x] Run the current gate: 386 tests in 39 files, 2026-10-06, no model calls
-- [ ] Write Phase 1 spec in `docs/specs/` and plan in `docs/plans/`
-- [ ] Obtain approval of both documents before writing code
+- [x] Write Phase 1 spec `docs/specs/2026-10-06-agent-evals.md` and companion plan
+- [x] Obtain approval of both documents before writing code (2026-10-06)
+- [ ] Agree live spend cap and the SDK stop-after-exceed budget limitation
 - [ ] Run protected live prerequisites: cost, session store, e2e, security, in that order
 - [ ] Implement and verify Phase 1, including test mutations and live regression experiments
+- [x] Task 1a: Postgres sandbox isolation — 14/14 dedicated-instance tests pass; initial
+      review findings fixed and fresh scoped review passed. Eight semantic mutations killed.
+- [x] Task 1b: protected subprocess output capture — security findings fixed and fresh
+      evidence review passed; 13 behavior tests mutation-checked.
+- [x] Task 2: tool and model-attempt observation — SDK hook IDs correlate outcomes; optional
+      result flags, fallback usage and retry failure evidence are tested and reviewed. Gate:
+      42 files, 416 passed and 9 skipped on 2026-10-06.
+- [x] Task 3: scenario contract and deterministic oracle — actual generated PDF text and PPTX
+      XML/chart content, persisted bill inputs and aggregates, exact external-change grounding,
+      candidate shape, and store-scoped snapshots checked. Oracle amendment reviewed and approved;
+      both movement-store predicate mutants fail. Final gate: 46 files, 453 tests on disposable
+      `eval_control`; exact output is in the Task 3 report.
+- [ ] Task 4: approved replay-isolation amendment implemented; child-process replay now binds to
+      an owned sandbox and checks process/pool host, port, database and user before each step.
+      Fresh independent review passed after both findings were fixed. CI-shaped replay run:
+      5 passed, 2 sandbox-provisioning tests skipped; dedicated integration: 7 passed.
+- [ ] Tasks 5–8: synthetic budget/report primitives and baseline refusal implemented and
+      mutation-checked. Full coordinator, CLI, 50-scenario inventory, judge calibration,
+      regression demos, and accepted baseline remain incomplete. No API calls or probes ran.
+- [x] Incident check: one user-approved read-only query of `drizzle.__drizzle_migrations` on
+      localhost:5435 returned six rows matching the current migration journal. This shows the DB
+      was at the journal head when checked, not whether the earlier `pnpm db:migrate` changed it.
+      No credentials printed and no rollback attempted. Earlier invoice test failed with EPERM
+      before connecting; no query succeeded from that test.
+- [ ] Live cap: zero; no probes, model evals, or live smoke runs were executed. Cost semantics
+      remain unverified, comparison refuses, and no baseline is accepted.
+- [ ] Live smoke: after credits exist, run cost/session/e2e/security probes in order, resolve
+      SDK cost semantics, finish/review the live runner, then use the runbook in
+      `evals/results/task-5-to-8-synthetic.md`. Proposed future smoke cap there is $0.25.
 - [ ] Prepare each later phase separately, with its own spec, plan and approval

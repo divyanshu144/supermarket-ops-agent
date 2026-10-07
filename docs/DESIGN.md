@@ -318,6 +318,16 @@ recorded against the same daily budget. A run that times out is charged the per-
 its real cost is unknown and over-counting is the safe direction. `/reset` only explains itself;
 `/reset confirm` does it.
 
+If a resumed run fails before emitting any output and the SDK provides no usage result, I charge
+that failed attempt the full per-run cap. The runtime retries once without the old session. If
+that fresh attempt succeeds and reports usage, its charge is added to the conservative charge
+for the failed resume, so a broken transcript cannot erase unknown model spend from the daily
+total. If the retry also fails without a usage result, `AgentRunFailure` preserves both attempts
+and carries the sum of their per-run caps in `conservativelyChargedTurnCostUsd`. When the SDK did
+report usage for an attempt, I charge the reported per-run amount instead. Runtime tests check
+the unknown-resume-cost plus successful-retry case, and a Telegram turn test checks that the
+conservative total is persisted when both attempts fail.
+
 ## Restarts and conversation storage
 
 Conversations are mirrored into Postgres through the Agent SDK's `sessionStore`, so a redeploy no

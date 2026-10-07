@@ -484,7 +484,7 @@ describe('runAgent — session store and resume', () => {
     expect(r.turnCostUsd).toBeCloseTo(0.2); // charged in full, not total - 0.6 clamped to 0
   });
 
-  it('retries once without resume when the run fails to start before any output', async () => {
+  it('charges the full cap for an unreported failed resume before a successful fresh retry', async () => {
     mockQuery
       .mockImplementationOnce(() =>
         // eslint-disable-next-line require-yield -- throws before yielding, like a failed spawn
@@ -505,7 +505,11 @@ describe('runAgent — session store and resume', () => {
       expect(mockQuery).toHaveBeenCalledTimes(2);
       expect((mockQuery.mock.calls[1]![0] as QueryArgs).options.resume).toBeUndefined();
       expect(r).toMatchObject({ outcome: 'ok', reply: 'fresh', resumeDropped: true });
-      // The first query threw before the SDK supplied usage, so charge its full run cap.
+      expect(r.attempts).toMatchObject([
+        { ordinal: 1, resumed: true, retryFresh: false, costUsd: null },
+        { ordinal: 2, resumed: false, retryFresh: true, costUsd: 0.1 },
+      ]);
+      // The first query threw before SDK usage, so its cap is added to the fresh retry's cost.
       expect(r.turnCostUsd).toBeCloseTo(0.6);
       expect(warn).toHaveBeenCalledTimes(1);
       const line = String(warn.mock.calls[0]![0]);

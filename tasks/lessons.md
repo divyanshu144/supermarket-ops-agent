@@ -116,3 +116,145 @@ I also found that the live probes print raw errors, stderr or model replies. In 
 the security probe prints its reply before checking for leaked credentials. I have not changed
 the probes. Their execution needs protected output and a disposable database; I must not ask
 someone to paste raw probe output or infer that an exit code alone proves a probe passed.
+
+The installed SDK describes its budget cutoff as stopping after the budget is exceeded.
+That is not evidence of a strict billing ceiling. I have made the limitation an explicit
+spec decision instead of writing a test for fake costs and calling the real spending cap
+proven. Next time I will distinguish admission accounting, observed cost and provider-side
+spending controls before promising a hard budget.
+
+## 2026-10-06: a restricted role does not cancel PUBLIC database access
+
+I checked the local Postgres ACLs before building eval isolation. `kirana` and `postgres`
+use default database ACLs, so a new restricted role still inherits PUBLIC CONNECT. Revoking
+CONNECT from that role alone cannot override the PUBLIC grant. I will use a disposable
+dedicated Postgres instance for the isolation tests and make the harness reject unsuitable
+admin connections. I will not change grants on the existing shop database.
+
+I also inspected SDK 0.3.220: it forwards `maxBudgetUsd` only when provided. The first two
+cost probe queries and the session-store probe omit it. Exporting AGENT_MAX_BUDGET_USD in
+a launcher cannot bound direct SDK calls that never read that variable. The protected
+output/database work can proceed, but the paid launcher must wait for query-level budget
+accounting rather than advertise an ineffective cap.
+
+## 2026-10-06: eval expectations must agree with the product's skills
+
+I initially proposed a valid empty deck as an eval outcome. The documents skill explicitly
+tells the model not to generate a deck without sales. I corrected that scenario to require
+a grounded no-data response with no artifact and retained chart inspection for the nonempty
+case. Next time I will check the skill's instructions before treating a tool's technical
+ability to produce a file as the expected agent behaviour.
+
+During this review I found an unrelated existing issue in `src/repositories/products.ts`:
+`adjustStock` accepts a reason but does not persist it, and unlike `receiveStock` it does
+not check unit dimensions. The tool converts the supplied unit before calling it. I have
+not changed this behaviour in the eval phase; a separate correctness fix needs its own
+scope and invariant tests.
+
+## 2026-10-06: preserve ownership proof through partial database setup
+
+The first sandbox review found that a database can exist before its ownership comment does.
+Cleanup must track the creation boundary independently and retain evidence whenever catalog
+ownership cannot be proved. URL path comparison also misses PostgreSQL's default database
+name for pathless URLs. Require explicit names, reject connection overrides, and test effective
+identity. A failing test must not leave privilege probes behind: generate and track their names
+and attempt every cleanup independently. The corrected implementation keeps an unverified
+recovery manifest instead of guessing. Its fix and mutation evidence are in
+`evals/results/task-1a-fix-*`.
+
+## 2026-10-06: stderr is an output channel, not a trusted diagnostic
+
+The first protected-child review caught that masking HTTP(S) URLs still allowed credentials
+in PostgreSQL URLs, and ordinary exception text remained exposed in stderr. A value can also
+be echoed from an environment variable even when the caller forgot to list it as an exact
+secret. Treat stderr as untrusted, cover URL schemes and automatically protect sensitive
+allowlisted values before integrating legacy probes. The accepted correction drains and
+suppresses stderr and has mutation-checked stdout URI and credential handling.
+
+## 2026-10-06: SDK tool results omit optional success flags
+
+The SDK's `is_error` tool-result flag is optional. Requiring an explicit `false` labels valid
+successful tool calls as pending, which would invalidate agent-eval traces. Match tool results
+by their call ID and treat an absent error flag as a returned result with unknown error state.
+Preserve every assistant model ID and the SDK's modelUsage map for fallback accounting. The SDK
+PostToolUse hooks do carry the model call ID and completed response, while the local MCP handler
+context does not. The reviewed design uses hooks as the canonical correlated execution evidence
+and labels handler observations separately instead of inferring a match from arguments or timing.
+# 2026-10-07: pg.Client statement sequencing in eval snapshots
+
+## What broke
+
+An eval snapshot initially issued several statements with `Promise.all` on the same `pg.Client`.
+The integration test passed, but `pg` warned that overlapping queries on a client are deprecated
+and will be removed in `pg@9`.
+
+## Root cause
+
+`pg.Client` has one connection and serializes its query queue. Parallel promises looked harmless
+but relied on that implicit queue behavior.
+
+## What to do next time
+
+Use sequential `await client.query(...)` calls for a single client. Use a pool only when actual
+parallel database work is required and its isolation semantics are clear.
+
+## 2026-10-07: grade the artifact itself and validate every reference
+
+The first Task 3 review found that a caller-supplied extracted-text field could make an
+incorrect PDF appear correct, a broad string search could mistake unrelated output for
+product candidates, and external-change references could point outside the seed. The approved
+amendment adds `pdfjs-dist@6.3.289` as an exact development dependency for real file extraction.
+The corrected code must validate generated PDF body text and deck XML/chart content, not just
+signatures. Clarification checks inspect the actual `get_stock` ambiguous result shape, and
+scenario references resolve to seeded records.
+
+## 2026-10-07: localhost 5435 migration check (closed)
+
+During Task 3 amendment work, `pnpm db:migrate` ran without overriding `DATABASE_URL`. The CLI
+reported success; I confirmed drizzle-kit loads `.env` and the configured target was localhost
+port 5435. With user approval, I later ran one read-only transaction querying only
+`drizzle.__drizzle_migrations` on that host. The six IDs and timestamps matched the six entries
+in the current migration journal, so the database was at the journal head when checked. This
+cannot establish whether the earlier command changed it. No rollback was attempted, and no
+credentials were printed. This check is closed with that historical uncertainty recorded; there
+is no further action against 5435. For future migration commands, pass an explicit disposable
+`DATABASE_URL` and verify the target without printing credentials.
+
+One invoice integration test was also accidentally invoked without URL overrides. It failed with
+`connect EPERM` to port 5435 before connecting; no query succeeded.
+
+## 2026-10-07: replay fixtures must follow catalogue uniqueness and close their tool pool
+
+The first replay fixture used two products with the same name to create ambiguity. The real
+catalogue has a per-store unique-name constraint, so the fixture must use distinct names that
+share a partial query (for example, `Tea Brand A` and `Tea Brand B`). Replay imports production
+repositories, whose shared pool must point to the worker's throwaway database before tools
+load. Close that pool before dropping the sandbox; otherwise PostgreSQL's termination error can
+include connection parameters in a test failure. The replay integration selects the worker URL
+before lazy-loading tools and ends the pool before sandbox cleanup.
+
+
+## 2026-10-07: preserve failed-retry spend in the daily ledger
+
+The runtime attached a conservative charge to `AgentRunFailure`, but the Telegram turn adapter
+only persisted charges from successful `runAgent` results. A resumed attempt and fresh retry
+could both fail, leaving the daily spend ledger unchanged despite the known worst-case charge.
+The turn adapter now records that charge on the error path, while keeping the update uncompleted
+for redelivery. A database-backed turn test checks the ledger and was mutation-checked by removing
+the error-path recording guard.
+
+## 2026-10-07: replay workers must re-check ownership, not only their initial URL
+
+An independent Task 4 review found that matching the initial worker and pool targets did not
+prove the persisted sandbox was still owned before later calls. The child now receives a
+non-password proof from the exact sandbox object; it checks the durable manifest before entry
+and before every step. The per-step mutation is killed by a test that changes the manifest
+after the first handler and asserts the second handler is never called. CI has only the ordinary
+Postgres URL, so only the two tests that provision a separate sandbox are skipped there.
+
+## 2026-10-07: reservation settlement must remain usable after rejecting a refund
+
+The synthetic budget ledger initially marked a reservation settled before validating the
+reported charge. A rejected negative refund then stranded the reservation and prevented a
+valid settlement. I moved settlement state changes after validation; the test now rejects a
+negative amount, accepts a valid amount, and rejects only the subsequent duplicate settlement.

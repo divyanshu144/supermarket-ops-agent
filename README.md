@@ -20,7 +20,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Gate: `pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test` — 386 tests. Voice input needs
+Gate: `pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test`. Voice input needs
 `OPENAI_API_KEY`; without it the bot runs normally and text is unaffected. Two scripts hit the live
 API rather than mocks: `pnpm tsx src/agent/e2e.ts` (the brief's thirteen beats) and
 `pnpm tsx src/agent/security.probe.ts`.
@@ -34,6 +34,15 @@ Edit — and behind a public Telegram bot that is a shell anyone can reach. So t
 of that away and allows `Skill` plus our 25 tools, nothing else. Model is `claude-opus-5` with
 adaptive thinking; I routed nothing cheaper, because this is a billing system and a skipped tool
 call is worse than a slow one.
+
+## How agent quality is measured
+
+The eval work is in progress. The replay path executes synthetic tool recordings against isolated
+Postgres sandboxes; these fixtures test tool and grading behavior, not model decisions. The
+offline budget/report unit tests are synthetic. SDK cost semantics remain unverified, so
+`pnpm eval:compare` refuses comparison and there is no accepted baseline or agent-quality metric.
+See [`the synthetic checkpoint and live runbook`](evals/results/task-5-to-8-synthetic.md) for
+what is measured, what remains open, and the steps to run when credits are available.
 
 ## How the control loop works
 
@@ -86,8 +95,8 @@ from the verified chat, so no prompt can address another shop.
 - Multi-user roles: anyone in the chat is the owner, so in a group every member is.
 - Idempotency under a diverging replay. Keys are ordinal-based, so they only line up if a replayed
   turn makes the same calls; closing it properly needs a durable per-turn execution log.
-- Agent behaviour is not in CI. The tool layer is exhaustively tested; the orchestration is covered
-  by `e2e.ts`, a live script.
+- Full agent behaviour is not yet measured in CI. Synthetic replay checks registered tool
+  behavior without a model; `e2e.ts` remains a live script, and no live baseline is accepted.
 - One slow turn delays other shops, because polling is sequential on purpose (the runner can lose
   updates when killed). Conversation transcripts also grow until `/new`; there is no retention job.
 

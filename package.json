@@ -17,7 +17,8 @@
     "db:up": "docker compose up -d postgres",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "invite": "tsx src/scripts/invite.ts"
+    "invite": "tsx src/scripts/invite.ts",
+    "eval:compare": "tsx src/evals/compare-cli.ts"
   },
   "keywords": [],
   "author": "",

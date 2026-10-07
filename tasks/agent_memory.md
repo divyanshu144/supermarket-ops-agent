@@ -47,6 +47,22 @@ If a locked decision needs to change, change it here first and say so explicitly
 
 ## Known Gotchas
 
+- **Migration history after the unbound migrate command (2026-10-07):** with user approval, one
+  read-only transaction queried only `drizzle.__drizzle_migrations` at localhost:5435. Six rows
+  matched the six current journal entries. That means the DB matched the journal head at query
+  time; it cannot prove whether the earlier command applied a migration. No credentials were
+  printed and no further DB query was made.
+- **2026-10-06 checkpoint:** I confirmed credential presence only, without printing values.
+  Cost, session-store, e2e and security probes remain unrun in this session. They need a
+  disposable database and sanitized stdout/stderr: the security probe prints replies before
+  testing for a leak, and other probes print raw errors. The pending Phase 1 spec includes a
+  protected launcher. I must capture cost Q1/Q2/Q3, session B/C, all e2e beat outcomes and all
+  security attempt outcomes in that order before accepting live evidence.
+- **A hard billing cap is not established by the installed SDK contract.** On 2026-10-06 I
+  read `node_modules/@anthropic-ai/claude-agent-sdk/sdk.d.ts`: `maxBudgetUsd` stops a query
+  when the budget is exceeded. Strict admission accounting cannot alone promise that an
+  in-flight provider call costs no more than the remaining balance. The eval spec asks for
+  an explicit decision before paid runs.
 - **SDK cost semantics are unverified.** The SDK docs state `total_cost_usd` on a resumed session
   includes earlier spend; `SDK_COST_IS_CUMULATIVE = true` in `src/agent/limits.ts` rests on the
   docs only. `pnpm tsx src/agent/cost.probe.ts` and `pnpm tsx src/agent/e2e.ts` have NOT yet been

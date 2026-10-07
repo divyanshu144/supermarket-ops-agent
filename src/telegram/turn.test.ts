@@ -10,6 +10,7 @@ import {
   getSessionId,
   setSessionId,
 } from '../repositories/updates.js';
+import { spentTodayMicroUsd } from '../repositories/usage.js';
 import {
   appendEntries,
   deleteSessionEntries,
@@ -32,9 +33,21 @@ const runAgentMock = vi.fn(async (): Promise<AgentResult> => ({
   resumeDropped: false,
   attempts: [],
 }));
-vi.mock('../agent/runtime.js', () => ({ runAgent: () => runAgentMock() }));
+vi.mock('../agent/runtime.js', () => ({
+  runAgent: () => runAgentMock(),
+  AgentRunFailure: class AgentRunFailure extends Error {
+    constructor(
+      readonly original: unknown,
+      readonly attempts: unknown[],
+      readonly conservativelyChargedTurnCostUsd: number,
+    ) {
+      super('agent run failed after retry');
+    }
+  },
+}));
 
 const { handleTurn } = await import('./turn.js');
+const { AgentRunFailure } = await import('../agent/runtime.js');
 
 const UPD = 88800099n;
 const CHAT = 999000088n;
@@ -120,6 +133,17 @@ describe('handleTurn — alreadyClaimed', () => {
 });
 
 describe('handleTurn — dropped resume', () => {
+  it('records the conservative charge when both resumed and fresh attempts fail', async () => {
+    runAgentMock.mockRejectedValueOnce(new AgentRunFailure(undefined, [], 1));
+
+    const ctx = fakeCtx();
+    await handleTurn(ctx, 'hello');
+
+    expect(await spentTodayMicroUsd(CHAT)).toBe(1_000_000);
+    expect(await updateStatus()).toBe('claimed');
+    expect(ctx.replies).toEqual(['Something went wrong on my side. Try that again?']);
+  });
+
   it('replaces a stale session row with the new session id and cost', async () => {
     await setSessionId(CHAT, 'stale-id', 900_000);
     runAgentMock.mockResolvedValueOnce({

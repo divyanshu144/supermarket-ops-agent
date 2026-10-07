@@ -1,5 +1,5 @@
 import { InputFile, type Context } from 'grammy';
-import { runAgent } from '../agent/runtime.js';
+import { AgentRunFailure, runAgent } from '../agent/runtime.js';
 import { deleteSessionEntries } from '../repositories/session-entries.js';
 import { hasStore } from '../repositories/access.js';
 import {
@@ -143,6 +143,15 @@ export async function handleTurn(
       logOptions,
     );
   } catch (error) {
+    if (error instanceof AgentRunFailure) {
+      // A failed resume and failed fresh retry have no owner reply, but their known or
+      // conservative spend still belongs in the per-store daily budget.
+      try {
+        await recordUsage(storeId, microUsd(error.conservativelyChargedTurnCostUsd));
+      } catch (usageError) {
+        console.error(redact({ scope: 'usage', storeId: String(storeId), error: usageError }));
+      }
+    }
     console.error(redact({ updateId: String(updateId), storeId: String(storeId), error }));
     logTurn(
       {
