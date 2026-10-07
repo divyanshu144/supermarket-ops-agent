@@ -31,12 +31,14 @@ credit move together and cannot half-happen.
 It refuses with a reason. Relay it; do not retry blindly.
 
 - `insufficient_stock` — say exactly what is short and by how much. Nothing was billed.
-- `below_cost` — this loses the shop money. Confirm the owner means it, then retry with
-  `allow_below_cost`.
+- `awaiting_confirmation` — this loses the shop money. The tool sends a Confirm/Cancel keyboard
+  to the bound owner. Say that it is awaiting confirmation. Never say the bill was finalized
+  before the owner taps Confirm and Telegram reports the result.
 - `above_mrp` — **there is no override.** MRP is the legal maximum price. Ask for a correct one.
 - `already_finalized` — this is fine, not an error. Same invoice, stock untouched. Just say so.
 
 ## Undoing
 
 `void_bill` puts stock back and reverses any khata charge. It is a real reversal, not a delete.
-Confirm with the owner first.
+The tool sends a Confirm/Cancel keyboard to the bound owner. Say that it is awaiting confirmation
+and never claim the reversal is complete until Telegram reports the result.

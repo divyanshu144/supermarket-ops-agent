@@ -6,7 +6,6 @@ import { createInvite, hasStore, listInvites, redeemInvite, revokeInvite } from 
 
 const A = 999100002n;
 const B = 999100003n;
-const GROUP = -999100004n; // Telegram group chat ids are negative
 const made: string[] = [];
 
 async function invite() {
@@ -16,12 +15,12 @@ async function invite() {
 }
 
 afterEach(async () => {
-  await db.delete(stores).where(inArray(stores.id, [A, B, GROUP]));
+  await db.delete(stores).where(inArray(stores.id, [A, B]));
 });
 
 afterAll(async () => {
   if (made.length) await db.delete(inviteCodes).where(inArray(inviteCodes.id, made));
-  await db.delete(stores).where(inArray(stores.id, [A, B, GROUP]));
+  await db.delete(stores).where(inArray(stores.id, [A, B]));
   await pool.end();
 });
 
@@ -29,7 +28,7 @@ describe('hasStore', () => {
   it('is false before provisioning and true after redemption', async () => {
     expect(await hasStore(A)).toBe(false);
     const { code } = await invite();
-    await redeemInvite(code, A);
+    await redeemInvite(code, A, 7001n);
     expect(await hasStore(A)).toBe(true);
   });
 });
@@ -51,56 +50,58 @@ describe('createInvite', () => {
 describe('redeemInvite', () => {
   it('provisions a store and records who used the code', async () => {
     const { id, code } = await invite();
-    expect(await redeemInvite(code, A)).toBe('redeemed');
+    expect(await redeemInvite(code, A, 7001n)).toBe('redeemed');
     expect(await hasStore(A)).toBe(true);
     const [row] = await db.select().from(inviteCodes).where(eq(inviteCodes.id, id));
     expect(row!.usedByChat).toBe(A);
     expect(row!.usedAt).not.toBeNull();
+    const [store] = await db.select().from(stores).where(eq(stores.id, A));
+    expect(store!.ownerUserId).toBe(7001n);
   });
 
   it('refuses a second redemption and creates no second store', async () => {
     const { code } = await invite();
-    await redeemInvite(code, A);
-    expect(await redeemInvite(code, B)).toBe('invalid');
+    await redeemInvite(code, A, 7001n);
+    expect(await redeemInvite(code, B, 7002n)).toBe('invalid');
     expect(await hasStore(B)).toBe(false);
   });
 
   it('lets exactly one of two simultaneous redemptions win', async () => {
     const { code } = await invite();
-    const results = await Promise.all([redeemInvite(code, A), redeemInvite(code, B)]);
+    const results = await Promise.all([redeemInvite(code, A, 7001n), redeemInvite(code, B, 7002n)]);
     expect([...results].sort()).toEqual(['invalid', 'redeemed']);
     const owners = [await hasStore(A), await hasStore(B)].filter(Boolean);
     expect(owners).toHaveLength(1);
   });
 
   it('rejects an unknown code', async () => {
-    expect(await redeemInvite('zzzzzzzzzzzz', A)).toBe('invalid');
+    expect(await redeemInvite('zzzzzzzzzzzz', A, 7001n)).toBe('invalid');
     expect(await hasStore(A)).toBe(false);
   });
 
   it('rejects a revoked code', async () => {
     const { id, code } = await invite();
     expect(await revokeInvite(id)).toBe(true);
-    expect(await redeemInvite(code, A)).toBe('invalid');
+    expect(await redeemInvite(code, A, 7001n)).toBe('invalid');
     expect(await hasStore(A)).toBe(false);
   });
 
   it('accepts a code typed in upper case with stray spaces', async () => {
     const { code } = await invite();
-    expect(await redeemInvite(`  ${code.toUpperCase()} `, A)).toBe('redeemed');
+    expect(await redeemInvite(`  ${code.toUpperCase()} `, A, 7001n)).toBe('redeemed');
   });
 
-  it('works from a group chat with a negative id', async () => {
+  it('rejects a missing owner identity', async () => {
     const { code } = await invite();
-    expect(await redeemInvite(code, GROUP)).toBe('redeemed');
-    expect(await hasStore(GROUP)).toBe(true);
+    await expect(redeemInvite(code, A, null)).rejects.toThrow(/owner/i);
+    expect(await hasStore(A)).toBe(false);
   });
 });
 
 describe('revokeInvite', () => {
   it('does not revoke a code that was already redeemed', async () => {
     const { id, code } = await invite();
-    await redeemInvite(code, A);
+    await redeemInvite(code, A, 7001n);
     expect(await revokeInvite(id)).toBe(false);
     expect(await hasStore(A)).toBe(true);
   });

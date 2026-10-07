@@ -108,6 +108,28 @@ describe('settling', () => {
     if (result.status === 'settled') expect(result.newBalance).toBe('-₹400.00');
   });
 
+  it('does not duplicate a confirmed overpayment after callback recovery', async () => {
+    const input = {
+      customerQuery: 'Ramesh',
+      amountPaise: 90_000,
+      allowOverpay: true,
+      idempotencyKey: 'pending-action:test-retry',
+    };
+    const first = await settleAccount(STORE, input);
+    const replay = await settleAccount(STORE, input);
+
+    expect(first).toEqual(replay);
+    expect(first.status).toBe('settled');
+    const account = await findAccount(STORE, 'Ramesh');
+    expect(account.status).toBe('found');
+    if (account.status === 'found') expect(account.account.balancePaise).toBe(-40_000);
+    const statement = await accountStatement(STORE, { customerQuery: 'Ramesh' });
+    expect(statement.status).toBe('found');
+    if (statement.status === 'found') {
+      expect(statement.entries.filter((entry) => entry.kind === 'payment')).toHaveLength(1);
+    }
+  });
+
   it('settles exactly to zero without complaint', async () => {
     const result = await settleAccount(STORE, { customerQuery: 'Ramesh', amountPaise: 50_000 });
     expect(result.status).toBe('settled');

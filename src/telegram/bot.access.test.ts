@@ -27,6 +27,7 @@ const { beginDrain, resetDrainForTests } = await import('./drain.js');
 const { runAgent } = await import('../agent/runtime.js');
 const { downloadTelegramFile } = await import('../media/download.js');
 const { createInvite } = await import('../repositories/access.js');
+const { createPendingAction } = await import('../repositories/confirmations.js');
 const { recordUsage, spentTodayMicroUsd } = await import('../repositories/usage.js');
 const { getSessionCostMicroUsd } = await import('../repositories/updates.js');
 const { provisionStore } = await import('../repositories/stores.js');
@@ -103,6 +104,25 @@ function voiceUpdate(chatId: bigint) {
   };
 }
 
+function callbackUpdate(chatId: bigint, userId: bigint, data: string) {
+  const id = nextId++;
+  return {
+    update_id: id,
+    callback_query: {
+      id: `callback-${id}`,
+      from: { id: Number(userId), is_bot: false, first_name: 'T' },
+      chat_instance: 'private-chat-instance',
+      message: {
+        message_id: id,
+        date: 0,
+        chat: { id: Number(chatId), type: 'private', first_name: 'T' },
+        text: 'Awaiting confirmation',
+      },
+      data,
+    },
+  };
+}
+
 const replies = () =>
   sent.filter((s) => s.method === 'sendMessage').map((s) => String(s.payload.text));
 
@@ -148,7 +168,7 @@ describe('access gate', () => {
     expect(runAgent).not.toHaveBeenCalled();
   });
 
-  it('redeems a code via /start, then lets the new owner talk to the agent', async () => {
+  it('redeems in a private chat and only lets the redeeming Telegram user talk to the agent', async () => {
     const { id, code } = await createInvite();
     made.push(id);
     const bot = makeBot();
@@ -159,17 +179,58 @@ describe('access gate', () => {
     await bot.handleUpdate(textUpdate(STRANGER, 'how much sugar is left?') as never);
     expect(runAgent).toHaveBeenCalledTimes(1);
     expect(replies()).toContain('agent says hi');
+
+    const otherUser = textUpdate(STRANGER, 'stock please');
+    otherUser.message.from.id = 700099;
+    await bot.handleUpdate(otherUser as never);
+    expect(runAgent).toHaveBeenCalledTimes(1);
+    expect(replies().at(-1)).toMatch(/private|owner/i);
   });
 
-  it('redeems from a group chat and lets the group talk afterwards', async () => {
+  it('fails closed for group chat invite redemption and group turns', async () => {
     const { id, code } = await createInvite();
     made.push(id);
     const bot = makeBot();
 
     await bot.handleUpdate(textUpdate(GROUP, `/start ${code}`) as never);
-    expect(replies()).toEqual([WELCOME]);
+    expect(replies()).toEqual([PRIVATE_MESSAGE]);
     await bot.handleUpdate(textUpdate(GROUP, 'stock check') as never);
-    expect(runAgent).toHaveBeenCalledTimes(1);
+    expect(runAgent).not.toHaveBeenCalled();
+  });
+
+  it('does not let another private-chat user use a leaked confirmation callback', async () => {
+    const { id, code } = await createInvite();
+    made.push(id);
+    const bot = makeBot();
+    await bot.handleUpdate(textUpdate(OWNER, `/start ${code}`) as never);
+    const pending = await createPendingAction({
+      storeId: OWNER,
+      ownerUserId: OWNER,
+      originatingUpdateId: 7001n,
+      tool: 'void_bill',
+      arguments: { bill_id: '123e4567-e89b-42d3-a456-426614174000' },
+    });
+
+    await bot.handleUpdate(callbackUpdate(OWNER, 700099n, `rai:c:${pending.callbackId}`) as never);
+
+    const { pendingActions } = await import('../db/schema.js');
+    const { eq } = await import('drizzle-orm');
+    const [row] = await db
+      .select()
+      .from(pendingActions)
+      .where(eq(pendingActions.callbackId, pending.callbackId));
+    expect(row!.status).toBe('pending');
+    expect(runAgent).not.toHaveBeenCalled();
+  });
+
+  it('keeps a legacy store with no bound owner inaccessible', async () => {
+    await provisionStore(OWNER);
+    const bot = makeBot();
+
+    await bot.handleUpdate(textUpdate(OWNER, 'stock check') as never);
+
+    expect(replies()).toEqual([PRIVATE_MESSAGE]);
+    expect(runAgent).not.toHaveBeenCalled();
   });
 
   it('does not let a stranger slip through with /start addressed to another bot', async () => {
@@ -227,7 +288,7 @@ describe('access gate', () => {
   });
 
   it('keeps an existing owner working with no code at all', async () => {
-    await provisionStore(OWNER);
+    await provisionStore(OWNER, OWNER);
     const bot = makeBot();
     await bot.handleUpdate(textUpdate(OWNER, 'hello') as never);
     expect(runAgent).toHaveBeenCalledTimes(1);
@@ -236,7 +297,7 @@ describe('access gate', () => {
 
 describe('turn to ledger wiring', () => {
   it('records each turn against the daily budget and the session, passing the prior total', async () => {
-    await provisionStore(OWNER);
+    await provisionStore(OWNER, OWNER);
     const bot = makeBot();
 
     await bot.handleUpdate(textUpdate(OWNER, 'one') as never);
@@ -262,7 +323,7 @@ describe('turn to ledger wiring', () => {
   });
 
   it('records the Whisper cost of a voice note against the daily budget', async () => {
-    await provisionStore(OWNER);
+    await provisionStore(OWNER, OWNER);
     const bot = makeBot();
     const before = await spentTodayMicroUsd(OWNER);
 
@@ -276,7 +337,7 @@ describe('turn to ledger wiring', () => {
 
 describe('spend and rate guards', () => {
   it('refuses a turn once the store has spent its daily budget, with no agent call', async () => {
-    await provisionStore(CAPPED);
+    await provisionStore(CAPPED, CAPPED);
     await recordUsage(CAPPED, microUsd(env.STORE_DAILY_BUDGET_USD)); // exactly at the cap
     const bot = makeBot();
 
@@ -287,7 +348,7 @@ describe('spend and rate guards', () => {
   });
 
   it('refuses a voice note at the cap before downloading or transcribing', async () => {
-    await provisionStore(CAPPED);
+    await provisionStore(CAPPED, CAPPED);
     await recordUsage(CAPPED, microUsd(env.STORE_DAILY_BUDGET_USD));
     const bot = makeBot();
 
@@ -299,7 +360,7 @@ describe('spend and rate guards', () => {
   });
 
   it('rate-limits a chat after RATE_LIMIT_TURNS turns in the window', async () => {
-    await provisionStore(SPAMMER);
+    await provisionStore(SPAMMER, SPAMMER);
     const bot = makeBot();
 
     for (let i = 0; i < env.RATE_LIMIT_TURNS; i++) {
@@ -317,7 +378,7 @@ describe('draining', () => {
   afterEach(() => resetDrainForTests());
 
   it('neither handles nor claims an update that arrives during shutdown', async () => {
-    await provisionStore(OWNER);
+    await provisionStore(OWNER, OWNER);
     const bot = makeBot();
 
     // Control: the harness can handle an update when not draining.

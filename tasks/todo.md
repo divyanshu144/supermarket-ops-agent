@@ -1,5 +1,18 @@
 # Todo
 
+## Responsible AI, data protection, and safety (2026-10-07) — approved, implementation underway
+
+- [x] Draft workstream spec: `docs/specs/2026-10-07-responsible-ai.md`
+- [x] Draft implementation plan: `docs/plans/2026-10-07-responsible-ai.md`
+- [x] Owner approval and implementation decisions recorded in spec and plan
+- [x] W1: enforce single-use owner confirmation for high-impact exceptions (gate green; independent review complete)
+- [ ] W2: constrain and safely render owner preferences
+- [ ] W5: add accurate `/privacy` and onboarding disclosure
+- [ ] W3: implement approved transcript and artifact retention
+- [ ] W4: export and erasure, blocked on legal/product record-retention decision
+- [ ] W6: data inventory, threat model, impact assessment, system card, risk register, incident runbook
+- [ ] W7: synthetic safety replay scenarios and CI coverage
+
 Checklist written **before** implementing. Mark `[x]` as each item finishes — don't batch.
 Milestones from the design spec §13. The detailed per-task breakdown comes from
 `writing-plans` and lands in `docs/plans/`.

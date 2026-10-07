@@ -1,7 +1,7 @@
-import { InputFile, type Context } from 'grammy';
+import { InlineKeyboard, InputFile, type Context } from 'grammy';
 import { AgentRunFailure, runAgent } from '../agent/runtime.js';
 import { deleteSessionEntries } from '../repositories/session-entries.js';
-import { hasStore } from '../repositories/access.js';
+import { isAuthorizedOwner } from '../repositories/access.js';
 import {
   claimUpdate,
   clearSession,
@@ -72,7 +72,11 @@ export async function handleTurn(
 
   // Second line of defence behind the access gate: a turn never creates a store. The only way
   // one comes into existence is redeeming an invite code.
-  if (!(await hasStore(storeId))) {
+  if (
+    ctx.chat?.type !== 'private' ||
+    !ctx.from ||
+    !(await isAuthorizedOwner(storeId, BigInt(ctx.from.id)))
+  ) {
     return refuse('denied', PRIVATE_MESSAGE);
   }
 
@@ -90,7 +94,7 @@ export async function handleTurn(
     const priorMicro = await getSessionCostMicroUsd(storeId);
     const preferences = await readPreferences(storeId);
 
-    const turnContext = newToolContext(storeId, updateId);
+    const turnContext = newToolContext(storeId, updateId, undefined, BigInt(ctx.from.id));
     const result = await toolContext.run(turnContext, () =>
       runAgent({ text, sessionId, preferences, priorCostUsd: priorMicro / 1_000_000 }),
     );
@@ -118,7 +122,16 @@ export async function handleTurn(
       // out before its first message): clear the stale row so the next turn starts clean.
       await clearSession(storeId);
     }
-    await ctx.reply(result.reply || 'Sorry, I could not work that out.');
+    if (turnContext.pendingConfirmations.length > 0) {
+      for (const pending of turnContext.pendingConfirmations) {
+        const keyboard = new InlineKeyboard()
+          .text('Confirm', `rai:c:${pending.callbackId}`)
+          .text('Cancel', `rai:x:${pending.callbackId}`);
+        await ctx.reply(`Awaiting confirmation: ${pending.action}.`, { reply_markup: keyboard });
+      }
+    } else {
+      await ctx.reply(result.reply || 'Sorry, I could not work that out.');
+    }
 
     // Files the tools produced this turn go out after the reply, so the owner reads the answer
     // first and the document lands underneath it.

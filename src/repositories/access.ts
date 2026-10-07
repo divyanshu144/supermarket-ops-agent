@@ -32,6 +32,21 @@ export async function hasStore(chatId: bigint): Promise<boolean> {
   return rows.length > 0;
 }
 
+/** Returns the bound Telegram owner, or null for a missing/legacy store. */
+export async function getStoreOwnerId(chatId: bigint): Promise<bigint | null> {
+  const rows = await db
+    .select({ ownerUserId: stores.ownerUserId })
+    .from(stores)
+    .where(eq(stores.id, chatId))
+    .limit(1);
+  return rows[0]?.ownerUserId ?? null;
+}
+
+export async function isAuthorizedOwner(chatId: bigint, userId: bigint): Promise<boolean> {
+  if (chatId <= 0n || userId <= 0n) return false;
+  return (await getStoreOwnerId(chatId)) === userId;
+}
+
 /** Returns the plaintext code once. Only its hash is persisted. */
 export async function createInvite(): Promise<{ id: string; code: string }> {
   const code = generateCode();
@@ -51,7 +66,14 @@ export type RedeemResult = 'redeemed' | 'invalid';
  * not a read-then-write. If provisioning then fails before the chat has a store, the code is released: a database blip
  * must not cost the owner their only invite. If the store row already exists, the code stays used.
  */
-export async function redeemInvite(code: string, chatId: bigint): Promise<RedeemResult> {
+export async function redeemInvite(
+  code: string,
+  chatId: bigint,
+  ownerUserId: bigint | null,
+): Promise<RedeemResult> {
+  if (chatId <= 0n || ownerUserId === null || ownerUserId <= 0n) {
+    throw new Error('A private-chat owner identity is required to redeem an invite.');
+  }
   const claimed = await db
     .update(inviteCodes)
     .set({ usedByChat: chatId, usedAt: sql`now()` })
@@ -67,7 +89,14 @@ export async function redeemInvite(code: string, chatId: bigint): Promise<Redeem
   if (claimed.length === 0) return 'invalid';
 
   try {
-    await provisionStore(chatId);
+    await provisionStore(chatId, ownerUserId);
+    if ((await getStoreOwnerId(chatId)) !== ownerUserId) {
+      await db
+        .update(inviteCodes)
+        .set({ usedByChat: null, usedAt: null })
+        .where(eq(inviteCodes.id, claimed[0]!.id));
+      return 'invalid';
+    }
   } catch (error) {
     // Release the code only if the chat still has NO store. provisionStore can fail after the
     // store row committed (seeding); the chat then already owns a store, and releasing the code

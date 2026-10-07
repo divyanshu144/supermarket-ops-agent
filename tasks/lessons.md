@@ -258,3 +258,37 @@ The synthetic budget ledger initially marked a reservation settled before valida
 reported charge. A rejected negative refund then stranded the reservation and prevented a
 valid settlement. I moved settlement state changes after validation; the test now rejects a
 negative amount, accepts a valid amount, and rejects only the subsequent duplicate settlement.
+
+## 2026-10-07: responsible-AI implementation decisions approved
+
+Owner identity is the Telegram user who redeemed the invite and is stored on the store. Legacy
+stores and group chats fail closed. Confirmation uses a short callback ID backed by a DB row and
+binds the current bill-line/price hash plus exact tool arguments; it expires after 10 minutes.
+Preferences use enums and strict formats, with catalogue validation for brands. Transcript and
+artifact retention is 30 days since last activity; invoice PDFs regenerate from finalized bills
+before expiration, and export files are removed after sending. W4 now includes export and customer
+pseudonymisation only. Store erasure is not done pending legal review. The owner authorized local
+task commits on `responsible-ai` and explicitly prohibited pushes, live model calls, and probes.
+
+## 2026-10-07: prompt-only confirmations and preference values are not enforcement boundaries
+
+Reviewing the responsible-AI scope against the current handlers showed that skill instructions
+ask for confirmation before some sensitive actions, while the tool handlers accept boolean
+overrides directly. Preference values are also inserted into model context. Treat both as
+untrusted inputs: enforce sensitive-action authorization outside the model turn, and validate and
+render preference values as data. Current voice transcription uses in-memory buffers; verify the
+no-audio-on-disk property with a test before documenting it as a maintained guarantee.
+
+## 2026-10-07: mutation fixtures must exercise the guard, not an earlier rejection
+
+The first callback-owner mutation survived because its test proposal used a fixed timestamp from
+earlier in the day, so expiry rejected every callback before the owner predicate ran. The test now
+injects its current time and advances only the expiry case. Mutation checks must keep unrelated
+guards valid so a failure identifies the intended control. A foreign Telegram callback also needs
+an explicit answer; silently stopping the middleware leaves Telegram showing a spinner.
+
+The final W1 review found that a below-cost refusal and its pending callback fingerprint were read
+in separate operations. The refusal now returns the hash from its locked line snapshot and the tool
+passes that exact hash into the pending row. Confirmation still checks again under the bill lock
+before stock or money changes. The regression test makes the bill change between refusal snapshot
+and pending-row creation and verifies confirmation is stale.

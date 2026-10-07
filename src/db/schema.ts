@@ -21,6 +21,8 @@ export const unitEnum = pgEnum('unit', ['kg', 'g', 'litre', 'ml', 'packet', 'doz
 
 export const stores = pgTable('stores', {
   id: bigint('id', { mode: 'bigint' }).primaryKey(),
+  // Telegram user that redeemed the invite. Null means a legacy store and fails closed.
+  ownerUserId: bigint('owner_user_id', { mode: 'bigint' }),
   name: text('name').notNull(),
   gstin: text('gstin').notNull(),
   stateCode: text('state_code').notNull().default('27'),
@@ -241,6 +243,49 @@ export const inviteCodes = pgTable('invite_codes', {
   usedByChat: bigint('used_by_chat', { mode: 'bigint' }),
   usedAt: timestamp('used_at', { withTimezone: true }),
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
+});
+
+export const pendingActionStatusEnum = pgEnum('pending_action_status', [
+  'pending',
+  'processing',
+  'confirmed',
+  'cancelled',
+]);
+
+/** Short callback IDs map to this server-side action record; callback data contains no arguments. */
+export const pendingActions = pgTable(
+  'pending_actions',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    callbackId: text('callback_id').notNull().unique(),
+    storeId: bigint('store_id', { mode: 'bigint' })
+      .notNull()
+      .references(() => stores.id, { onDelete: 'cascade' }),
+    ownerUserId: bigint('owner_user_id', { mode: 'bigint' }).notNull(),
+    originatingUpdateId: bigint('originating_update_id', { mode: 'bigint' }).notNull(),
+    tool: text('tool').notNull(),
+    arguments: jsonb('arguments').$type<Record<string, unknown>>().notNull(),
+    argumentHash: text('argument_hash').notNull(),
+    billFingerprint: text('bill_fingerprint'),
+    status: pendingActionStatusEnum('status').notNull().default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    processingAt: timestamp('processing_at', { withTimezone: true }),
+    confirmedUpdateId: bigint('confirmed_update_id', { mode: 'bigint' }),
+    outcome: text('outcome'),
+  },
+  (t) => [index('pending_actions_store_status_idx').on(t.storeId, t.status, t.expiresAt)],
+);
+
+/** Content-free audit records for high-impact actions. */
+export const auditLog = pgTable('audit_log', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  storeId: bigint('store_id', { mode: 'bigint' }).notNull(),
+  action: text('action').notNull(),
+  tool: text('tool').notNull(),
+  outcome: text('outcome').notNull(),
+  updateId: bigint('update_id', { mode: 'bigint' }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
 /**

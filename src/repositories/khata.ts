@@ -1,6 +1,6 @@
 import { and, desc, eq, ilike, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
-import { khataAccounts, khataEntries } from '../db/schema.js';
+import { idempotencyKeys, khataAccounts, khataEntries } from '../db/schema.js';
 import { formatPaise } from '../domain/money.js';
 
 /**
@@ -128,7 +128,13 @@ export type SettleResult =
 /** Refuses an unknown customer, and refuses to overpay without an explicit confirmation. */
 export async function settleAccount(
   storeId: bigint,
-  input: { customerQuery: string; amountPaise: number; note?: string; allowOverpay?: boolean },
+  input: {
+    customerQuery: string;
+    amountPaise: number;
+    note?: string;
+    allowOverpay?: boolean;
+    idempotencyKey?: string;
+  },
 ): Promise<SettleResult> {
   const found = await findAccount(storeId, input.customerQuery);
   if (found.status === 'not_found') {
@@ -137,6 +143,31 @@ export async function settleAccount(
   if (found.status === 'ambiguous') return found;
 
   return db.transaction(async (tx) => {
+    if (input.idempotencyKey) {
+      const claimed = await tx
+        .insert(idempotencyKeys)
+        .values({
+          storeId,
+          key: input.idempotencyKey,
+          operation: 'settle_khata',
+          result: {},
+        })
+        .onConflictDoNothing()
+        .returning({ key: idempotencyKeys.key });
+      if (claimed.length === 0) {
+        const [existing] = await tx
+          .select({ result: idempotencyKeys.result })
+          .from(idempotencyKeys)
+          .where(
+            and(
+              eq(idempotencyKeys.storeId, storeId),
+              eq(idempotencyKeys.key, input.idempotencyKey),
+            ),
+          );
+        return existing!.result as SettleResult;
+      }
+    }
+
     const [locked] = await tx
       .select()
       .from(khataAccounts)
@@ -166,12 +197,21 @@ export async function settleAccount(
       .where(eq(khataAccounts.id, locked!.id))
       .returning();
 
-    return {
+    const result: SettleResult = {
       status: 'settled' as const,
       customerName: updated!.customerName,
       amount: formatPaise(input.amountPaise),
       newBalance: formatPaise(updated!.balancePaise),
     };
+    if (input.idempotencyKey) {
+      await tx
+        .update(idempotencyKeys)
+        .set({ result })
+        .where(
+          and(eq(idempotencyKeys.storeId, storeId), eq(idempotencyKeys.key, input.idempotencyKey)),
+        );
+    }
+    return result;
   });
 }
 

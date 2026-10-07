@@ -2,13 +2,58 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-06, Phase 1 approved and offline implementation started
-**Branch:** `eval-harness`, created from `readme-trim` at `4359796`.
+**Last updated:** 2026-10-07, W1 implemented, reviewed, and locally verified
+**Branch:** `responsible-ai`, created from `eval-harness` at `c435f26`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
 ---
 
 ## Current state
+
+### Responsible-AI checkpoint (2026-10-07)
+
+Draft spec: `docs/specs/2026-10-07-responsible-ai.md`.
+Draft plan: `docs/plans/2026-10-07-responsible-ai.md`.
+The owner approved both and provided binding decisions on 2026-10-07. The spec and plan now record
+those decisions. The branch is `responsible-ai`, based on `eval-harness` at `c435f26`.
+
+The design uses owner-only bound Telegram Confirm/Cancel callbacks for below-cost bill finalize,
+bill void, khata overpayment override, and customer pseudonymisation. The store records the Telegram
+user who redeemed the invite. Legacy stores without an owner ID and all group chats fail closed.
+Callbacks use short IDs mapped to DB rows, bind exact tool arguments and current bill lines/prices,
+and expire after 10 minutes. Transcript and artifact retention is 30 days from last activity;
+invoice PDFs regenerate from bills before expiry and export files are deleted after send. Store
+erasure is explicitly NOT DONE pending legal review. No live model call or probe is permitted.
+
+W1 implementation and independent review are complete; it is ready for its local commit. It records the
+invite redeemer as store owner, fails closed for legacy stores/groups/other users, and moves
+below-cost finalize, bill void, and khata overpayment behind a model-free 10-minute confirmation
+callback. Callback claims bind owner/store/update, exact tool-argument hash, and bill-line/price
+fingerprint. The below-cost refusal snapshot supplies the pending fingerprint without a later read;
+finalize and void recheck the fingerprint inside the locked transaction. Pending model
+results are rendered as “awaiting confirmation”. Denied callbacks are answered so Telegram clears
+the spinner. The additive migration is `src/db/migrations/0006_good_the_call.sql`.
+
+W1 targeted verification: 84 tests passed across 9 files. Required gate on disposable
+`127.0.0.1:55439/rai_test`: `pnpm fmt:check` passed, `pnpm lint` passed, `pnpm typecheck` passed,
+`pnpm test` passed (477 passed, 13 skipped; 52 files). Mutation evidence is in
+`docs/safety/mutation-ledger.md`. One owner-predicate mutation was initially masked by an expired
+test fixture; the fixture now uses the current injected time, and the mutation fails as intended.
+Two fresh independent reviews found no unresolved blocker after the below-cost snapshot race fix;
+the later reviewer could not connect to the DB from its sandbox, but the main run passed. The default
+`src/agent/runtime.ts` path has no diff. No live model call, probe, or `.env` access occurred.
+
+Every DB command and gate must use an explicitly disposable `DATABASE_URL`. Each completed task
+gets a local commit on this branch; never push. Independent review is required at each task
+checkpoint. Any hard stop is recorded here before proceeding to independent work. W2, W5, W3, the
+W4 export/customer-pseudonymisation slice, W6, and W7 remain pending. Store erasure remains NOT DONE
+pending legal review.
+
+### Eval harness checkpoint
+
+The offline eval Tasks 1–3 were committed and pushed as `c435f26` on `eval-harness`. Live budget is
+zero; no cost probe or live model run has happened. Replay output is synthetic and cannot serve as
+an accepted live baseline. The worktree was clean before the `responsible-ai` branch was created.
 
 The `improvements` work (`docs/plans/2026-08-01-improvements.md`) is merged into `main`.
 

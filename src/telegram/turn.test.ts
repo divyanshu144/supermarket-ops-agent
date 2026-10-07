@@ -18,6 +18,7 @@ import {
 } from '../repositories/session-entries.js';
 import { provisionStore } from '../repositories/stores.js';
 import { PRIVATE_MESSAGE } from './messages.js';
+import { toolContext } from '../tools/context.js';
 
 // handleTurn calls runAgent, which calls the real Anthropic API. Mocked so this test exercises
 // only the claim/skip-claim branch the alreadyClaimed option controls, with no network call and
@@ -56,7 +57,8 @@ function fakeCtx(): Context & { replies: string[] } {
   const replies: string[] = [];
   return {
     update: { update_id: Number(UPD) },
-    chat: { id: Number(CHAT) },
+    chat: { id: Number(CHAT), type: 'private' },
+    from: { id: Number(CHAT), is_bot: false, first_name: 'Test' },
     reply: vi.fn(async (text: string) => {
       replies.push(text);
     }),
@@ -76,7 +78,7 @@ beforeEach(async () => {
   await db.delete(processedUpdates).where(eq(processedUpdates.updateId, UPD));
   await db.delete(stores).where(eq(stores.id, CHAT));
   // handleTurn never creates a store, so the owner under test must already exist.
-  await provisionStore(CHAT);
+  await provisionStore(CHAT, CHAT);
 });
 
 afterAll(async () => {
@@ -87,6 +89,38 @@ afterAll(async () => {
 });
 
 describe('handleTurn — alreadyClaimed', () => {
+  it('replaces a model completion claim with an awaiting-confirmation keyboard', async () => {
+    runAgentMock.mockImplementationOnce(async () => {
+      toolContext.getStore()!.pendingConfirmations.push({
+        callbackId: 'Abcdef123_-0',
+        action: 'below_cost_finalize',
+      });
+      return {
+        reply: 'The bill is finalized.',
+        sessionId: 'sess-1',
+        toolsUsed: ['finalize_bill'],
+        outcome: 'ok',
+        totalCostUsd: 0,
+        turnCostUsd: 0,
+        numTurns: 1,
+        resumeDropped: false,
+        attempts: [],
+      };
+    });
+    const ctx = fakeCtx();
+
+    await handleTurn(ctx, 'sell below cost');
+
+    expect(ctx.replies).toEqual(['Awaiting confirmation: below_cost_finalize.']);
+    const replyCall = vi.mocked(ctx.reply).mock.calls[0]!;
+    const keyboard = replyCall[1]!.reply_markup as {
+      inline_keyboard: Array<Array<{ callback_data: string }>>;
+    };
+    const callbacks = keyboard.inline_keyboard.flat().map((button) => button.callback_data);
+    expect(callbacks).toEqual(['rai:c:Abcdef123_-0', 'rai:x:Abcdef123_-0']);
+    expect(callbacks.every((data) => Buffer.byteLength(data, 'utf8') <= 64)).toBe(true);
+  });
+
   it('default behaviour is unchanged: a duplicate claim short-circuits before the agent runs', async () => {
     // Simulates a genuine Telegram redelivery racing a still-fresh claim from elsewhere.
     await claimUpdate(UPD, CHAT);

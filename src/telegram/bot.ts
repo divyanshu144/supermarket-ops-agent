@@ -1,5 +1,6 @@
 import { Bot, type CommandContext, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
+import { handleConfirmation } from '../agent/confirmation.js';
 import { loadEnv } from '../config/env.js';
 import { downloadTelegramFile } from '../media/download.js';
 import { transcribe, whisperCostMicroUsd } from '../media/transcribe.js';
@@ -8,7 +9,7 @@ import { recordUsage } from '../repositories/usage.js';
 import { newCommand, resetCommand, startCommand } from './commands.js';
 import { drainGate } from './drain.js';
 import { accessGate } from './gate.js';
-import { DAILY_CAP_REPLY, RATE_LIMITED_REPLY, WELCOME } from './messages.js';
+import { DAILY_CAP_REPLY, PRIVATE_MESSAGE, RATE_LIMITED_REPLY, WELCOME } from './messages.js';
 import { turnLimiter } from './rate-limit.js';
 import { redact } from './redact.js';
 import { dailyCapReached, handleTurn } from './turn.js';
@@ -52,10 +53,51 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
   // Then: nothing below runs for a chat that has no store and is not redeeming a code.
   bot.use(accessGate);
 
+  bot.on('callback_query:data', async (ctx) => {
+    const match = /^rai:([cx]):([A-Za-z0-9_-]{12})$/.exec(ctx.callbackQuery.data);
+    if (!match || !ctx.chat || ctx.chat.type !== 'private') {
+      await ctx.answerCallbackQuery({
+        text: 'This confirmation is unavailable.',
+        show_alert: true,
+      });
+      return;
+    }
+    const [, decision, callbackId] = match;
+    try {
+      const result = await handleConfirmation({
+        decision: decision === 'c' ? 'confirm' : 'cancel',
+        callbackId: callbackId!,
+        storeId: BigInt(ctx.chat.id),
+        ownerUserId: BigInt(ctx.from.id),
+        updateId: BigInt(ctx.update.update_id),
+      });
+      const message =
+        result.status === 'confirmed'
+          ? `Confirmation processed (${result.outcome}).`
+          : result.status === 'cancelled'
+            ? 'Cancelled. Nothing was changed.'
+            : result.status === 'stale_bill'
+              ? 'The bill changed after this request. Nothing was changed; review it and try again.'
+              : 'This confirmation has expired or is no longer available.';
+      await ctx.answerCallbackQuery({ text: message, show_alert: result.status !== 'confirmed' });
+      await ctx.reply(message);
+    } catch (error) {
+      console.error(redact({ scope: 'confirmation', error }));
+      await ctx.answerCallbackQuery({
+        text: 'I could not process that confirmation.',
+        show_alert: true,
+      });
+    }
+  });
+
   bot.command(
     'start',
     guarded(async (ctx) => {
-      await ctx.reply(await startCommand(BigInt(ctx.chat.id), argOf(ctx)));
+      if (ctx.chat.type !== 'private' || !ctx.from) {
+        await ctx.reply(PRIVATE_MESSAGE);
+        return;
+      }
+      await ctx.reply(await startCommand(BigInt(ctx.chat.id), argOf(ctx), BigInt(ctx.from.id)));
     }),
   );
 

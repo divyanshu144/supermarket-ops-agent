@@ -9,6 +9,7 @@ import {
 } from '../repositories/khata.js';
 import { requireContext } from './context.js';
 import { toolResult } from './present.js';
+import { proposeConfirmation } from './confirmation.js';
 
 export const getKhataBalanceTool = tool(
   'get_khata_balance',
@@ -79,7 +80,7 @@ export const chargeKhataTool = tool(
 export const settleKhataTool = tool(
   'settle_khata',
   'Record a payment against a customer\'s credit, e.g. "Ramesh paid ₹300". Refuses an unknown ' +
-    'customer, and refuses to take more than the outstanding balance unless the owner confirms.',
+    'customer, and sends a Telegram owner confirmation before taking more than the outstanding balance.',
   {
     customer: z.string().min(1),
     amount_paise: z.number().int().positive().describe('Amount in PAISE.'),
@@ -95,8 +96,23 @@ export const settleKhataTool = tool(
       customerQuery: customer,
       amountPaise: amount_paise,
       note,
-      allowOverpay: allow_overpay,
+      allowOverpay: false,
     });
+
+    if (result.status === 'exceeds_balance') {
+      return toolResult(
+        await proposeConfirmation({
+          tool: 'settle_khata',
+          action: 'khata_overpayment',
+          arguments: {
+            customer,
+            amount_paise,
+            ...(note === undefined ? {} : { note }),
+            ...(allow_overpay === undefined ? {} : { allow_overpay }),
+          },
+        }),
+      );
+    }
 
     if (result.status === 'unknown_customer') {
       return toolResult({
@@ -104,14 +120,6 @@ export const settleKhataTool = tool(
         query: result.query,
         message:
           'No khata account by that name. Do not open one to take a payment — check the name with the owner.',
-      });
-    }
-    if (result.status === 'exceeds_balance') {
-      return toolResult({
-        status: 'exceeds_balance',
-        message: `${result.customerName} owes only ${result.balance}. Confirm with the owner before taking ${result.offered}.`,
-        balance: result.balance,
-        offered: result.offered,
       });
     }
     return toolResult(result);

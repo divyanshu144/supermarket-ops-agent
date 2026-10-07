@@ -32,35 +32,39 @@ describe('redeemInvite when provisioning fails', () => {
     ids.push(id);
     provision.mockRejectedValueOnce(new Error('database blip'));
 
-    await expect(redeemInvite(code, CHAT_A)).rejects.toThrow('database blip');
+    await expect(redeemInvite(code, CHAT_A, 8001n)).rejects.toThrow('database blip');
 
     const [row] = await db.select().from(inviteCodes).where(eq(inviteCodes.id, id));
     expect(row!.usedAt).toBeNull();
     expect(row!.usedByChat).toBeNull();
 
     // The released code works for another chat (the mock now inserts a real store row).
-    provision.mockImplementationOnce(async (chatId: bigint) => {
-      await db.insert(stores).values({ id: chatId, name: 'Test', gstin: 'X' });
+    provision.mockImplementationOnce(async (chatId: bigint, ownerUserId?: bigint) => {
+      await db
+        .insert(stores)
+        .values({ id: chatId, ownerUserId: ownerUserId ?? null, name: 'Test', gstin: 'X' });
       return { id: chatId, created: true };
     });
-    expect(await redeemInvite(code, CHAT_B)).toBe('redeemed');
+    expect(await redeemInvite(code, CHAT_B, 8002n)).toBe('redeemed');
     expect(await hasStore(CHAT_B)).toBe(true);
   });
 
   it('keeps the code consumed when the store row already committed before the failure', async () => {
     const { id, code } = await createInvite();
     ids.push(id);
-    provision.mockImplementationOnce(async (chatId: bigint) => {
-      await db.insert(stores).values({ id: chatId, name: 'Half made', gstin: 'X' });
+    provision.mockImplementationOnce(async (chatId: bigint, ownerUserId?: bigint) => {
+      await db
+        .insert(stores)
+        .values({ id: chatId, ownerUserId: ownerUserId ?? null, name: 'Half made', gstin: 'X' });
       throw new Error('seeding failed');
     });
 
-    await expect(redeemInvite(code, CHAT_A)).rejects.toThrow('seeding failed');
+    await expect(redeemInvite(code, CHAT_A, 8001n)).rejects.toThrow('seeding failed');
 
     const [row] = await db.select().from(inviteCodes).where(eq(inviteCodes.id, id));
     expect(row!.usedAt).not.toBeNull();
     expect(row!.usedByChat).toBe(CHAT_A);
     // So a second chat cannot turn the same invite into a second store.
-    expect(await redeemInvite(code, CHAT_B)).toBe('invalid');
+    expect(await redeemInvite(code, CHAT_B, 8002n)).toBe('invalid');
   });
 });

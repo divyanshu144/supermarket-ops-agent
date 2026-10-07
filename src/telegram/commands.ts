@@ -1,4 +1,4 @@
-import { hasStore, redeemInvite } from '../repositories/access.js';
+import { hasStore, isAuthorizedOwner, redeemInvite } from '../repositories/access.js';
 import { clearSession } from '../repositories/updates.js';
 import { reseedStore } from '../seed/index.js';
 import { INVALID_CODE, PRIVATE_MESSAGE, RESET_EXPLAINER, WELCOME } from './messages.js';
@@ -8,11 +8,17 @@ import { INVALID_CODE, PRIVATE_MESSAGE, RESET_EXPLAINER, WELCOME } from './messa
  * tested against the real database without a Telegram update in sight.
  */
 
-export async function startCommand(chatId: bigint, arg: string): Promise<string> {
-  // An existing owner never spends a code, whatever they typed after /start.
-  if (await hasStore(chatId)) return WELCOME;
+export async function startCommand(
+  chatId: bigint,
+  arg: string,
+  ownerUserId: bigint,
+): Promise<string> {
+  // Existing stores are usable only by the user who redeemed the invite. Legacy stores fail closed.
+  if (await hasStore(chatId)) {
+    return (await isAuthorizedOwner(chatId, ownerUserId)) ? WELCOME : PRIVATE_MESSAGE;
+  }
   if (arg.trim() === '') return PRIVATE_MESSAGE;
-  return (await redeemInvite(arg, chatId)) === 'redeemed' ? WELCOME : INVALID_CODE;
+  return (await redeemInvite(arg, chatId, ownerUserId)) === 'redeemed' ? WELCOME : INVALID_CODE;
 }
 
 export async function newCommand(chatId: bigint): Promise<string> {

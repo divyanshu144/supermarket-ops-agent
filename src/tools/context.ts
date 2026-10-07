@@ -57,6 +57,7 @@ export interface ToolContext {
    */
   storeId: bigint;
   updateId: bigint;
+  ownerUserId?: bigint;
   idempotency: IdempotencyIssuer;
   /**
    * Files generated this turn. Tools push here; the adapter drains it after the reply.
@@ -66,6 +67,7 @@ export interface ToolContext {
   artifacts: ProducedArtifact[];
   /** Internal eval-only observation sink. Production contexts leave this unset. */
   observer?: ToolObserver;
+  pendingConfirmations: Array<{ callbackId: string; action: string }>;
 }
 
 export const toolContext = new AsyncLocalStorage<ToolContext>();
@@ -88,12 +90,15 @@ export function newToolContext(
   storeId: bigint,
   updateId: bigint,
   observer?: ToolContext['observer'],
+  ownerUserId?: bigint,
 ): ToolContext {
   return {
     storeId,
     updateId,
+    ...(ownerUserId === undefined ? {} : { ownerUserId }),
     idempotency: new IdempotencyIssuer(updateId),
     artifacts: [],
+    pendingConfirmations: [],
     ...(observer ? { observer } : {}),
   };
 }

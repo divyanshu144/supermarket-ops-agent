@@ -1,5 +1,5 @@
 import type { Context, NextFunction } from 'grammy';
-import { hasStore } from '../repositories/access.js';
+import { getStoreOwnerId } from '../repositories/access.js';
 import { PRIVATE_MESSAGE } from './messages.js';
 
 /**
@@ -23,11 +23,21 @@ export function decideAccess(input: {
  */
 export async function accessGate(ctx: Context, next: NextFunction): Promise<void> {
   if (!ctx.chat) return;
+  if (ctx.chat.type !== 'private') {
+    if (ctx.message) await ctx.reply(PRIVATE_MESSAGE);
+    else if (ctx.callbackQuery)
+      await ctx.answerCallbackQuery({ text: PRIVATE_MESSAGE, show_alert: true });
+    return;
+  }
+  const ownerUserId = await getStoreOwnerId(BigInt(ctx.chat.id));
   const decision = decideAccess({
-    hasStore: await hasStore(BigInt(ctx.chat.id)),
+    hasStore: ownerUserId !== null && ownerUserId === BigInt(ctx.from?.id ?? 0),
     isStartCommand: ctx.hasCommand('start'),
   });
   if (decision === 'allow') return next();
   // Fail closed for every update type; only answer an actual message.
   if (ctx.message) await ctx.reply(PRIVATE_MESSAGE);
+  else if (ctx.callbackQuery) {
+    await ctx.answerCallbackQuery({ text: PRIVATE_MESSAGE, show_alert: true });
+  }
 }

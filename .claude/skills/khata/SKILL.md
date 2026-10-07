@@ -34,9 +34,9 @@ even when you're confident you already know it. Money owed is the last figure wo
 
 ## Refusals
 
-`exceeds_balance` means they offered more than is outstanding. Say what is actually owed and ask
-before taking the extra. If the owner confirms, `allow_overpay` records it and the customer ends
-up in credit.
+`awaiting_confirmation` means they offered more than is outstanding. The tool sends a
+Confirm/Cancel keyboard to the bound owner. Say that the payment is awaiting confirmation. Never
+claim it was recorded before the owner taps Confirm and Telegram reports the result.
 
 ## Billing to credit
 

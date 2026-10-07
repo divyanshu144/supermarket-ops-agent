@@ -14,6 +14,7 @@ import { computeLine } from '../domain/gst.js';
 import { formatPaise, roundToNearestRupee } from '../domain/money.js';
 import { formatQuantity, toBaseUnits, type Unit } from '../domain/units.js';
 import { findStock, type ProductSummary } from './products.js';
+import { hashBillSnapshot } from './confirmations.js';
 
 /** The transaction handle Drizzle hands to `db.transaction`. */
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -109,7 +110,12 @@ export type FinalizeResult =
       status: 'insufficient_stock';
       shortfalls: Array<{ name: string; wanted: string; available: string }>;
     }
-  | { status: 'below_cost'; lines: Array<{ name: string; price: string; cost: string }> }
+  | {
+      status: 'below_cost';
+      lines: Array<{ name: string; price: string; cost: string }>;
+      billFingerprint: string;
+    }
+  | { status: 'stale_confirmation' }
   // No override counterpart to below_cost's `allowBelowCost`: selling under cost is the owner's
   // money to lose, selling over MRP is the customer's and is not the owner's to give away.
   | { status: 'above_mrp'; lines: Array<{ name: string; price: string; mrp: string }> }
@@ -127,6 +133,7 @@ export type VoidResult =
       khataReversedPaise: number;
     }
   | { status: 'already_void'; billId: string; invoiceNumber: string | null }
+  | { status: 'stale_confirmation' }
   | { status: 'bill_not_found'; billId: string };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -826,6 +833,7 @@ export async function finalizeBill(
     paymentRef?: string;
     customerName?: string;
     allowBelowCost?: boolean;
+    expectedBillFingerprint?: string;
   },
 ): Promise<FinalizeResult> {
   const { billId } = input;
@@ -864,6 +872,21 @@ export async function finalizeBill(
 
     // 4. Lines, priced off their snapshots.
     const lines = await selectLines(tx, billId);
+    if (
+      input.expectedBillFingerprint &&
+      hashBillSnapshot(
+        lines.map((line) => ({
+          lineNo: line.lineNo,
+          productId: line.productId,
+          qtyBase: line.qtyBase,
+          unitPricePaise: line.unitPricePaise,
+          gstRateBps: line.gstRateBps,
+          hsnCode: line.hsnCode,
+        })),
+      ) !== input.expectedBillFingerprint
+    ) {
+      return { status: 'stale_confirmation' };
+    }
     if (lines.length === 0) return { status: 'empty_bill', billId };
 
     // 5. Credit needs a name. Charging a NEW name is fine — that is how a kirana works — but
@@ -901,7 +924,20 @@ export async function finalizeBill(
       }));
 
     if (belowCost.length > 0 && !input.allowBelowCost) {
-      return { status: 'below_cost', lines: belowCost };
+      return {
+        status: 'below_cost',
+        lines: belowCost,
+        billFingerprint: hashBillSnapshot(
+          lines.map((line) => ({
+            lineNo: line.lineNo,
+            productId: line.productId,
+            qtyBase: line.qtyBase,
+            unitPricePaise: line.unitPricePaise,
+            gstRateBps: line.gstRateBps,
+            hsnCode: line.hsnCode,
+          })),
+        ),
+      };
     }
 
     // 8. Shortfalls, across ALL lines. We hold the row locks, so these readings cannot move
@@ -1038,7 +1074,11 @@ async function chargeKhata(
  * through `reversal` movements, and the khata charge is undone by a signed adjustment entry —
  * so the ledger still explains how the balance got where it is.
  */
-export async function voidBill(storeId: bigint, billId: string): Promise<VoidResult> {
+export async function voidBill(
+  storeId: bigint,
+  billId: string,
+  expectedBillFingerprint?: string,
+): Promise<VoidResult> {
   if (!isBillId(billId)) return { status: 'bill_not_found', billId };
 
   return db.transaction(async (tx): Promise<VoidResult> => {
@@ -1055,6 +1095,23 @@ export async function voidBill(storeId: bigint, billId: string): Promise<VoidRes
       return { status: 'already_void', billId, invoiceNumber: bill.invoiceNumber };
     }
 
+    const lines = await selectLines(tx, billId);
+    if (
+      expectedBillFingerprint &&
+      hashBillSnapshot(
+        lines.map((line) => ({
+          lineNo: line.lineNo,
+          productId: line.productId,
+          qtyBase: line.qtyBase,
+          unitPricePaise: line.unitPricePaise,
+          gstRateBps: line.gstRateBps,
+          hsnCode: line.hsnCode,
+        })),
+      ) !== expectedBillFingerprint
+    ) {
+      return { status: 'stale_confirmation' };
+    }
+
     // A draft never moved any stock, so voiding one is just closing it.
     if (bill.status === 'draft') {
       await tx.update(bills).set({ status: 'void' }).where(eq(bills.id, billId));
@@ -1067,7 +1124,6 @@ export async function voidBill(storeId: bigint, billId: string): Promise<VoidRes
       };
     }
 
-    const lines = await selectLines(tx, billId);
     const wanted = wantedPerProduct(lines);
     const locked = await lockProducts(tx, storeId, [...wanted.keys()]);
 

@@ -40,27 +40,27 @@ afterAll(async () => {
 
 describe('startCommand', () => {
   it('turns a stranger with no code away and creates nothing', async () => {
-    expect(await startCommand(STRANGER, '')).toBe(PRIVATE_MESSAGE);
+    expect(await startCommand(STRANGER, '', STRANGER)).toBe(PRIVATE_MESSAGE);
     expect(await hasStore(STRANGER)).toBe(false);
   });
 
   it('rejects an invalid code and creates nothing', async () => {
-    expect(await startCommand(STRANGER, 'nonsense')).toBe(INVALID_CODE);
+    expect(await startCommand(STRANGER, 'nonsense', STRANGER)).toBe(INVALID_CODE);
     expect(await hasStore(STRANGER)).toBe(false);
   });
 
   it('welcomes a stranger who presents a valid code, and creates their store', async () => {
     const { code } = await invite();
-    expect(await startCommand(STRANGER, code)).toBe(WELCOME);
+    expect(await startCommand(STRANGER, code, STRANGER)).toBe(WELCOME);
     expect(await hasStore(STRANGER)).toBe(true);
   });
 
   it('welcomes an existing owner without spending a code', async () => {
-    await provisionStore(OWNER);
+    await provisionStore(OWNER, OWNER);
     const { code } = await invite();
-    expect(await startCommand(OWNER, code)).toBe(WELCOME);
+    expect(await startCommand(OWNER, code, OWNER)).toBe(WELCOME);
     // The code is still good for someone else.
-    expect(await redeemInvite(code, OTHER)).toBe('redeemed');
+    expect(await redeemInvite(code, OTHER, OTHER)).toBe('redeemed');
   });
 });
 

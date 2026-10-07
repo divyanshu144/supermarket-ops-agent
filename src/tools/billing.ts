@@ -8,13 +8,13 @@ import {
   openBill,
   removeBillItem,
   updateBillItem,
-  voidBill,
   type AddItemResult,
   type FinalizeResult,
   type RemoveItemResult,
   type UpdateItemResult,
 } from '../repositories/bills.js';
 import { requireContext } from './context.js';
+import { proposeConfirmation } from './confirmation.js';
 import { presentBill, presentBillSummary, toolResult } from './present.js';
 
 const UNITS = ['kg', 'g', 'litre', 'ml', 'packet', 'dozen', 'piece'] as const;
@@ -68,7 +68,7 @@ function presentFinalize(result: FinalizeResult): unknown {
       return {
         status: 'below_cost',
         message:
-          'One or more lines are priced below cost. Confirm with the owner, then retry with allow_below_cost.',
+          'One or more lines are priced below cost. Awaiting Telegram owner confirmation; the bill is not finalized yet.',
         lines: result.lines,
       };
     case 'above_mrp':
@@ -207,7 +207,7 @@ export const findBillsTool = tool(
 export const finalizeBillTool = tool(
   'finalize_bill',
   'Close a bill and take the stock. This is the only point at which stock moves. Refuses if ' +
-    'stock is short, if a line is below cost (overridable) or above MRP (never overridable). ' +
+    'stock is short, if a line is below cost (requires Telegram owner confirmation) or above MRP (never overridable). ' +
     'Use payment_mode "khata" to put the bill on a customer\'s credit — the ledger entry is ' +
     'written in the same transaction, so it cannot half-happen.',
   {
@@ -227,8 +227,26 @@ export const finalizeBillTool = tool(
       paymentMode: payment_mode,
       paymentRef: payment_ref,
       customerName: customer_name,
-      allowBelowCost: allow_below_cost,
+      // A boolean supplied by the model is never authorization. First run the normal refusal
+      // checks, then surface a Telegram confirmation if the only issue is below-cost pricing.
+      allowBelowCost: false,
     });
+    if (result.status === 'below_cost') {
+      const pending = await proposeConfirmation({
+        tool: 'finalize_bill',
+        action: 'below_cost_finalize',
+        billId: bill_id,
+        billFingerprint: result.billFingerprint,
+        arguments: {
+          bill_id,
+          payment_mode,
+          ...(payment_ref === undefined ? {} : { payment_ref }),
+          ...(customer_name === undefined ? {} : { customer_name }),
+          ...(allow_below_cost === undefined ? {} : { allow_below_cost }),
+        },
+      });
+      return toolResult(pending);
+    }
     return toolResult(presentFinalize(result));
   },
 );
@@ -236,12 +254,20 @@ export const finalizeBillTool = tool(
 export const voidBillTool = tool(
   'void_bill',
   'Reverse a finalized bill: stock goes back and any khata charge is reversed. Nothing is ' +
-    'deleted — the reversal is recorded. Confirm with the owner before using this.',
+    'deleted — the reversal is recorded. This always requires the owner to tap Confirm in Telegram.',
   { bill_id: z.string() },
   async ({ bill_id }) => {
     const { storeId } = requireContext();
-    const result = await voidBill(storeId, bill_id);
-    return toolResult(result);
+    const bill = await getBill(storeId, bill_id);
+    if (!bill) return toolResult({ status: 'bill_not_found', bill_id });
+    return toolResult(
+      await proposeConfirmation({
+        tool: 'void_bill',
+        action: 'void_bill',
+        billId: bill_id,
+        arguments: { bill_id },
+      }),
+    );
   },
 );
 
