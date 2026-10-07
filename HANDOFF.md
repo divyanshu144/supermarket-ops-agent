@@ -180,7 +180,8 @@ All matched files use Prettier code style!
    Duration  28.11s (transform 461ms, setup 293ms, import 10.57s, tests 13.08s, environment 3ms)
 ```
 `pnpm eval:safety` reported six synthetic cases passing with no violations. The test-only tool-call
-bound does not enforce production rate or cost limits; those semantics remain unverified. Mutation
+bound does not enforce production rate or cost limits; those semantics remain unverified. The
+implementation was committed locally as `47c1014`. Mutation
 results and synthetic output are in `evals/results/w7-safety-replay-synthetic.md`. No paid model call,
 probe, or `.env` access occurred. Store erasure remains **NOT DONE** pending legal review; do not
 implement it.

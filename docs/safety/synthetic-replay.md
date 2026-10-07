@@ -32,3 +32,6 @@ I did not run live model scenarios because no API credits are available. No pass
 or claim about production model quality is reported here. The manual credentialed runbook remains in
 [`evals/results/task-5-to-8-synthetic.md`](../../evals/results/task-5-to-8-synthetic.md); it is not
 authorization to run probes or a live evaluation.
+
+The exact synthetic replay output, verification gate, mutation ledger, and review result are in
+[`evals/results/w7-safety-replay-synthetic.md`](../../evals/results/w7-safety-replay-synthetic.md).
