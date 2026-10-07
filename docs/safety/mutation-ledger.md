@@ -81,3 +81,27 @@ no model call was made.
 All W3 mutations were restored. The repeated-sweep assertion checks that a second run reports zero
 additional transcript deletions; the database row is absent after the first run. No output is
 presented as a live-model result.
+
+## W4: store export and customer pseudonymisation slice
+
+Run on 2026-10-07, branch `responsible-ai`, disposable database target
+`127.0.0.1:55439/rai_test`. No live model call or probe was made.
+
+| Guard | Deliberate mutation | Test and observed result | Final state |
+|---|---|---|---|
+| Export owner binding | Removed the stored-owner equality check in `collectStoreExport`. | `pnpm exec vitest run src/repositories/privacy.test.ts -t 'denies a different Telegram user' --reporter=dot` failed because the other user received a ready export. | Restored stored-owner equality; legacy null-owner denial remains covered. |
+| Export tenant isolation | Removed the store predicate from the product export query. | `pnpm exec vitest run src/repositories/privacy.test.ts -t 'only the authenticated store records' --reporter=dot` failed because the record count became 2 instead of 1. | Restored tenant predicate. |
+| Transcript ownership | Removed the orphan-transcript fail-closed return. | `pnpm exec vitest run src/repositories/privacy.test.ts -t 'ownership cannot be assigned' --reporter=dot` failed because an incomplete export was returned as `ready`. | Restored orphan check. |
+| Cross-store customer linkage | Added a test ledger row in store A referencing a store B bill. | `pnpm exec vitest run src/repositories/privacy.test.ts -t 'ledger link into another store' --reporter=dot` passes only when preview returns `cross_store_link`; the fixture also prevents execution from reaching mutation. | Test guards fail-closed behavior. |
+| Confirmation owner binding | Removed the owner predicate from W1's pending-action claim. | `pnpm exec vitest run src/tools/privacy.test.ts -t 'requires the owner-bound' --reporter=dot` failed because the other user completed pseudonymisation. | Restored owner predicate; the targeted test passes after restore. |
+| Direct identifier removal | Omitted `phone: null` from the account update. | `pnpm exec vitest run src/tools/privacy.test.ts -t 'requires the owner-bound' --reporter=dot` failed because the phone remained `9876543210`. | Restored phone clearing; the same test asserts names, notes, and payment references are cleared while balances and amounts remain. |
+| Free-text note removal | Set the linked khata note to a non-empty value during pseudonymisation. | `pnpm exec vitest run src/tools/privacy.test.ts -t 'requires the owner-bound' --reporter=dot` failed because the note remained. | Restored clearing notes. |
+| Payment-reference removal | Omitted `paymentRef: null` from the bill update. | `pnpm exec vitest run src/tools/privacy.test.ts -t 'requires the owner-bound' --reporter=dot` failed because `UPI-PRIVATE-REF` remained. | Restored clearing payment references. |
+| Export file cleanup | Removed deletion from the delivery `finally` block. | `pnpm exec vitest run src/telegram/export-delivery.test.ts --reporter=dot` failed on both success and Telegram-send failure because the file remained. | Restored deletion in `finally`. |
+| Transcript scope disclosure | Removed the sentence stating existing transcript mentions are not changed from the pseudonymisation preview. | `pnpm exec vitest run src/telegram/bot.access.test.ts -t 'previews customer pseudonymisation' --reporter=dot` failed because the limitation was missing. | Restored the disclosure in the confirmation preview. |
+| Artifact serialization and permissions | Not mutated separately; exercised by a database-backed artifact test. | The test parses the generated JSON (including a bigint store ID) and asserts mode `0600`. | Passing W4 focused suite verifies the serialized artifact format. |
+
+The independent W4 review found that generated invoice/deck files were omitted without being named
+in the manifest. The manifest now explicitly records that omission because the artifact directory
+has no store ownership index. The reviewer found no other blocker. All deliberate source mutations
+above were restored before the W4 gate.

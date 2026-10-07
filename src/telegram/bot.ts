@@ -1,4 +1,4 @@
-import { Bot, type CommandContext, type Context } from 'grammy';
+import { Bot, InlineKeyboard, type CommandContext, type Context } from 'grammy';
 import type { UserFromGetMe } from 'grammy/types';
 import { handleConfirmation } from '../agent/confirmation.js';
 import { loadEnv } from '../config/env.js';
@@ -6,7 +6,15 @@ import { downloadTelegramFile } from '../media/download.js';
 import { transcribe, whisperCostMicroUsd } from '../media/transcribe.js';
 import { claimUpdate, completeUpdate } from '../repositories/updates.js';
 import { recordUsage } from '../repositories/usage.js';
-import { newCommand, privacyCommand, resetCommand, startCommand } from './commands.js';
+import {
+  newCommand,
+  privacyCommand,
+  requestCustomerPseudonymisation,
+  resetCommand,
+  startCommand,
+} from './commands.js';
+import { exportStoreArtifact } from '../documents/export.js';
+import { deliverTemporaryExport } from './export-delivery.js';
 import { drainGate } from './drain.js';
 import { accessGate } from './gate.js';
 import { DAILY_CAP_REPLY, PRIVATE_MESSAGE, RATE_LIMITED_REPLY, WELCOME } from './messages.js';
@@ -73,7 +81,9 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
       });
       const message =
         result.status === 'confirmed'
-          ? `Confirmation processed (${result.outcome}).`
+          ? result.outcome === 'pseudonymised'
+            ? 'Customer details were replaced with a pseudonym. Monetary amounts and accounting rows were retained.'
+            : `Confirmation processed (${result.outcome}).`
           : result.status === 'cancelled'
             ? 'Cancelled. Nothing was changed.'
             : result.status === 'stale_bill'
@@ -112,6 +122,65 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
     'privacy',
     guarded(async (ctx) => {
       await ctx.reply(privacyCommand(env.PRIVACY_CONTACT, env.APP_DATA_RETENTION_DAYS));
+    }),
+  );
+
+  bot.command(
+    'export',
+    guarded(async (ctx) => {
+      if (ctx.chat.type !== 'private' || !ctx.from) {
+        await ctx.reply(PRIVATE_MESSAGE);
+        return;
+      }
+      const result = await exportStoreArtifact(BigInt(ctx.chat.id), BigInt(ctx.from.id));
+      if (result.status === 'forbidden') {
+        await ctx.reply(PRIVATE_MESSAGE);
+        return;
+      }
+      if (result.status === 'unattributed_transcripts') {
+        await ctx.reply('I cannot export a complete transcript set safely. No export was sent.');
+        return;
+      }
+      await deliverTemporaryExport(ctx, result.path, result.filename);
+    }),
+  );
+
+  bot.command(
+    'pseudonymise',
+    guarded(async (ctx) => {
+      if (ctx.chat.type !== 'private' || !ctx.from) {
+        await ctx.reply(PRIVATE_MESSAGE);
+        return;
+      }
+      const result = await requestCustomerPseudonymisation({
+        storeId: BigInt(ctx.chat.id),
+        ownerUserId: BigInt(ctx.from.id),
+        updateId: BigInt(ctx.update.update_id),
+        customerName: argOf(ctx),
+      });
+      if (result.status === 'forbidden') {
+        await ctx.reply(PRIVATE_MESSAGE);
+        return;
+      }
+      if (result.status === 'not_found') {
+        await ctx.reply(
+          'I could not find that exact customer account in this store. Nothing changed.',
+        );
+        return;
+      }
+      if (result.status === 'cross_store_link') {
+        await ctx.reply('This customer has a record linked outside this store. Nothing changed.');
+        return;
+      }
+      const keyboard = new InlineKeyboard()
+        .text('Confirm', `rai:c:${result.callbackId}`)
+        .text('Cancel', `rai:x:${result.callbackId}`);
+      const billLabel = result.bills === 1 ? 'bill' : 'bills';
+      const noteLabel = result.notes === 1 ? 'note' : 'notes';
+      await ctx.reply(
+        `Preview: ${result.accounts} account, ${result.bills} ${billLabel}, and ${result.notes} ${noteLabel}. Confirmation will replace direct customer identifiers and clear linked notes and payment references. It keeps balances, bill totals, and ledger amounts. Existing transcript mentions are not changed. This request expires in 10 minutes.`,
+        { reply_markup: keyboard },
+      );
     }),
   );
 

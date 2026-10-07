@@ -1,4 +1,6 @@
 import { hasStore, isAuthorizedOwner, redeemInvite } from '../repositories/access.js';
+import { createPendingAction } from '../repositories/confirmations.js';
+import { previewCustomerPseudonymisation } from '../tools/privacy.js';
 import { clearSession } from '../repositories/updates.js';
 import { reseedStore } from '../seed/index.js';
 import {
@@ -34,6 +36,43 @@ export async function newCommand(chatId: bigint): Promise<string> {
 
 export function privacyCommand(contact?: string, retentionDays = 30): string {
   return privacyMessage(contact, retentionDays);
+}
+
+export type CustomerPseudonymisationRequest =
+  | { status: 'forbidden' }
+  | { status: 'not_found' }
+  | { status: 'cross_store_link' }
+  | {
+      status: 'awaiting_confirmation';
+      callbackId: string;
+      accounts: 1;
+      bills: number;
+      notes: number;
+    };
+
+export async function requestCustomerPseudonymisation(input: {
+  storeId: bigint;
+  ownerUserId: bigint;
+  updateId: bigint;
+  customerName: string;
+}): Promise<CustomerPseudonymisationRequest> {
+  if (!(await isAuthorizedOwner(input.storeId, input.ownerUserId))) return { status: 'forbidden' };
+  const preview = await previewCustomerPseudonymisation(input.storeId, input.customerName);
+  if (preview.status !== 'preview') return preview;
+  const pending = await createPendingAction({
+    storeId: input.storeId,
+    ownerUserId: input.ownerUserId,
+    originatingUpdateId: input.updateId,
+    tool: 'pseudonymise_customer',
+    arguments: { account_id: preview.accountId },
+  });
+  return {
+    status: 'awaiting_confirmation',
+    callbackId: pending.callbackId,
+    accounts: preview.accounts,
+    bills: preview.bills,
+    notes: preview.notes,
+  };
 }
 
 /** Destructive, so it takes an explicit second word. Anything else explains and does nothing. */

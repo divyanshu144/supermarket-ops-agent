@@ -25,7 +25,7 @@ export function privacyMessage(contact?: string, retentionDays = 30): string {
     'This bot uses Anthropic to process owner messages and relevant shop data for replies and tool use. If you send a voice note, its audio is sent to OpenAI for transcription.',
     'The app stores shop and product records, bills, customer names and khata records, preferences, conversation transcripts, usage records, and generated invoice/deck files.',
     `Current app retention: transcripts and generated files are removed after ${retentionDays} days without activity. Finalized invoices can be generated again from their bills. Telegram and AI-provider retention is outside this app and is not stated here.`,
-    'In-chat store export and customer pseudonymisation are not yet available.',
+    'Use /export to download this store’s app records. Use /pseudonymise <exact customer name> to preview and request confirmation to replace direct customer identifiers while retaining financial amounts. Store erasure is not available.',
     contactLine,
   ].join('\n');
 }

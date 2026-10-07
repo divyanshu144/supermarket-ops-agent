@@ -2,7 +2,7 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-07, W1, W2, W5, and W3 implemented, reviewed, and locally verified
+**Last updated:** 2026-10-07, W1, W2, W5, W3, and W4 implemented locally; W4 gate pending
 **Branch:** `responsible-ai`, created from `eval-harness` at `c435f26`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
@@ -12,8 +12,8 @@ Written so a cold-start session can resume. Update at every checkpoint.
 
 ### Responsible-AI checkpoint (2026-10-07)
 
-Draft spec: `docs/specs/2026-10-07-responsible-ai.md`.
-Draft plan: `docs/plans/2026-10-07-responsible-ai.md`.
+Approved spec: `docs/specs/2026-10-07-responsible-ai.md`.
+Approved plan: `docs/plans/2026-10-07-responsible-ai.md`.
 The owner approved both and provided binding decisions on 2026-10-07. The spec and plan now record
 those decisions. The branch is `responsible-ai`, based on `eval-harness` at `c435f26`.
 
@@ -57,12 +57,12 @@ Seven W2 mutations and their outcomes are recorded in `docs/safety/mutation-ledg
 independent review caught raw-value persistence on conflict update; it is fixed and a fresh review
 found no blocker. No live model call, probe, or `.env` access occurred.
 
-W5 is complete. Invite onboarding includes an AI-processing notice and `/privacy` gives the current
-app data categories, configured retention period, provider flows, and optional contact. It does not
-promise provider retention or legal compliance. Store export and customer pseudonymisation remain
-identified as unavailable until the W4 slice is complete. `PRIVACY_CONTACT` accepts an email or
-Telegram username and falls back to “ask whoever gave you your invite”. `/privacy` is plain text with
-no Telegram parse mode.
+W5 is complete in local commit `25010c3`. Invite onboarding includes an AI-processing notice and
+`/privacy` gives the current app data categories, configured retention period, provider flows, and
+optional contact. It does not promise provider retention or legal compliance. `PRIVACY_CONTACT`
+accepts an email or Telegram username and falls back to “ask whoever gave you your invite”.
+`/privacy` is plain text with no Telegram parse mode. W4 now makes `/export` and `/pseudonymise`
+available to the authenticated owner.
 
 W5 focused tests passed (39 tests across 3 files). The required gate on disposable
 `127.0.0.1:55439/rai_test` passed: `pnpm fmt:check`, `pnpm lint`, `pnpm typecheck`, and `pnpm test`
@@ -70,16 +70,16 @@ W5 focused tests passed (39 tests across 3 files). The required gate on disposab
 `docs/safety/mutation-ledger.md`. Independent review found no remaining issue. No live call, probe,
 or `.env` access occurred.
 
-W3 implementation is complete locally and has fresh independent review; no W3 commit has been made
-yet. `APP_DATA_RETENTION_DAYS` defaults to the proposed 30 days
+W3 is complete in local commit `45c38b9` and has fresh independent review.
+`APP_DATA_RETENTION_DAYS` defaults to the proposed 30 days
 and accepts integers from 1 through 3650. Cleanup uses last transcript activity or session update
 time, keeps current sessions for any claimed update, deletes stale orphan transcripts, and expires
 regular files in `ARTIFACT_DIR` by modification time. It locks store rows before checking claims;
 `claimUpdate` takes the same store-row lock before inserting or reclaiming a claim. Cleanup runs
 after instance-lock acquisition and claim recovery, once at startup and every 24 hours in the
 background. It logs counts only. No schema migration was required. Invoice PDFs regenerate from the
-finalized bill after their old file is deleted. Voice transcription remains buffer-only. Export
-files do not exist yet; W4 must delete any export immediately after send or failure.
+finalized bill after their old file is deleted. Voice transcription remains buffer-only. W4 export
+files are deleted immediately after send or failure.
 
 W3 targeted tests passed (64 tests across 7 files). The required full gate on disposable
 `127.0.0.1:55439/rai_test` passed: fmt and lint passed, typecheck passed, and tests passed (502 passed,
@@ -88,9 +88,17 @@ independent review found no remaining blocker. No live model call, probe, or `.e
 The lock-race test verifies the update claim is not inserted and its transcript is not deleted while
 another transaction holds that store's row lock.
 
-W4 export and customer pseudonymisation, W6 governance documents, and W7 synthetic safety replay
-remain. Store erasure remains **NOT DONE** pending legal review. Continue with W4 in the approved
-sequence; do not implement store erasure.
+W4 now adds owner-only JSON export with a manifest and transcript ownership fail-closed behavior,
+plus preview-and-confirm customer pseudonymisation. The export excludes generated invoice/deck files
+because the artifact directory has no store ownership index; the manifest states this. Customer
+amounts and ledger rows are retained while direct names, phone, notes, and payment references are
+cleared. Existing transcript mentions are not changed and the confirmation preview says so. W4
+passed the required gate against disposable `127.0.0.1:55439/rai_test`: fmt, lint, and typecheck
+passed; tests passed (513 passed, 13 skipped; 58 files). Mutation evidence is in
+`docs/safety/mutation-ledger.md`. Fresh independent reviews found no remaining blocker after the
+manifest omission and transcript-scope disclosures were added. The W4 local commit is pending.
+W6 governance documents and W7 synthetic safety replay remain. Store erasure remains **NOT DONE**
+pending legal review; do not implement it.
 
 Every DB command and gate must use an explicitly disposable `DATABASE_URL`. Each completed task
 gets a local commit on this branch; never push. Independent review is required at each task

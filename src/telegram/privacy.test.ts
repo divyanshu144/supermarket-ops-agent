@@ -10,8 +10,9 @@ describe('privacy disclosure', () => {
     expect(reply).toContain('conversation transcripts');
     expect(reply).toContain('30 days without activity');
     expect(reply).not.toContain('no automatic expiry');
-    expect(reply).toContain('not yet available');
-    expect(reply).not.toContain('request an export through');
+    expect(reply).toContain('/export');
+    expect(reply).toContain('/pseudonymise');
+    expect(reply).toContain('Store erasure is not available');
     expect(reply).not.toMatch(/compliant|legal basis|provider retention period/i);
     expect(reply).toContain('ask whoever gave you your invite');
   });

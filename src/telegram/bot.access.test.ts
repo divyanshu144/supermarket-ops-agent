@@ -4,7 +4,13 @@ import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { db, pool } from '../db/client.js';
-import { inviteCodes, processedUpdates, stores } from '../db/schema.js';
+import {
+  inviteCodes,
+  khataAccounts,
+  pendingActions,
+  processedUpdates,
+  stores,
+} from '../db/schema.js';
 
 vi.mock('../agent/runtime.js', () => ({
   runAgent: vi.fn().mockResolvedValue({
@@ -308,6 +314,44 @@ describe('access gate', () => {
     expect(replies().join('\n')).not.toContain('no automatic expiry');
     expect(sent.at(-1)?.method).toBe('sendMessage');
     expect(sent.at(-1)?.payload.parse_mode).toBeUndefined();
+  });
+
+  it('exports only for the owner and sends a document without calling the model', async () => {
+    await provisionStore(OWNER, OWNER);
+    const bot = makeBot();
+
+    await bot.handleUpdate(textUpdate(OWNER, '/export') as never);
+
+    expect(sent.some((call) => call.method === 'sendDocument')).toBe(true);
+    expect(runAgent).not.toHaveBeenCalled();
+  });
+
+  it('previews customer pseudonymisation and creates a short owner-bound W1 callback', async () => {
+    await provisionStore(OWNER, OWNER);
+    await db.insert(khataAccounts).values({
+      storeId: OWNER,
+      customerName: 'Privacy Test Customer',
+      phone: '9876543210',
+      balancePaise: 5000,
+    });
+    const bot = makeBot();
+
+    await bot.handleUpdate(textUpdate(OWNER, '/pseudonymise Privacy Test Customer') as never);
+
+    expect(replies()[0]).toContain('Preview: 1 account');
+    expect(replies()[0]).toContain('Existing transcript mentions are not changed');
+    const reply = sent.find((call) => call.method === 'sendMessage' && call.payload.reply_markup);
+    const keyboard = reply!.payload.reply_markup as {
+      inline_keyboard: Array<Array<{ callback_data: string }>>;
+    };
+    const callbackData = keyboard.inline_keyboard.flat().map((button) => button.callback_data);
+    expect(callbackData).toHaveLength(2);
+    expect(callbackData.every((data) => Buffer.byteLength(data, 'utf8') <= 64)).toBe(true);
+    const pending = await db.select().from(pendingActions).where(eq(pendingActions.storeId, OWNER));
+    expect(pending).toHaveLength(1);
+    expect(pending[0]!.tool).toBe('pseudonymise_customer');
+    expect(pending[0]!.status).toBe('pending');
+    expect(runAgent).not.toHaveBeenCalled();
   });
 });
 

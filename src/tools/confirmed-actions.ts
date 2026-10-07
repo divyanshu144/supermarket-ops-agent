@@ -9,6 +9,7 @@ import {
   rejectPendingAction,
 } from '../repositories/confirmations.js';
 import { settleAccount } from '../repositories/khata.js';
+import { applyCustomerPseudonymisation, pseudonymiseCustomerArgsSchema } from './privacy.js';
 
 const FinalizeArgs = z
   .object({
@@ -155,6 +156,32 @@ export async function handleConfirmation(input: {
       idempotencyKey: `pending-action:${pending.id}`,
     });
     outcome = result.status;
+  } else if (pending.tool === 'pseudonymise_customer') {
+    const parsed = pseudonymiseCustomerArgsSchema.safeParse(pending.arguments);
+    if (!parsed.success) {
+      await rejectPendingAction({
+        id: pending.id,
+        storeId: input.storeId,
+        updateId: input.updateId,
+        tool: pending.tool,
+        action: 'invalid_pending_action',
+        outcome: 'invalid_arguments',
+      });
+      return { status: 'failed' };
+    }
+    const result = await applyCustomerPseudonymisation(input.storeId, parsed.data.account_id);
+    if (result.status !== 'pseudonymised') {
+      await rejectPendingAction({
+        id: pending.id,
+        storeId: input.storeId,
+        updateId: input.updateId,
+        tool: pending.tool,
+        action: 'customer_pseudonymisation_refused',
+        outcome: result.status,
+      });
+      return { status: 'failed' };
+    }
+    outcome = result.outcome;
   } else {
     await rejectPendingAction({
       id: pending.id,

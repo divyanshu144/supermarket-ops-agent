@@ -323,3 +323,13 @@ file directly, or the command stops before later validation.
 The first W3 full gate also found a Telegram adapter test that still asserted W5's old “no automatic
 expiry” wording after the `/privacy` response changed. Update integration assertions when changing
 user-facing copy; the unit test alone did not cover the route through the real bot handler.
+
+## 2026-10-07: exports must disclose data that cannot be mapped safely
+
+W4 review found that generated invoice and deck files live in a shared artifact directory with no
+store ownership index. Including every file would risk exporting another store's artifact. The JSON
+export now states that these files are omitted in its manifest. Adding tenant-aware artifact
+ownership would require its own design and migration review; the current slice does not infer
+ownership from filenames. Pseudonymisation also treats a khata link to a bill outside the store as
+ambiguous and fails closed before changing any row. It does not rewrite past conversation transcripts;
+the confirmation preview now states this boundary so the user is not led to expect transcript erasure.
