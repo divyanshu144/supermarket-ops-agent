@@ -2,7 +2,7 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-07, W3 corrective follow-up verified; W6 governance work underway
+**Last updated:** 2026-10-07, W3 correction committed as `8d34362`; W6 verified and ready for local commit
 **Branch:** `responsible-ai`, created from `eval-harness` at `c435f26`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
@@ -73,7 +73,7 @@ or `.env` access occurred.
 
 The original W3 implementation is in local commit `45c38b9`. A later independent W6 review found
 that cleanup had not connected indexed artifact activity or invoice regeneration to the worker.
-W3 corrective work is complete in the current worktree. `APP_DATA_RETENTION_DAYS` defaults to the proposed 30 days
+W3 corrective work is complete in local commit `8d34362`. `APP_DATA_RETENTION_DAYS` defaults to the proposed 30 days
 and accepts integers from 1 through 3650. Cleanup uses last transcript activity or session update
 time, keeps current sessions for any claimed update, deletes stale orphan transcripts, and expires
 pre-index regular files in `ARTIFACT_DIR` by modification time. The additive migration `0007_jazzy_reaper.sql`
@@ -126,8 +126,34 @@ passed the required gate against disposable `127.0.0.1:55439/rai_test`: fmt, lin
 passed; tests passed (513 passed, 13 skipped; 58 files). Mutation evidence is in
 `docs/safety/mutation-ledger.md`. Fresh independent reviews found no remaining blocker after the
 manifest omission and transcript-scope disclosures were added.
-W6 governance documents and consistency tests are drafted. Finish W6 review, mutations, gate, and
-local commit next. W7 synthetic safety replay remains. Store erasure remains **NOT DONE**
+W6 governance documents and consistency tests are complete in the current worktree. The consistency
+test checks README destinations, status vocabulary, unsupported compliance claims, the explicit
+store-erasure status, Telegram parse-mode threat, pseudonymisation transcript scope, and indexed
+artifact export boundaries. Mutation results are in `docs/safety/mutation-ledger.md`. Fresh
+independent review found no remaining issue. The required gate against disposable
+`127.0.0.1:55439/rai_test` passed:
+```
+> Newpage_assignment@1.0.0 fmt:check
+> prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+
+> Newpage_assignment@1.0.0 lint
+> eslint .
+
+> Newpage_assignment@1.0.0 typecheck
+> tsc --noEmit
+
+> Newpage_assignment@1.0.0 test
+> vitest run
+
+ Test Files  59 passed (59)
+      Tests  525 passed | 13 skipped (538)
+   Start at  22:50:24
+   Duration  30.54s (transform 518ms, setup 347ms, import 12.07s, tests 13.46s, environment 3ms)
+```
+Each gate command used the disposable database URL and dummy test tokens. No live model call, probe,
+or `.env` access occurred. W7 synthetic safety replay remains. Store erasure remains **NOT DONE**
 pending legal review; do not implement it.
 
 Every DB command and gate must use an explicitly disposable `DATABASE_URL`. Each completed task

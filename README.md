@@ -15,7 +15,15 @@ The full reasoning behind everything below: [`docs/DESIGN.md`](docs/DESIGN.md).
 The owner sees an AI-processing notice during onboarding. `/privacy` explains what the app stores,
 where text and voice are processed, and the current app retention behavior. Set the optional
 `PRIVACY_CONTACT` to a Telegram username or email; if unset, the bot says to ask whoever gave the
-owner their invite. Store export and customer pseudonymisation are not yet available in the bot.
+owner their invite. `/export` sends the authenticated owner's app records as JSON. `/pseudonymise`
+previews customer-record changes and requires an owner confirmation. It retains financial amounts,
+does not rewrite historical transcript mentions, and does not erase a whole store. See the
+[data inventory](docs/privacy/data-inventory.md).
+
+The safety and data-protection notes are engineering documentation, not legal or compliance claims:
+[threat model](docs/safety/threat-model.md), [impact-assessment notes](docs/safety/dpia-lite.md),
+[system card](docs/safety/system-card.md), [risk register](docs/safety/risk-register.md), and
+[incident runbook](docs/safety/incident-runbook.md).
 
 ## Setup
 
@@ -99,14 +107,15 @@ from the verified chat, so no prompt can address another shop.
 
 - Inter-state supply (IGST), partial returns, expiry and batch tracking, e-invoicing, split
   payments and bill-level discounts.
-- Multi-user roles: anyone in the chat is the owner, so in a group every member is.
+- Multiple roles within one shop; owner actions and invite redemption fail closed in group chats.
 - Idempotency under a diverging replay. Keys are ordinal-based, so they only line up if a replayed
   turn makes the same calls; closing it properly needs a durable per-turn execution log.
 - Full agent behaviour is not yet measured in CI. Synthetic replay checks registered tool
   behavior without a model; `e2e.ts` remains a live script, and no live baseline is accepted.
 - One slow turn delays other shops, because polling is sequential on purpose (the runner can lose
-  updates when killed). App-owned transcripts and generated files are removed after the configured
-  inactivity period; Telegram and AI-provider retention is outside this cleanup.
+  updates when killed). App-owned transcripts and indexed artifacts are removed after the configured
+  inactivity period. Historical unindexed artifacts age out by file modification time; Telegram
+  and AI-provider retention is outside this cleanup.
 
 The full list, how I used AI tools, and what I'd do with more time are in
 [`docs/DESIGN.md`](docs/DESIGN.md#edge-cases-not-handled).

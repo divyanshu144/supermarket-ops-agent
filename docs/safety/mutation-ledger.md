@@ -105,3 +105,22 @@ The independent W4 review found that generated invoice/deck files were omitted w
 in the manifest. The manifest now explicitly records that omission because the artifact directory
 has no store ownership index. The reviewer found no other blocker. All deliberate source mutations
 above were restored before the W4 gate.
+
+## W6: governance documentation
+
+Run on 2026-10-07, branch `responsible-ai`. Tests are offline and contain no live-model metrics.
+The consistency test was written first and initially failed because the six expected governance
+documents did not exist.
+
+| Guard | Deliberate mutation | Test and observed result | Final state |
+|---|---|---|---|
+| Erasure status accuracy | Changed the risk-register status for store erasure from `not done` to `implemented`. | `pnpm exec vitest run src/safety/docs.test.ts -t 'parse-mode handling' --reporter=dot` failed because the parsed status cell was `implemented`. | Restored `not done`. |
+| Telegram parse-mode threat | Replaced the threat label `Telegram parse-mode interpretation` with a generic delivery label. | `pnpm exec vitest run src/safety/docs.test.ts -t 'parse-mode handling' --reporter=dot` failed because the required threat was absent. | Restored the explicit Telegram parse-mode threat and partial status. |
+| Unsupported compliance claim | Added `This system is certified` to the system card. | `pnpm exec vitest run src/safety/docs.test.ts -t 'explicit status values' --reporter=dot` failed on the unsupported claim. | Removed the claim. |
+| README document links | Changed the README system-card link to a nonexistent path. | `pnpm exec vitest run src/safety/docs.test.ts -t 'links to each' --reporter=dot` failed because the required path was missing. | Restored the valid link. |
+| W3 artifact-export accuracy | Changed the inventory row back to saying `/export` omits all invoice/deck files because no tenant index exists. | The first attempt survived because the test matched a separate explanatory paragraph; I narrowed the assertion to the inventory's artifact row. A second run of `pnpm exec vitest run src/safety/docs.test.ts -t 'indexed artifact metadata' --reporter=dot` failed on that row as expected. | Restored the accurate row; the row-scoped test passes. |
+| Threat-model artifact-export accuracy | Changed the threat model back to saying all invoice/deck files lack a store index and are omitted. | `pnpm exec vitest run src/safety/docs.test.ts -t 'indexed artifact metadata' --reporter=dot` failed on the threat-model assertion. | Restored the accurate indexed-metadata versus historical-file distinction. |
+
+All four original W6 mutations and both artifact-export accuracy mutations were restored. The four
+documentation consistency tests pass after restoration. The first inventory mutation exposed a weak
+test assertion; the narrower row assertion killed the repeated mutation.

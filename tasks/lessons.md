@@ -341,6 +341,9 @@ The test now catches a false `implemented` store-erasure status, a missing Teleg
 threat, an affirmative certification claim, and a broken README link. Reviewing the repository also
 found two stale README statements: export was described as unavailable and group members as owners.
 Both now reflect the implemented owner-only commands and fail-closed group behavior.
+The W6 review also caught statements that went stale after a later schema change. The first
+artifact-export assertion matched an explanatory paragraph and let a mutated table row survive;
+testing the exact row caught it. Keep consistency checks attached to the narrow claim they guard.
 
 The independent review also found that the initial W3 worker used file modification time for every
 artifact and did not invoke invoice regeneration before deleting an indexed invoice. Those W3
@@ -359,3 +362,6 @@ legacy artifact backfill is safe because old filenames do not identify a store o
   file contents, and separately disclose historical files that cannot be mapped to a store.
 - Typecheck caught a bad `billId` binding in the invoice tool; use the schema's actual
   `bill_id` field when recording generated artifacts.
+- A documentation guard must assert the relevant table row, not only match equivalent wording in a
+  separate paragraph. The first stale-inventory mutation survived because of that loose match; a
+  row-scoped assertion then failed on the same mutation as intended.
