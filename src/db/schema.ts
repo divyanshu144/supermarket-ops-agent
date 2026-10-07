@@ -332,3 +332,19 @@ export const sessionEntries = pgTable(
       .where(sql`${t.entryUuid} is not null`),
   ],
 );
+
+/** Per-store lifecycle metadata for app-generated files; filenames stay private from logs. */
+export const generatedArtifacts = pgTable(
+  'generated_artifacts',
+  {
+    artifactId: uuid('artifact_id').primaryKey(),
+    storeId: bigint('store_id', { mode: 'bigint' })
+      .notNull()
+      .references(() => stores.id, { onDelete: 'cascade' }),
+    fileName: text('file_name').notNull(),
+    billId: uuid('bill_id').references(() => bills.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    lastActivityAt: timestamp('last_activity_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('generated_artifacts_store_activity_idx').on(t.storeId, t.lastActivityAt)],
+);

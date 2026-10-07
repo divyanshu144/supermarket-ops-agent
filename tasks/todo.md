@@ -8,9 +8,10 @@
 - [x] W1: enforce single-use owner confirmation for high-impact exceptions (gate green; independent review complete)
 - [x] W2: constrain and safely render owner preferences (gate green; independent review complete)
 - [x] W5: add accurate `/privacy` and onboarding disclosure (gate green; independent review complete)
-- [x] W3: implement approved transcript and artifact retention (gate green; independent review complete)
+- [x] W3 initial transcript/audio lifecycle controls (original gate/review recorded below)
+- [x] W3 corrective follow-up: indexed artifact activity, invoice regeneration before expiry, active-claim protection, exact session predicate, and store-scoped artifact metadata export (additive migration; mutation ledger and fresh review recorded; required gate green)
 - [x] W4: implement store export and customer pseudonymisation (gate green; independent review complete); store erasure stays NOT DONE pending legal review
-- [ ] W6: data inventory, threat model, impact assessment, system card, risk register, incident runbook
+- [ ] W6: data inventory, threat model, impact assessment, system card, risk register, incident runbook (drafted; W3 correction complete; final review and gate pending)
 - [ ] W7: synthetic safety replay scenarios and CI coverage
 
 Checklist written **before** implementing. Mark `[x]` as each item finishes — don't batch.

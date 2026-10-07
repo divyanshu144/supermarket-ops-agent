@@ -1,5 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
+import { rm } from 'node:fs/promises';
+import { registerGeneratedArtifact } from '../repositories/artifacts.js';
 import type { ToolObserver } from './observe.js';
 
 /**
@@ -78,8 +80,23 @@ export function requireContext(): ToolContext {
   return ctx;
 }
 
-export function recordArtifact(artifact: ProducedArtifact): void {
-  requireContext().artifacts.push(artifact);
+export async function recordArtifact(
+  artifact: ProducedArtifact,
+  metadata: { billId?: string } = {},
+): Promise<void> {
+  const context = requireContext();
+  try {
+    await registerGeneratedArtifact({
+      artifactId: artifact.artifactId,
+      storeId: context.storeId,
+      path: artifact.path,
+      ...(metadata.billId ? { billId: metadata.billId } : {}),
+    });
+  } catch (error) {
+    await rm(artifact.path, { force: true }).catch(() => {});
+    throw error;
+  }
+  context.artifacts.push(artifact);
 }
 
 /**

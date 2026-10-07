@@ -1,12 +1,14 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { readFile, rm } from 'node:fs/promises';
+import { readFile, rm, utimes } from 'node:fs/promises';
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
-import { products, stores } from '../db/schema.js';
+import { generatedArtifacts, products, stores } from '../db/schema.js';
 import { addBillItem, finalizeBill, getBill, openBill } from '../repositories/bills.js';
 import { buildInvoiceDoc, generateInvoicePdf } from './invoice.js';
 import { formatPaise } from '../domain/money.js';
 import { extractPdfText } from '../evals/assertions.js';
+import { ARTIFACT_DIR } from './artifacts.js';
+import { runRetentionSweep } from '../retention/worker.js';
 
 /** Mirrors the PDF's currency rendering — Helvetica has no glyph for the rupee sign. */
 const rupees = (paise: number) => formatPaise(paise).replace('₹', 'Rs.');
@@ -105,6 +107,43 @@ describe('generateInvoicePdf', () => {
     const bytes = await readFile(regenerated.artifact.path);
     expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-');
     expect(regenerated.artifact.filename).toBe(first.artifact.filename);
+  });
+
+  it('regenerates an indexed expiring invoice before deleting the old PDF', async () => {
+    const billId = await finalizedBill();
+    const first = await generateInvoicePdf(STORE, billId);
+    expect(first.status).toBe('generated');
+    if (first.status !== 'generated') return;
+    generated.push(first.artifact.path);
+    const lastActivity = new Date('2026-08-01T00:00:00.000Z');
+    const now = new Date('2026-10-07T12:00:00.000Z');
+    await utimes(first.artifact.path, now, now);
+    await db.insert(generatedArtifacts).values({
+      artifactId: first.artifact.artifactId,
+      storeId: STORE,
+      fileName: first.artifact.path.split('/').at(-1)!,
+      billId,
+      lastActivityAt: lastActivity,
+    });
+
+    const result = await runRetentionSweep({
+      retentionDays: 30,
+      now,
+      artifactDir: ARTIFACT_DIR,
+    });
+
+    expect(result.artifactsDeleted).toBe(1);
+    await expect(readFile(first.artifact.path)).rejects.toMatchObject({ code: 'ENOENT' });
+    const current = await db
+      .select()
+      .from(generatedArtifacts)
+      .where(eq(generatedArtifacts.storeId, STORE));
+    expect(current).toHaveLength(1);
+    expect(current[0]!.billId).toBe(billId);
+    const regeneratedPath = `${ARTIFACT_DIR}/${current[0]!.fileName}`;
+    generated.push(regeneratedPath);
+    const regeneratedBytes = await readFile(regeneratedPath);
+    expect(regeneratedBytes.subarray(0, 5).toString('latin1')).toBe('%PDF-');
   });
 
   it('puts totals in the document that match the database exactly', async () => {

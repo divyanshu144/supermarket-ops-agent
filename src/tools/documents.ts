@@ -16,7 +16,7 @@ export const generateInvoicePdfTool = tool(
     const result = await generateInvoicePdf(storeId, bill_id);
 
     if (result.status === 'generated') {
-      recordArtifact(result.artifact);
+      await recordArtifact(result.artifact, { billId: bill_id });
       return toolResult({
         status: 'generated',
         invoice_number: result.invoiceNumber,
@@ -45,7 +45,7 @@ export const generateAnalysisDeckTool = tool(
     const from = new Date(to.getTime() - (days_back ?? 7) * 86_400_000);
 
     const result = await generateAnalysisDeck(storeId, { from, to });
-    recordArtifact(result.artifact);
+    await recordArtifact(result.artifact);
 
     return toolResult({
       status: 'generated',

@@ -4,6 +4,7 @@ import {
   auditLog,
   bills,
   billItems,
+  generatedArtifacts,
   idempotencyKeys,
   khataAccounts,
   khataEntries,
@@ -38,6 +39,7 @@ export interface StoreExportData {
   khataAccounts: (typeof khataAccounts.$inferSelect)[];
   khataEntries: (typeof khataEntries.$inferSelect)[];
   stockMovements: (typeof stockMovements.$inferSelect)[];
+  generatedArtifacts: (typeof generatedArtifacts.$inferSelect)[];
   preferences: (typeof preferences.$inferSelect)[];
   sessions: (typeof sessions.$inferSelect)[];
   transcripts: (typeof sessionEntries.$inferSelect)[];
@@ -128,6 +130,10 @@ export async function collectStoreExport(
         ? []
         : await tx.select().from(khataEntries).where(inArray(khataEntries.accountId, accountIds));
     const storeProducts = await tx.select().from(products).where(eq(products.storeId, storeId));
+    const artifacts = await tx
+      .select()
+      .from(generatedArtifacts)
+      .where(eq(generatedArtifacts.storeId, storeId));
     const movements = await tx
       .select()
       .from(stockMovements)
@@ -175,7 +181,7 @@ export async function collectStoreExport(
           'invite code hashes and unredeemed invite codes',
           'pending confirmation callback IDs and argument hashes',
           'transcript rows whose store ownership cannot be determined (export fails closed if any exist)',
-          'generated invoice and deck files (the artifact directory has no store ownership index)',
+          'generated invoice and deck file contents (indexed artifact metadata is exported; unindexed historical files have no store ownership mapping)',
           'data held by Telegram and AI providers',
         ],
       },
@@ -186,6 +192,7 @@ export async function collectStoreExport(
       khataAccounts: accounts,
       khataEntries: entries,
       stockMovements: movements,
+      generatedArtifacts: artifacts,
       preferences: storePreferences,
       sessions: storeSessions,
       transcripts,
@@ -203,6 +210,7 @@ export async function collectStoreExport(
       khataAccounts: data.khataAccounts.length,
       khataEntries: data.khataEntries.length,
       stockMovements: data.stockMovements.length,
+      generatedArtifacts: data.generatedArtifacts.length,
       preferences: data.preferences.length,
       sessions: data.sessions.length,
       transcripts: data.transcripts.length,

@@ -2,7 +2,7 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-07, W1, W2, W5, W3, and W4 implemented locally; W4 gate pending
+**Last updated:** 2026-10-07, W3 corrective follow-up verified; W6 governance work underway
 **Branch:** `responsible-ai`, created from `eval-harness` at `c435f26`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
@@ -21,8 +21,9 @@ The design uses owner-only bound Telegram Confirm/Cancel callbacks for below-cos
 bill void, khata overpayment override, and customer pseudonymisation. The store records the Telegram
 user who redeemed the invite. Legacy stores without an owner ID and all group chats fail closed.
 Callbacks use short IDs mapped to DB rows, bind exact tool arguments and current bill lines/prices,
-and expire after 10 minutes. Transcript and artifact retention is 30 days from last activity;
-invoice PDFs regenerate from bills before expiry and export files are deleted after send. Store
+and expire after 10 minutes. Proposed transcript and indexed-artifact retention is 30 days from the
+last authenticated owner update; historical unindexed files expire by modification time. Indexed
+invoice PDFs regenerate from finalized bills before expiry and export files are deleted after send. Store
 erasure is explicitly NOT DONE pending legal review. No live model call or probe is permitted.
 
 W1 implementation and independent review are complete in local commit `dc145b9`. It records the
@@ -70,34 +71,63 @@ W5 focused tests passed (39 tests across 3 files). The required gate on disposab
 `docs/safety/mutation-ledger.md`. Independent review found no remaining issue. No live call, probe,
 or `.env` access occurred.
 
-W3 is complete in local commit `45c38b9` and has fresh independent review.
-`APP_DATA_RETENTION_DAYS` defaults to the proposed 30 days
+The original W3 implementation is in local commit `45c38b9`. A later independent W6 review found
+that cleanup had not connected indexed artifact activity or invoice regeneration to the worker.
+W3 corrective work is complete in the current worktree. `APP_DATA_RETENTION_DAYS` defaults to the proposed 30 days
 and accepts integers from 1 through 3650. Cleanup uses last transcript activity or session update
 time, keeps current sessions for any claimed update, deletes stale orphan transcripts, and expires
-regular files in `ARTIFACT_DIR` by modification time. It locks store rows before checking claims;
+pre-index regular files in `ARTIFACT_DIR` by modification time. The additive migration `0007_jazzy_reaper.sql`
+adds an artifact ownership/activity index for newly generated files. The owner gate refreshes those
+rows on authenticated updates; the worker regenerates an indexed invoice from a finalized bill
+before deleting its old PDF. It does not backfill old files because their owner/bill cannot be
+identified safely. It locks store rows before checking claims;
 `claimUpdate` takes the same store-row lock before inserting or reclaiming a claim. Cleanup runs
 after instance-lock acquisition and claim recovery, once at startup and every 24 hours in the
-background. It logs counts only. No schema migration was required. Invoice PDFs regenerate from the
-finalized bill after their old file is deleted. Voice transcription remains buffer-only. W4 export
-files are deleted immediately after send or failure.
+background. It logs counts only. Voice transcription remains buffer-only. W4 export files are
+deleted immediately after send or failure. Schema inspection confirmed
+`sessions.store_id` is the primary key, so only one mapped session can exist per store; the correction
+also narrows the delete predicate to the exact agent session ID.
 
-W3 targeted tests passed (64 tests across 7 files). The required full gate on disposable
-`127.0.0.1:55439/rai_test` passed: fmt and lint passed, typecheck passed, and tests passed (502 passed,
-13 skipped; 55 files). All W3 mutation outcomes are in `docs/safety/mutation-ledger.md`; fresh
-independent review found no remaining blocker. No live model call, probe, or `.env` access occurred.
-The lock-race test verifies the update claim is not inserted and its transcript is not deleted while
-another transaction holds that store's row lock.
+W3 correction gate output against disposable `127.0.0.1:55439/rai_test`:
+```
+> Newpage_assignment@1.0.0 fmt:check
+> prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
 
-W4 now adds owner-only JSON export with a manifest and transcript ownership fail-closed behavior,
-plus preview-and-confirm customer pseudonymisation. The export excludes generated invoice/deck files
-because the artifact directory has no store ownership index; the manifest states this. Customer
+> Newpage_assignment@1.0.0 lint
+> eslint .
+
+> Newpage_assignment@1.0.0 typecheck
+> tsc --noEmit
+
+> Newpage_assignment@1.0.0 test
+> vitest run
+
+ Test Files  59 passed (59)
+      Tests  524 passed | 13 skipped (537)
+   Start at  22:31:41
+   Duration  29.24s (transform 476ms, setup 312ms, import 10.73s, tests 13.35s, environment 3ms)
+```
+The gate command ran the four required `pnpm` commands sequentially, each with the disposable
+`DATABASE_URL` and dummy test tokens. Mutation outcomes are in
+`docs/safety/w3-retention-correction.md`. Fresh independent review confirmed the tenant filter,
+active-claim artifact guard, and corrected manifest wording with no remaining actionable findings.
+No live model call, probe, or `.env` access occurred. The lock-race test verifies claims serialize
+against cleanup for both transcript and indexed artifact expiry.
+
+W4 is complete in local commit `779ce4b`. It adds owner-only JSON export with a manifest and transcript ownership fail-closed behavior,
+plus preview-and-confirm customer pseudonymisation. The export includes indexed artifact metadata,
+omits invoice/deck file contents, and discloses that historical unindexed files cannot be mapped
+safely. Customer
 amounts and ledger rows are retained while direct names, phone, notes, and payment references are
 cleared. Existing transcript mentions are not changed and the confirmation preview says so. W4
 passed the required gate against disposable `127.0.0.1:55439/rai_test`: fmt, lint, and typecheck
 passed; tests passed (513 passed, 13 skipped; 58 files). Mutation evidence is in
 `docs/safety/mutation-ledger.md`. Fresh independent reviews found no remaining blocker after the
-manifest omission and transcript-scope disclosures were added. The W4 local commit is pending.
-W6 governance documents and W7 synthetic safety replay remain. Store erasure remains **NOT DONE**
+manifest omission and transcript-scope disclosures were added.
+W6 governance documents and consistency tests are drafted. Finish W6 review, mutations, gate, and
+local commit next. W7 synthetic safety replay remains. Store erasure remains **NOT DONE**
 pending legal review; do not implement it.
 
 Every DB command and gate must use an explicitly disposable `DATABASE_URL`. Each completed task

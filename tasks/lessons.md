@@ -333,3 +333,29 @@ ownership would require its own design and migration review; the current slice d
 ownership from filenames. Pseudonymisation also treats a khata link to a bill outside the store as
 ambiguous and fails closed before changing any row. It does not rewrite past conversation transcripts;
 the confirmation preview now states this boundary so the user is not led to expect transcript erasure.
+
+## 2026-10-07: security documentation needs a code-backed status test
+
+W6 added a small offline consistency test after the first test-first run failed on missing documents.
+The test now catches a false `implemented` store-erasure status, a missing Telegram parse-mode
+threat, an affirmative certification claim, and a broken README link. Reviewing the repository also
+found two stale README statements: export was described as unavailable and group members as owners.
+Both now reflect the implemented owner-only commands and fail-closed group behavior.
+
+The independent review also found that the initial W3 worker used file modification time for every
+artifact and did not invoke invoice regeneration before deleting an indexed invoice. Those W3
+behaviors are being corrected before W6 can be completed. The review's statement that one stale
+session could delete multiple session rows is not reachable with the current schema because
+`sessions.store_id` is its primary key; the delete is narrowed to the agent-session ID anyway. No
+legacy artifact backfill is safe because old filenames do not identify a store or bill.
+## 2026-10-07: W3 indexed retention correction
+
+- The independent W6 review caught a real retention gap: generated artifact files were not tied to
+  authenticated owner activity, and expiring invoice PDFs were not regenerated from their bills.
+  Keep retention claims tied to a tested mapping from owner activity to each artifact.
+- An active Telegram update claim must protect indexed artifacts from expiry as well as sessions.
+  The focused test failed before the worker was corrected and passes after it skips claimed stores.
+- The artifact registry changes the export boundary: export store-scoped indexed metadata, omit
+  file contents, and separately disclose historical files that cannot be mapped to a store.
+- Typecheck caught a bad `billId` binding in the invoice tool; use the schema's actual
+  `bill_id` field when recording generated artifacts.

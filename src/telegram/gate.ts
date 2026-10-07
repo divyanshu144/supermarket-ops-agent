@@ -1,5 +1,6 @@
 import type { Context, NextFunction } from 'grammy';
 import { getStoreOwnerId } from '../repositories/access.js';
+import { markGeneratedArtifactsActive } from '../repositories/artifacts.js';
 import { PRIVATE_MESSAGE } from './messages.js';
 
 /**
@@ -34,7 +35,12 @@ export async function accessGate(ctx: Context, next: NextFunction): Promise<void
     hasStore: ownerUserId !== null && ownerUserId === BigInt(ctx.from?.id ?? 0),
     isStartCommand: ctx.hasCommand('start'),
   });
-  if (decision === 'allow') return next();
+  if (decision === 'allow') {
+    if (ownerUserId !== null && ownerUserId === BigInt(ctx.from?.id ?? 0)) {
+      await markGeneratedArtifactsActive(BigInt(ctx.chat.id));
+    }
+    return next();
+  }
   // Fail closed for every update type; only answer an actual message.
   if (ctx.message) await ctx.reply(PRIVATE_MESSAGE);
   else if (ctx.callbackQuery) {

@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getStoreOwnerId } = vi.hoisted(() => ({ getStoreOwnerId: vi.fn() }));
+const { getStoreOwnerId, markGeneratedArtifactsActive } = vi.hoisted(() => ({
+  getStoreOwnerId: vi.fn(),
+  markGeneratedArtifactsActive: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('../repositories/access.js', () => ({ getStoreOwnerId }));
+vi.mock('../repositories/artifacts.js', () => ({ markGeneratedArtifactsActive }));
 
 import { decideAccess, accessGate } from './gate.js';
 
@@ -17,7 +21,44 @@ describe('decideAccess', () => {
 });
 
 describe('accessGate owner binding', () => {
-  beforeEach(() => getStoreOwnerId.mockReset());
+  beforeEach(() => {
+    getStoreOwnerId.mockReset();
+    markGeneratedArtifactsActive.mockClear();
+  });
+
+  it('refreshes that store artifact activity before passing an authorized update', async () => {
+    getStoreOwnerId.mockResolvedValue(456n);
+    const next = vi.fn();
+    const ctx = {
+      chat: { id: 456, type: 'private' },
+      from: { id: 456 },
+      message: { text: 'hello' },
+      callbackQuery: undefined,
+      hasCommand: () => false,
+    };
+
+    await accessGate(ctx as never, next);
+
+    expect(markGeneratedArtifactsActive).toHaveBeenCalledWith(456n);
+    expect(next).toHaveBeenCalledOnce();
+  });
+
+  it('does not refresh store artifact activity for an unowned /start exception', async () => {
+    getStoreOwnerId.mockResolvedValue(456n);
+    const next = vi.fn();
+    const ctx = {
+      chat: { id: 456, type: 'private' },
+      from: { id: 789 },
+      message: { text: '/start' },
+      callbackQuery: undefined,
+      hasCommand: () => true,
+    };
+
+    await accessGate(ctx as never, next);
+
+    expect(markGeneratedArtifactsActive).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledOnce();
+  });
 
   it('does not pass a private update from a different user to handlers', async () => {
     getStoreOwnerId.mockResolvedValue(123n);

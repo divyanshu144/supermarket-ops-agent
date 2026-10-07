@@ -6,6 +6,7 @@ import { and, eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import {
   bills,
+  generatedArtifacts,
   khataAccounts,
   khataEntries,
   products,
@@ -78,6 +79,18 @@ beforeEach(async () => {
       note: 'private note sentinel',
     },
   ]);
+  await db.insert(generatedArtifacts).values([
+    {
+      artifactId: '83000000-0000-4000-8000-000000000001',
+      storeId: STORE,
+      fileName: 'owner-invoice.pdf',
+    },
+    {
+      artifactId: '83000000-0000-4000-8000-000000000002',
+      storeId: OTHER,
+      fileName: 'foreign-invoice.pdf',
+    },
+  ]);
   await db.insert(sessions).values({ storeId: STORE, agentSessionId: 'privacy-export-session' });
   await db.insert(sessionEntries).values({
     projectKey: 'privacy-export-test',
@@ -102,7 +115,11 @@ describe('collectStoreExport', () => {
     expect(result.data.manifest.format).toBe('supermarket-ops-agent-store-export');
     expect(result.data.manifest.recordCounts.products).toBe(1);
     expect(result.data.manifest.recordCounts.bills).toBe(1);
+    expect(result.data.manifest.recordCounts.generatedArtifacts).toBe(1);
     expect(result.data.products.map((product) => product.name)).toEqual(['Owner product']);
+    expect(result.data.generatedArtifacts.map((artifact) => artifact.fileName)).toEqual([
+      'owner-invoice.pdf',
+    ]);
     expect(result.data.bills.map((bill) => bill.customerName)).toEqual(['Ramesh']);
     expect(result.data.khataEntries[0]!.note).toBe('private note sentinel');
     expect(result.data.transcripts[0]!.entry).toEqual({ message: 'owner transcript sentinel' });
@@ -111,11 +128,12 @@ describe('collectStoreExport', () => {
     );
     expect(serialized).not.toContain('Foreign product sentinel');
     expect(serialized).not.toContain('Foreign customer sentinel');
+    expect(serialized).not.toContain('foreign-invoice.pdf');
     expect(result.data.manifest.omitted).toContain(
       'invite code hashes and unredeemed invite codes',
     );
     expect(result.data.manifest.omitted).toContain(
-      'generated invoice and deck files (the artifact directory has no store ownership index)',
+      'generated invoice and deck file contents (indexed artifact metadata is exported; unindexed historical files have no store ownership mapping)',
     );
   });
 

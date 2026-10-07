@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { db, pool } from '../db/client.js';
 import {
+  generatedArtifacts,
   inviteCodes,
   khataAccounts,
   pendingActions,
@@ -310,7 +311,7 @@ describe('access gate', () => {
 
     expect(replies().join('\n')).toContain('Anthropic');
     expect(replies().join('\n')).toContain('OpenAI');
-    expect(replies().join('\n')).toContain('30 days without activity');
+    expect(replies().join('\n')).toContain('30 days without an authenticated owner update');
     expect(replies().join('\n')).not.toContain('no automatic expiry');
     expect(sent.at(-1)?.method).toBe('sendMessage');
     expect(sent.at(-1)?.payload.parse_mode).toBeUndefined();
@@ -324,6 +325,26 @@ describe('access gate', () => {
 
     expect(sent.some((call) => call.method === 'sendDocument')).toBe(true);
     expect(runAgent).not.toHaveBeenCalled();
+  });
+
+  it('refreshes the owner store artifact retention clock on an authenticated update', async () => {
+    await provisionStore(OWNER, OWNER);
+    const oldActivity = new Date('2026-09-01T00:00:00.000Z');
+    await db.insert(generatedArtifacts).values({
+      artifactId: '81000000-0000-4000-8000-000000000006',
+      storeId: OWNER,
+      fileName: 'owner-report.pptx',
+      lastActivityAt: oldActivity,
+    });
+    const bot = makeBot();
+
+    await bot.handleUpdate(textUpdate(OWNER, '/privacy') as never);
+
+    const [row] = await db
+      .select()
+      .from(generatedArtifacts)
+      .where(eq(generatedArtifacts.artifactId, '81000000-0000-4000-8000-000000000006'));
+    expect(row!.lastActivityAt.getTime()).toBeGreaterThan(oldActivity.getTime());
   });
 
   it('previews customer pseudonymisation and creates a short owner-bound W1 callback', async () => {

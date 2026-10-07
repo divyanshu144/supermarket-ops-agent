@@ -8,7 +8,9 @@ describe('privacy disclosure', () => {
     expect(reply).toContain('Anthropic');
     expect(reply).toContain('OpenAI');
     expect(reply).toContain('conversation transcripts');
-    expect(reply).toContain('30 days without activity');
+    expect(reply).toContain('30 days without an authenticated owner update');
+    expect(reply).toContain('Older unindexed files expire by file modification time');
+    expect(reply).toContain('regenerated before the old PDF is deleted');
     expect(reply).not.toContain('no automatic expiry');
     expect(reply).toContain('/export');
     expect(reply).toContain('/pseudonymise');
@@ -24,7 +26,9 @@ describe('privacy disclosure', () => {
   });
 
   it('reports the configured application retention period', () => {
-    expect(privacyCommand(undefined, 45)).toContain('45 days without activity');
+    expect(privacyCommand(undefined, 45)).toContain(
+      '45 days without an authenticated owner update',
+    );
   });
 
   it('introduces AI processing and points owners to /privacy during onboarding', () => {
