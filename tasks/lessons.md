@@ -292,3 +292,11 @@ in separate operations. The refusal now returns the hash from its locked line sn
 passes that exact hash into the pending row. Confirmation still checks again under the bill lock
 before stock or money changes. The regression test makes the bill change between refusal snapshot
 and pending-row creation and verifies confirmation is stale.
+
+## 2026-10-07: normalize before both insert and conflict update
+
+W2 review found preference writes validated a normalized catalogue brand but the upsert conflict
+path persisted the original whitespace-padded input. Reads normalized it again, which hid the
+storage inconsistency. The update now persists the parsed value; a database assertion checks the
+stored row itself. Review claims should be checked against the actual persistence path, not only
+the read API.

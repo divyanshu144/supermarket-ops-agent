@@ -6,7 +6,7 @@
 - [x] Draft implementation plan: `docs/plans/2026-10-07-responsible-ai.md`
 - [x] Owner approval and implementation decisions recorded in spec and plan
 - [x] W1: enforce single-use owner confirmation for high-impact exceptions (gate green; independent review complete)
-- [ ] W2: constrain and safely render owner preferences
+- [x] W2: constrain and safely render owner preferences (gate green; independent review complete)
 - [ ] W5: add accurate `/privacy` and onboarding disclosure
 - [ ] W3: implement approved transcript and artifact retention
 - [ ] W4: export and erasure, blocked on legal/product record-retention decision

@@ -2,7 +2,7 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-07, W1 implemented, reviewed, and locally verified
+**Last updated:** 2026-10-07, W1 and W2 implemented, reviewed, and locally verified
 **Branch:** `responsible-ai`, created from `eval-harness` at `c435f26`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
@@ -25,7 +25,7 @@ and expire after 10 minutes. Transcript and artifact retention is 30 days from l
 invoice PDFs regenerate from bills before expiry and export files are deleted after send. Store
 erasure is explicitly NOT DONE pending legal review. No live model call or probe is permitted.
 
-W1 implementation and independent review are complete; it is ready for its local commit. It records the
+W1 implementation and independent review are complete in local commit `dc145b9`. It records the
 invite redeemer as store owner, fails closed for legacy stores/groups/other users, and moves
 below-cost finalize, bill void, and khata overpayment behind a model-free 10-minute confirmation
 callback. Callback claims bind owner/store/update, exact tool-argument hash, and bill-line/price
@@ -43,10 +43,24 @@ Two fresh independent reviews found no unresolved blocker after the below-cost s
 the later reviewer could not connect to the DB from its sandbox, but the main run passed. The default
 `src/agent/runtime.ts` path has no diff. No live model call, probe, or `.env` access occurred.
 
+W2 is complete in the working tree. Supported preference keys are `default_payment_mode`, `gstin`,
+and `preferred_brand`; values are validated as a payment enum, strict GSTIN shape, and an exact
+brand in the current store catalogue. Invalid or unknown legacy rows are ignored, and the warning
+contains only the count. Upserts store normalized values. The agent renders only validated fields as
+bounded JSON data in delimiters; preferences are defaults and cannot change tool access or policy.
+No migration was needed. The mocked-SDK prompt test and database-backed tests make no model calls.
+
+W2 focused tests passed (38 tests across the preferences and runtime files after the normalized
+upsert regression). The required gate on disposable `127.0.0.1:55439/rai_test` passed:
+`pnpm fmt:check`, `pnpm lint`, `pnpm typecheck`, and `pnpm test` (483 passed, 13 skipped; 52 files).
+Seven W2 mutations and their outcomes are recorded in `docs/safety/mutation-ledger.md`. The first
+independent review caught raw-value persistence on conflict update; it is fixed and a fresh review
+found no blocker. No live model call, probe, or `.env` access occurred.
+
 Every DB command and gate must use an explicitly disposable `DATABASE_URL`. Each completed task
 gets a local commit on this branch; never push. Independent review is required at each task
-checkpoint. Any hard stop is recorded here before proceeding to independent work. W2, W5, W3, the
-W4 export/customer-pseudonymisation slice, W6, and W7 remain pending. Store erasure remains NOT DONE
+checkpoint. Any hard stop is recorded here before proceeding to independent work. W5, W3, the W4
+export/customer-pseudonymisation slice, W6, and W7 remain pending. Store erasure remains NOT DONE
 pending legal review.
 
 ### Eval harness checkpoint

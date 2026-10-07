@@ -11,6 +11,7 @@ import {
 } from './limits.js';
 import { postgresSessionStore, sessionExists } from './session-store.js';
 import { ALLOWED_TOOLS, STORE_SERVER_NAME, storeToolServer } from '../tools/index.js';
+import { renderPreferenceContext } from '../domain/preferences.js';
 
 const env = loadEnv();
 
@@ -28,18 +29,10 @@ which one they mean rather than guessing. If it reports the product is unknown, 
 rather than inventing one.
 `.trim();
 
-/** Preferences are injected as instructions so they apply with no tool call. */
+/** Validated preferences are rendered as bounded data, not instructions. */
 function withPreferences(prefs: Record<string, unknown>): string {
-  const entries = Object.entries(prefs);
-  if (entries.length === 0) return SYSTEM_PROMPT;
-
-  const lines = entries.map(([key, value]) => `- ${key}: ${String(value)}`).join('\n');
-  return `${SYSTEM_PROMPT}
-
-The owner has set these standing preferences. Apply them without being asked and without
-looking them up. They survive /new, so do not treat a fresh chat as a reason to re-ask:
-
-${lines}`;
+  const rendered = renderPreferenceContext(prefs);
+  return rendered ? `${SYSTEM_PROMPT}\n\n${rendered}` : SYSTEM_PROMPT;
 }
 
 export interface AgentResult {

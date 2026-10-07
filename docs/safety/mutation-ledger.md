@@ -19,3 +19,21 @@ Run on 2026-10-07, branch `responsible-ai`, disposable database target
 All four mutations were restored before the final W1 gate. W1 focused tests passed (84 tests across
 9 files). The full gate passed with 477 tests and 13 skipped across 52 files. `HANDOFF.md` records
 the verification result and independent-review status.
+
+## W2: validated preference data
+
+Run on 2026-10-07, branch `responsible-ai`, disposable database target
+`127.0.0.1:55439/rai_test`. Agent tests use the mocked SDK; no model call was made.
+
+| Guard | Deliberate mutation | Test and observed result | Final state |
+|---|---|---|---|
+| Key allow-list | Removed the supported-key check from `parsePreference`. | `pnpm exec vitest run src/agent/runtime.test.ts -t 'validated preference data' --reporter=dot` failed when an unknown key indexed no schema. | Restored the allow-list. |
+| Payment-mode enum | Replaced the payment enum with an arbitrary string schema. | `pnpm exec vitest run src/tools/preferences.test.ts -t 'invalid payment modes' --reporter=dot` failed because hostile text returned `saved`. | Restored the enum. |
+| GSTIN format | Removed the GSTIN regex. | `pnpm exec vitest run src/tools/preferences.test.ts -t 'malformed GSTINs' --reporter=dot` failed because malformed text returned `saved`. | Restored the regex. |
+| Per-store brand catalogue | Removed the catalogue lookup before saving preferred brand. | `pnpm exec vitest run src/tools/preferences.test.ts -t 'brand present' --reporter=dot` failed because an unknown brand returned `saved`. The passing test also rejects a brand present only in another store. | Restored the store-scoped lookup. |
+| Prompt data boundary | Replaced the filtered preference object with the raw input object during prompt rendering. | `pnpm exec vitest run src/agent/runtime.test.ts -t 'validated preference data' --reporter=dot` failed because the hostile `shop_name` value appeared in the system prompt. | Restored allow-listed bounded JSON rendering. |
+| Count-only invalid-row warning | Added invalid preference key/value pairs to the warning. | `pnpm exec vitest run src/tools/preferences.test.ts -t 'invalid legacy rows' --reporter=dot` failed because the warning contained the hostile value. An earlier attempted mutation serialized complete rows and failed sooner on BigInt serialization; that was discarded as an invalid mutation. | Restored count-only warning. |
+| Normalized upsert | Changed the conflict update to persist the raw input instead of the parsed value. | `pnpm exec vitest run src/tools/preferences.test.ts -t 'normalized catalogue brand' --reporter=dot` failed because the stored brand retained surrounding spaces. | Restored persistence of the parsed normalized value. |
+
+All W2 mutations were restored. Initial W2 focused tests passed (37 tests across 2 files); the
+normalized-upsert regression adds one more test. Final W2 gate output is recorded in `HANDOFF.md`.
