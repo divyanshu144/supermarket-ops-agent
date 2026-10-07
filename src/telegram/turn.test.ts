@@ -30,6 +30,7 @@ const runAgentMock = vi.fn(async (): Promise<AgentResult> => ({
   turnCostUsd: 0,
   numTurns: 1,
   resumeDropped: false,
+  attempts: [],
 }));
 vi.mock('../agent/runtime.js', () => ({ runAgent: () => runAgentMock() }));
 
@@ -130,6 +131,7 @@ describe('handleTurn — dropped resume', () => {
       turnCostUsd: 0.2,
       numTurns: 1,
       resumeDropped: true,
+      attempts: [],
     } satisfies AgentResult);
     await handleTurn(fakeCtx(), 'hello');
     expect(await getSessionId(CHAT)).toBe('new-id');
@@ -147,6 +149,7 @@ describe('handleTurn — dropped resume', () => {
       turnCostUsd: 0.5,
       numTurns: 0,
       resumeDropped: true,
+      attempts: [],
     } satisfies AgentResult);
     await handleTurn(fakeCtx(), 'hello');
     expect(await getSessionId(CHAT)).toBeUndefined();
@@ -166,6 +169,7 @@ describe('handleTurn — dropped resume', () => {
       turnCostUsd: 0.2,
       numTurns: 1,
       resumeDropped: true,
+      attempts: [],
     } satisfies AgentResult);
     await handleTurn(fakeCtx(), 'hello');
     expect(await getSessionId(CHAT)).toBe('new-sess');
@@ -186,6 +190,7 @@ describe('handleTurn — dropped resume', () => {
       turnCostUsd: 0.1,
       numTurns: 1,
       resumeDropped: false,
+      attempts: [],
     } satisfies AgentResult);
     await handleTurn(fakeCtx(), 'hello');
     expect(await sessionHasEntries('same-sess')).toBe(true);

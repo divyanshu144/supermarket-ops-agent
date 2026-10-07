@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
+import type { ToolObserver } from './observe.js';
 
 /**
  * Deterministic JSON. Object keys are sorted so that argument order never changes the hash,
@@ -63,6 +64,8 @@ export interface ToolContext {
    * no bot running at all.
    */
   artifacts: ProducedArtifact[];
+  /** Internal eval-only observation sink. Production contexts leave this unset. */
+  observer?: ToolObserver;
 }
 
 export const toolContext = new AsyncLocalStorage<ToolContext>();
@@ -81,11 +84,16 @@ export function recordArtifact(artifact: ProducedArtifact): void {
  * Builds a fresh per-turn context. Use this rather than an object literal so a new field
  * cannot be silently forgotten at one of the call sites.
  */
-export function newToolContext(storeId: bigint, updateId: bigint): ToolContext {
+export function newToolContext(
+  storeId: bigint,
+  updateId: bigint,
+  observer?: ToolContext['observer'],
+): ToolContext {
   return {
     storeId,
     updateId,
     idempotency: new IdempotencyIssuer(updateId),
     artifacts: [],
+    ...(observer ? { observer } : {}),
   };
 }

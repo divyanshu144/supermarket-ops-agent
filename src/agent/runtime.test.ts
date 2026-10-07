@@ -23,11 +23,15 @@ interface QueryArgs {
     maxBudgetUsd?: number;
     resume?: string;
     sessionStore?: unknown;
+    hooks?: Record<
+      string,
+      Array<{ hooks: Array<(input: never, toolUseID: string | undefined) => Promise<unknown>> }>
+    >;
   };
 }
 
 const { query } = await import('@anthropic-ai/claude-agent-sdk');
-const { runAgent } = await import('./runtime.js');
+const { AgentRunFailure, runAgent } = await import('./runtime.js');
 const { OUTCOME_REPLY } = await import('./limits.js');
 const { sessionExists } = await import('./session-store.js');
 const sessionExistsMock = vi.mocked(sessionExists);
@@ -45,6 +49,25 @@ const result = (subtype: string, isError: boolean, cost: number, turns: number):
   is_error: isError,
   total_cost_usd: cost,
   num_turns: turns,
+  usage: {
+    input_tokens: 3,
+    output_tokens: 4,
+    cache_read_input_tokens: 1,
+    cache_creation_input_tokens: 2,
+  },
+  modelUsage: {
+    'claude-opus-current': {
+      inputTokens: 3,
+      outputTokens: 4,
+      cacheReadInputTokens: 1,
+      cacheCreationInputTokens: 2,
+      costUSD: cost,
+      contextWindow: 200000,
+      maxOutputTokens: 4096,
+      canonicalModel: 'claude-opus-current',
+      provider: 'firstParty',
+    },
+  },
 });
 
 /** Yields the messages, then (optionally) hangs until aborted and throws, like the SDK. */
@@ -65,6 +88,45 @@ function fake(messages: Msg[], after: 'end' | 'throw' | 'hang', error = new Erro
   });
 }
 
+async function runToolHookScenario(
+  hookEvent: 'PostToolUse' | 'PostToolUseFailure',
+  protocolIsError: boolean,
+) {
+  const toolTurn: Msg = {
+    type: 'assistant',
+    message: {
+      content: [{ type: 'mcp_tool_use', id: 'hook-call', name: 'get_stock', input: {} }],
+    },
+  };
+  const returned: Msg = {
+    type: 'user',
+    message: {
+      content: [{ type: 'mcp_tool_result', tool_use_id: 'hook-call', is_error: protocolIsError }],
+    },
+  };
+  fake([system, toolTurn, returned, result('success', false, 0.1, 2)], 'end');
+  const promise = runAgent({ text: 'stock?' });
+  await vi.waitFor(() => {
+    expect((mockQuery.mock.calls[0]?.[0] as QueryArgs).options.hooks).toBeDefined();
+  });
+  const hooks = (mockQuery.mock.calls[0]?.[0] as QueryArgs).options.hooks!;
+  const callback = hooks[hookEvent]?.[0]?.hooks[0];
+  expect(callback).toBeDefined();
+  await callback!(
+    {
+      hook_event_name: hookEvent,
+      tool_name: 'get_stock',
+      tool_input: {},
+      tool_response: {},
+      tool_use_id: 'hook-call',
+      duration_ms: 5,
+      ...(hookEvent === 'PostToolUseFailure' ? { error: 'handler failed' } : {}),
+    } as never,
+    'hook-call',
+  );
+  return promise;
+}
+
 beforeAll(() => {
   expect(process.env.AGENT_TURN_TIMEOUT_MS).toBe('50');
 });
@@ -76,11 +138,255 @@ beforeEach(() => {
 
 describe('runAgent', () => {
   it('returns the reply and per-run cost on success', async () => {
-    fake([system, text('hello'), result('success', false, 0.4, 2)], 'end');
+    const assistant = text('hello');
+    assistant.message = {
+      model: 'claude-opus-current',
+      content: [{ type: 'text', text: 'hello' }],
+    };
+    fake([system, assistant, result('success', false, 0.4, 2)], 'end');
     const r = await runAgent({ text: 'hi', priorCostUsd: 0.1 });
     expect(r).toMatchObject({ outcome: 'ok', reply: 'hello', totalCostUsd: 0.4, numTurns: 2 });
     expect(r.turnCostUsd).toBeCloseTo(0.3);
     expect(r.sessionId).toBe('sess-1');
+    expect(r.attempts).toMatchObject([
+      {
+        ordinal: 1,
+        modelIds: ['claude-opus-current'],
+        modelUsage: {
+          'claude-opus-current': {
+            inputTokens: 3,
+            outputTokens: 4,
+            cacheReadInputTokens: 1,
+            cacheCreationInputTokens: 2,
+            costUsd: 0.4,
+            canonicalModel: 'claude-opus-current',
+            provider: 'firstParty',
+          },
+        },
+        resultSubtype: 'success',
+        outcome: 'ok',
+        inputTokens: 3,
+        outputTokens: 4,
+        cacheReadInputTokens: 1,
+        cacheCreationInputTokens: 2,
+        costUsd: 0.4,
+        numTurns: 2,
+        resumed: false,
+        retryFresh: false,
+      },
+    ]);
+  });
+
+  it('keeps repeated registered tool names distinct by SDK call id', async () => {
+    const toolTurn: Msg = {
+      type: 'assistant',
+      message: {
+        model: 'claude-sonnet-current',
+        content: [
+          {
+            type: 'mcp_tool_use',
+            id: 'call-a',
+            name: 'get_stock',
+            input: {},
+            server_name: 'store',
+          },
+          {
+            type: 'mcp_tool_use',
+            id: 'call-b',
+            name: 'get_stock',
+            input: {},
+            server_name: 'store',
+          },
+        ],
+      },
+    };
+    const returned: Msg = {
+      type: 'user',
+      message: { content: [{ type: 'mcp_tool_result', tool_use_id: 'call-a' }] },
+    };
+    fake([system, toolTurn, returned, result('success', false, 0.1, 2)], 'end');
+    const r = await runAgent({ text: 'stock?' });
+    expect(r.toolsUsed).toEqual(['get_stock', 'get_stock']);
+    expect(r.attempts[0]?.toolCalls).toEqual([
+      {
+        toolUseId: 'call-a',
+        name: 'get_stock',
+        source: 'mcp',
+        resultState: 'returned',
+        isError: null,
+        sdkExecution: null,
+      },
+      {
+        toolUseId: 'call-b',
+        name: 'get_stock',
+        source: 'mcp',
+        resultState: 'pending',
+        isError: null,
+        sdkExecution: null,
+      },
+    ]);
+  });
+
+  it('retains explicit model IDs and usage for primary and fallback models', async () => {
+    const primary = text('working');
+    primary.message = { model: 'claude-primary-raw', content: [{ type: 'text', text: 'working' }] };
+    const fallback = text('done');
+    fallback.message = { model: 'claude-fallback-raw', content: [{ type: 'text', text: 'done' }] };
+    const final = result('success', false, 0.08, 2);
+    final.modelUsage = {
+      'claude-primary-raw': {
+        inputTokens: 10,
+        outputTokens: 2,
+        cacheReadInputTokens: 0,
+        cacheCreationInputTokens: 0,
+        costUSD: 0.03,
+        contextWindow: 200000,
+        maxOutputTokens: 4096,
+      },
+      'claude-fallback-raw': {
+        inputTokens: 5,
+        outputTokens: 8,
+        cacheReadInputTokens: 1,
+        cacheCreationInputTokens: 0,
+        costUSD: 0.05,
+        contextWindow: 200000,
+        maxOutputTokens: 4096,
+        canonicalModel: 'claude-fallback-canonical',
+        provider: 'firstParty',
+      },
+    };
+    fake([system, primary, fallback, final], 'end');
+    const r = await runAgent({ text: 'hi' });
+    expect(r.attempts[0]?.modelIds).toEqual(['claude-primary-raw', 'claude-fallback-raw']);
+    expect(r.attempts[0]?.modelUsage).toEqual({
+      'claude-primary-raw': {
+        inputTokens: 10,
+        outputTokens: 2,
+        cacheReadInputTokens: 0,
+        cacheCreationInputTokens: 0,
+        costUsd: 0.03,
+        canonicalModel: null,
+        provider: null,
+      },
+      'claude-fallback-raw': {
+        inputTokens: 5,
+        outputTokens: 8,
+        cacheReadInputTokens: 1,
+        cacheCreationInputTokens: 0,
+        costUsd: 0.05,
+        canonicalModel: 'claude-fallback-canonical',
+        provider: 'firstParty',
+      },
+    });
+  });
+
+  it('records completed same-name calls by SDK hook tool_use_id, including repeated calls', async () => {
+    const toolTurn: Msg = {
+      type: 'assistant',
+      message: {
+        model: 'claude-sonnet-current',
+        content: [
+          { type: 'mcp_tool_use', id: 'repeat-a', name: 'get_stock', input: { product: 'atta' } },
+          { type: 'mcp_tool_use', id: 'repeat-b', name: 'get_stock', input: { product: 'atta' } },
+        ],
+      },
+    };
+    const returned: Msg = {
+      type: 'user',
+      message: {
+        content: [
+          { type: 'mcp_tool_result', tool_use_id: 'repeat-a', is_error: false },
+          { type: 'mcp_tool_result', tool_use_id: 'repeat-b', is_error: false },
+        ],
+      },
+    };
+    fake([system, toolTurn, returned, result('success', false, 0.1, 2)], 'end');
+    const promise = runAgent({ text: 'stock?' });
+    await vi.waitFor(async () => {
+      const options = (mockQuery.mock.calls[0]?.[0] as QueryArgs).options;
+      expect(options.hooks).toBeDefined();
+    });
+    const hooks = (mockQuery.mock.calls[0]?.[0] as QueryArgs).options.hooks!;
+    const postToolUse = hooks.PostToolUse?.[0]?.hooks[0];
+    expect(postToolUse).toBeDefined();
+    await postToolUse!(
+      {
+        hook_event_name: 'PostToolUse',
+        tool_name: 'get_stock',
+        tool_input: { product: 'atta' },
+        tool_response: { content: [{ type: 'text', text: '1' }] },
+        tool_use_id: 'repeat-b',
+        duration_ms: 12,
+      } as never,
+      'repeat-b',
+    );
+    await postToolUse!(
+      {
+        hook_event_name: 'PostToolUse',
+        tool_name: 'get_stock',
+        tool_input: { product: 'atta' },
+        tool_response: { content: [{ type: 'text', text: '1' }] },
+        tool_use_id: 'repeat-a',
+        duration_ms: 8,
+      } as never,
+      'repeat-a',
+    );
+    const r = await promise;
+    expect(r.attempts[0]?.toolCalls).toMatchObject([
+      {
+        toolUseId: 'repeat-a',
+        resultState: 'returned',
+        isError: false,
+        sdkExecution: { state: 'returned', durationMs: 8 },
+      },
+      {
+        toolUseId: 'repeat-b',
+        resultState: 'returned',
+        isError: false,
+        sdkExecution: { state: 'returned', durationMs: 12 },
+      },
+    ]);
+  });
+
+  it('preserves a PostToolUseFailure outcome when the protocol result says no error', async () => {
+    const r = await runToolHookScenario('PostToolUseFailure', false);
+    expect(r.attempts[0]?.toolCalls[0]).toMatchObject({
+      toolUseId: 'hook-call',
+      resultState: 'failed',
+      isError: true,
+      sdkExecution: { state: 'failed', durationMs: 5 },
+    });
+  });
+
+  it('lets explicit protocol is_error override a PostToolUse success', async () => {
+    const r = await runToolHookScenario('PostToolUse', true);
+    expect(r.attempts[0]?.toolCalls[0]).toMatchObject({
+      toolUseId: 'hook-call',
+      resultState: 'failed',
+      isError: true,
+      sdkExecution: { state: 'returned', durationMs: 5 },
+    });
+  });
+
+  it('records a forbidden built-in attempt and leaves a missing tool result pending', async () => {
+    const toolTurn: Msg = {
+      type: 'assistant',
+      message: {
+        content: [{ type: 'tool_use', id: 'shell-call', name: 'Bash', input: { command: 'pwd' } }],
+      },
+    };
+    fake([system, toolTurn, result('success', false, 0.1, 1)], 'end');
+    const r = await runAgent({ text: 'run shell' });
+    expect(r.attempts[0]?.toolCalls).toEqual([
+      {
+        toolUseId: 'shell-call',
+        name: 'Bash',
+        source: 'builtin',
+        resultState: 'pending',
+        isError: null,
+        sdkExecution: null,
+      },
+    ]);
   });
 
   it('swallows the throw that follows an error result', async () => {
@@ -199,7 +505,8 @@ describe('runAgent — session store and resume', () => {
       expect(mockQuery).toHaveBeenCalledTimes(2);
       expect((mockQuery.mock.calls[1]![0] as QueryArgs).options.resume).toBeUndefined();
       expect(r).toMatchObject({ outcome: 'ok', reply: 'fresh', resumeDropped: true });
-      expect(r.turnCostUsd).toBeCloseTo(0.1);
+      // The first query threw before the SDK supplied usage, so charge its full run cap.
+      expect(r.turnCostUsd).toBeCloseTo(0.6);
       expect(warn).toHaveBeenCalledTimes(1);
       const line = String(warn.mock.calls[0]![0]);
       expect(line).toContain('"errorName":"Error"');
@@ -234,6 +541,38 @@ describe('runAgent — session store and resume', () => {
       expect(r).toMatchObject({ outcome: 'ok', reply: 'fresh', resumeDropped: true });
       expect(warn).toHaveBeenCalledTimes(1);
       expect(String(warn.mock.calls[0]![0])).not.toContain('error result');
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('retains failed-resume attempt evidence and spend when retry-fresh succeeds', async () => {
+    mockQuery
+      .mockImplementationOnce(() =>
+        (async function* () {
+          yield system;
+          yield result('error_during_execution', true, 0.35, 0);
+        })(),
+      )
+      .mockImplementationOnce(() =>
+        (async function* () {
+          yield system;
+          yield text('fresh');
+          yield result('success', false, 0.2, 1);
+        })(),
+      );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const r = await runAgent({ text: 'hi', sessionId: 'sess-1', priorCostUsd: 0.3 });
+      expect(r.attempts).toHaveLength(2);
+      expect(r.attempts.map((attempt) => attempt.resultSubtype)).toEqual([
+        'error_during_execution',
+        'success',
+      ]);
+      expect(r.attempts.map((attempt) => attempt.costUsd)).toEqual([0.35, 0.2]);
+      expect(r.attempts.map((attempt) => attempt.resumed)).toEqual([true, false]);
+      expect(r.attempts.map((attempt) => attempt.retryFresh)).toEqual([false, true]);
+      expect(r.turnCostUsd).toBeCloseTo(0.25);
     } finally {
       warn.mockRestore();
     }
@@ -291,7 +630,7 @@ describe('runAgent — session store and resume', () => {
     expect(mockQuery).toHaveBeenCalledTimes(1);
   });
 
-  it('surfaces the retry failure itself if the fresh start also fails', async () => {
+  it('preserves both attempts and worst-case cost if the fresh retry also fails', async () => {
     for (const message of ['first', 'second']) {
       mockQuery.mockImplementationOnce(() =>
         // eslint-disable-next-line require-yield -- throws before yielding, like a failed spawn
@@ -302,7 +641,21 @@ describe('runAgent — session store and resume', () => {
     }
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
-      await expect(runAgent({ text: 'hi', sessionId: 'sess-1' })).rejects.toThrow('second');
+      let failure: unknown;
+      try {
+        await runAgent({ text: 'hi', sessionId: 'sess-1' });
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(AgentRunFailure);
+      expect(failure).toMatchObject({
+        attempts: [
+          { ordinal: 1, resumed: true, retryFresh: false, costUsd: null },
+          { ordinal: 2, resumed: false, retryFresh: true, costUsd: null },
+        ],
+        conservativelyChargedTurnCostUsd: 1,
+      });
+      expect((failure as { original: unknown }).original).toMatchObject({ message: 'second' });
       expect(mockQuery).toHaveBeenCalledTimes(2);
     } finally {
       warn.mockRestore();
