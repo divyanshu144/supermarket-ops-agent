@@ -13,7 +13,9 @@ The full reasoning behind everything below: [`docs/DESIGN.md`](docs/DESIGN.md).
 ## Privacy and AI use
 
 The owner sees an AI-processing notice during onboarding. `/privacy` explains what the app stores,
-where text and voice are processed, and the current app retention behavior. Set the optional
+where text and voice are processed, and the current app retention behavior. Transcripts and indexed
+generated artifacts expire after 30 days without owner activity. Before an indexed invoice PDF
+expires, the bot regenerates it from its bill. Export JSON files are removed after sending. Set the optional
 `PRIVACY_CONTACT` to a Telegram username or email; if unset, the bot says to ask whoever gave the
 owner their invite. `/export` sends the authenticated owner's app records as JSON. `/pseudonymise`
 previews customer-record changes and requires an owner confirmation. It retains financial amounts,
@@ -54,12 +56,13 @@ call is worse than a slow one.
 
 ## How agent quality is measured
 
-The eval work is in progress. The replay path executes synthetic tool recordings against isolated
-Postgres sandboxes; these fixtures test tool and grading behavior, not model decisions. The
-offline budget/report unit tests are synthetic. SDK cost semantics remain unverified, so
-`pnpm eval:compare` refuses comparison and there is no accepted baseline or agent-quality metric.
-See [`the synthetic checkpoint and live runbook`](evals/results/task-5-to-8-synthetic.md) for
-what is measured, what remains open, and the steps to run when credits are available.
+CI runs keyless replay checks and synthetic safety cases against its Postgres service. The safety
+cases invoke registered tools and assert their results and database state; they do not exercise
+model tool choice, replies, or live agent behavior. SDK cost semantics remain unverified, so
+`pnpm eval:compare` refuses comparison and there is no accepted live baseline or agent-quality
+metric. See [`the synthetic results and live runbook`](evals/results/task-5-to-8-synthetic.md) and
+the [safety replay results](evals/results/w7-safety-replay-synthetic.md) for the evidence and the
+steps to run when credits are available.
 
 ## How the control loop works
 
@@ -112,12 +115,12 @@ from the verified chat, so no prompt can address another shop.
 - Multiple roles within one shop; owner actions and invite redemption fail closed in group chats.
 - Idempotency under a diverging replay. Keys are ordinal-based, so they only line up if a replayed
   turn makes the same calls; closing it properly needs a durable per-turn execution log.
-- Full agent behaviour is not yet measured in CI. Synthetic replay checks registered tool
-  behavior without a model; `e2e.ts` remains a live script, and no live baseline is accepted.
+- Full agent behavior is not yet measured in CI. The safety replay checks registered-tool behavior
+  without a model; `e2e.ts` remains a live script, and no live baseline is accepted.
 - One slow turn delays other shops, because polling is sequential on purpose (the runner can lose
-  updates when killed). App-owned transcripts and indexed artifacts are removed after the configured
-  inactivity period. Historical unindexed artifacts age out by file modification time; Telegram
-  and AI-provider retention is outside this cleanup.
+  updates when killed). Historical unindexed artifacts age out by file modification time; Telegram
+  and AI-provider retention is outside this cleanup. Whole-store erasure is not implemented pending
+  legal review.
 
 The full list, how I used AI tools, and what I'd do with more time are in
 [`docs/DESIGN.md`](docs/DESIGN.md#edge-cases-not-handled).
