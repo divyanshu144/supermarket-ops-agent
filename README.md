@@ -3,7 +3,7 @@
 A kirana store you run from a Telegram chat. Receive stock, cut bills, run customer credit,
 close the day, and pull GST invoices and analysis decks — in plain terse English, no forms.
 
-**Bot: [@Divagent_bot](https://t.me/Divagent_bot)** · invite-only: ask me for a code (open an issue or message [@divyanshu144](https://github.com/divyanshu144) on GitHub) and send it to the bot as `/start <code>`. Each code is single-use and gives you your own store. Then try `how much sugar is left?`. `/reset` only explains itself; `/reset confirm` does it.
+**Bot: [@divagentBot](https://t.me/divagentBot)** · invite-only: ask me for a code (open an issue or message [@divyanshu144](https://github.com/divyanshu144) on GitHub) and send it to the bot as `/start <code>`. Each code is single-use and gives you your own store. Then try `how much sugar is left?`. `/reset` only explains itself; `/reset confirm` does it.
 
 [![CI](https://github.com/divyanshu144/supermarket-ops-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/divyanshu144/supermarket-ops-agent/actions/workflows/ci.yml)
 
