@@ -168,7 +168,8 @@ describe('runAgent', () => {
     fake([system, assistant, result('success', false, 0.4, 2)], 'end');
     const r = await runAgent({ text: 'hi', priorCostUsd: 0.1 });
     expect(r).toMatchObject({ outcome: 'ok', reply: 'hello', totalCostUsd: 0.4, numTurns: 2 });
-    expect(r.turnCostUsd).toBeCloseTo(0.3);
+    // SDK_COST_IS_CUMULATIVE is false (measured by cost.probe.ts): the reported total is this run.
+    expect(r.turnCostUsd).toBeCloseTo(0.4);
     expect(r.sessionId).toBe('sess-1');
     expect(r.attempts).toMatchObject([
       {
@@ -450,15 +451,14 @@ describe('runAgent', () => {
     expect(second).toBeCloseTo(0.6);
   });
 
-  it('warns once, with numbers only, when a resumed total falls below the prior total', async () => {
+  it('does not warn when a resumed total falls below the prior total, as per-call costs do', async () => {
+    // The cumulative-chain tripwire only applies while SDK_COST_IS_CUMULATIVE is true; the live
+    // probe showed it is false, so a lower resumed total is normal and must not log.
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       fake([system, text('secret reply'), result('success', false, 0.05, 1)], 'end');
       await runAgent({ text: 'hi', sessionId: 'sess-1', priorCostUsd: 0.3 });
-      expect(warn).toHaveBeenCalledTimes(1);
-      const line = JSON.parse(String(warn.mock.calls[0]![0]));
-      expect(line).toMatchObject({ scope: 'cost', prior: 0.3, total: 0.05 });
-      expect(JSON.stringify(line)).not.toContain('secret');
+      expect(warn).not.toHaveBeenCalled();
     } finally {
       warn.mockRestore();
     }
@@ -598,7 +598,8 @@ describe('runAgent — session store and resume', () => {
       expect(r.attempts.map((attempt) => attempt.costUsd)).toEqual([0.35, 0.2]);
       expect(r.attempts.map((attempt) => attempt.resumed)).toEqual([true, false]);
       expect(r.attempts.map((attempt) => attempt.retryFresh)).toEqual([false, true]);
-      expect(r.turnCostUsd).toBeCloseTo(0.25);
+      // Per-call totals: the failed resume cost 0.35 and the fresh retry 0.2.
+      expect(r.turnCostUsd).toBeCloseTo(0.55);
     } finally {
       warn.mockRestore();
     }

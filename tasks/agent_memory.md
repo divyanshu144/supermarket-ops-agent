@@ -122,3 +122,14 @@ _(empty — record the problem, the root cause, and the fix as they come up)_
 | AD-29 | **The allowlist genuinely blocks the filesystem.** Four direct attempts (read `.env`, run `ls -la`, list files, write a file) all refused with **zero tool calls** and no credential leaked. §4 is now empirically supported, not just designed for. | `security.probe.ts` |
 | AD-30 | **Tools must never return raw DB rows.** `JSON.stringify` throws outright on BigInt, so `get_stock` errored on every call in production while unit tests passed. Present a shaped view — which also stops leaking cost price and internal ids to the model. | live smoke run; regression test in `inventory.test.ts` |
 | AD-31 | **Pin `packageManager`.** Unpinned, container corepack pulled pnpm 11 against a pnpm-9 lockfile and the image would not build at all. | docker build failure |
+
+### Verified empirically 2026-10-09 (live cost probe, `src/agent/cost.probe.ts`)
+
+- **`total_cost_usd` is per-call, not cumulative across `resume`** (Q1, definitive): a trivial resume
+  reported 0.128 USD against 0.181 for the output-heavy first turn. `SDK_COST_IS_CUMULATIVE` is now
+  `false` in `limits.ts`; the cumulative-chain tripwire in `runtime.ts` is therefore inactive.
+- **`maxBudgetUsd` semantics are unresolved** (Q2, inconclusive): a resumed turn under a cap of 0.163
+  ended `success` having cost 0.011. `SDK_BUDGET_IS_CUMULATIVE` stays `true` (the safe default).
+- **Resume keeps the same session id** (Q3).
+- A trivial resumed turn still cost ~0.128 USD, so resumes are not cheap.
+
