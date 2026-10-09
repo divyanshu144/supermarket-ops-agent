@@ -195,3 +195,6 @@ through `8536b3d` (PR #2) and `fa89f53` (PR #1).
       SDK cost semantics, finish/review the live runner, then use the runbook in
       `evals/results/task-5-to-8-synthetic.md`. Proposed future smoke cap there is $0.25.
 - [ ] Prepare each later phase separately, with its own spec, plan and approval
+- [x] `list_stock` tool (2026-10-09): one call lists every product, so "list all the stock" no longer
+      loops `get_stock` per product (live run: 16 turns, 14 `get_stock` calls, $0.27). Tests added;
+      gate 539 passed. Verify on Railway after deploy: one `list_stock` call and a lower cost.

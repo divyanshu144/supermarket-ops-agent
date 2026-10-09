@@ -3,7 +3,13 @@ import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { products, stores } from '../db/schema.js';
 import { newToolContext, toolContext } from './context.js';
-import { getStockTool, handleGetStock, presentStockResult } from './inventory.js';
+import {
+  getStockTool,
+  handleGetStock,
+  handleListStock,
+  listStockTool,
+  presentStockResult,
+} from './inventory.js';
 import {
   ALLOWED_TOOLS,
   FORBIDDEN_TOOLS,
@@ -68,6 +74,54 @@ describe('handleGetStock', () => {
   it('cannot reach another store even though the product exists', async () => {
     const result = await withStore(STORE, () => handleGetStock('Secret Stock'));
     expect(result.status).toBe('not_found');
+  });
+});
+
+describe('list_stock', () => {
+  it('takes no parameters, so the model cannot address another store', () => {
+    expect(Object.keys(listStockTool.inputSchema)).toEqual([]);
+  });
+
+  it('lists every product in this store in one call, sorted, with only the fields the model needs', async () => {
+    await db.insert(products).values({
+      storeId: STORE,
+      name: 'Atta (loose)',
+      unit: 'kg',
+      isLoose: true,
+      hsnCode: '11010000',
+      gstRateBps: 0,
+      costPricePaise: 4000,
+      mrpPaise: 4500,
+      quantityBase: 2000,
+      reorderLevelBase: 5000,
+    });
+    const result = await withStore(STORE, () => handleListStock());
+    expect(result.count).toBe(2);
+    expect(result.items.map((i) => i.name)).toEqual(['Atta (loose)', 'Maggi 70g']);
+    expect(result.items[0]).toEqual({
+      name: 'Atta (loose)',
+      brand: null,
+      pack_size: null,
+      in_stock: '2 kg',
+      reorder_level: '5 kg',
+      below_reorder_level: true,
+      price: expect.any(String),
+    });
+    const text = JSON.stringify(result);
+    expect(text).not.toContain('cost');
+    expect(text).not.toContain('hsn');
+    expect(text).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-/); // no row ids
+  });
+
+  it("never returns another store's products", async () => {
+    const result = await withStore(STORE, () => handleListStock());
+    expect(JSON.stringify(result)).not.toContain('Secret Stock');
+  });
+
+  it('returns an empty list, not an error, for a store with no products', async () => {
+    await db.delete(products).where(eq(products.storeId, STORE));
+    const result = await withStore(STORE, () => handleListStock());
+    expect(result).toEqual({ count: 0, items: [] });
   });
 });
 

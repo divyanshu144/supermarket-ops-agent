@@ -222,6 +222,11 @@ export async function adjustStock(
   });
 }
 
+/** Every product in the store, by name. Callers present it; the raw rows include cost price. */
+export async function listProducts(storeId: bigint): Promise<(typeof products.$inferSelect)[]> {
+  return db.select().from(products).where(eq(products.storeId, storeId)).orderBy(products.name);
+}
+
 export interface LowStockItem {
   name: string;
   inStock: string;
