@@ -188,8 +188,9 @@ through `8536b3d` (PR #2) and `fa89f53` (PR #1).
       was at the journal head when checked, not whether the earlier `pnpm db:migrate` changed it.
       No credentials printed and no rollback attempted. Earlier invoice test failed with EPERM
       before connecting; no query succeeded from that test.
-- [ ] Live cap: zero; no probes, model evals, or live smoke runs were executed. Cost semantics
-      remain unverified, comparison refuses, and no baseline is accepted.
+- [ ] Live cap: credits added 2026-10-09. Only `cost.probe.ts` has run (about 0.32 USD): total cost is
+      per-call (`SDK_COST_IS_CUMULATIVE=false`); budget semantics (Q2) still inconclusive. Session-store,
+      e2e and security probes have NOT run. Comparison still refuses; no baseline is accepted.
 - [ ] Live smoke: after credits exist, run cost/session/e2e/security probes in order, resolve
       SDK cost semantics, finish/review the live runner, then use the runbook in
       `evals/results/task-5-to-8-synthetic.md`. Proposed future smoke cap there is $0.25.

@@ -33,15 +33,18 @@ export function microUsd(usd: number | undefined): number {
 }
 
 /**
- * Two independent SDK facts, both taken from the docs and both UNVERIFIED until
- * `src/agent/cost.probe.ts` has been run against the live API (Q1 sets this one, Q2 the next).
+ * Two independent SDK facts. SDK_COST_IS_CUMULATIVE was verified against the live API on
+ * 2026-10-09 by `src/agent/cost.probe.ts` (Q1: per-call, definitive). SDK_BUDGET_IS_CUMULATIVE is
+ * still UNVERIFIED (Q2 was inconclusive).
  *
  * SDK_COST_IS_CUMULATIVE drives `turnCostUsd`: is `total_cost_usd` on a resumed session the
  * session's lifetime total (true) or only this call (false)? If it is really per-call but this
  * says true, the daily budget UNDER-counts (we subtract the prior spend from a figure that never
  * included it) and the per-run cap ratchets upward as the stored session total grows.
+ * Measured: a trivial resume reported 0.128 USD against 0.181 for the output-heavy first turn, so
+ * the total is per-call and this is false.
  */
-export const SDK_COST_IS_CUMULATIVE = true;
+export const SDK_COST_IS_CUMULATIVE = false;
 
 /**
  * SDK_BUDGET_IS_CUMULATIVE drives `perRunBudgetUsd`: is `maxBudgetUsd` compared against that
