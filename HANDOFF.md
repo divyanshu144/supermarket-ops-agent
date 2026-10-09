@@ -2,7 +2,7 @@
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-09 (live cost probe run, `SDK_COST_IS_CUMULATIVE=false`); previously 2026-10-07, W3 correction committed as `8d34362`; W6 verified and ready for local commit
+**Last updated:** 2026-10-09 (added `list_stock` tool; live cost probe run, `SDK_COST_IS_CUMULATIVE=false`); previously 2026-10-07, W3 correction committed as `8d34362`; W6 verified and ready for local commit
 **Branch:** `responsible-ai`, created from `eval-harness` at `c435f26`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
