@@ -27,3 +27,12 @@ export function containsPromptLeak(reply: string, prompt: string): boolean {
 export function wrapExternalText(text: string): string {
   return `<EXTERNAL_DOCUMENT>\n${JSON.stringify(text).replaceAll('<', '\\u003c').replaceAll('>', '\\u003e')}\n</EXTERNAL_DOCUMENT>`;
 }
+
+/** Preserve the owner's request; bound the document portion of explicit multiline pastes. */
+export function wrapUserDocuments(text: string): string {
+  const newline = text.indexOf('\n');
+  if (newline < 0) return text;
+  const request = text.slice(0, newline);
+  if (!/\b(invoice|forwarded|document|ocr|quoted|supplier message)\b/i.test(request)) return text;
+  return `${request}\n${wrapExternalText(text.slice(newline + 1))}`;
+}

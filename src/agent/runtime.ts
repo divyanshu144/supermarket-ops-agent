@@ -1,4 +1,4 @@
-import { DATA_POLICY, containsPromptLeak } from '../security/boundaries.js';
+import { DATA_POLICY, containsPromptLeak, wrapUserDocuments } from '../security/boundaries.js';
 import { query, type HookCallback } from '@anthropic-ai/claude-agent-sdk';
 import { loadEnv } from '../config/env.js';
 import {
@@ -199,7 +199,7 @@ async function runOnce(args: {
 
   try {
     stream = query({
-      prompt: args.text,
+      prompt: wrapUserDocuments(args.text),
       options: {
         model: limits.model,
         fallbackModel: limits.fallbackModel,

@@ -1,15 +1,16 @@
 import { createHash } from 'node:crypto';
 import { runAgent, type AgentResult } from '../agent/runtime.js';
 import { requireContext } from '../tools/context.js';
-import { OpenAIEmbeddings } from './embeddings.js';
+import { OpenAIEmbeddings, AppleWordEmbeddings } from './embeddings.js';
 import { SemanticCache, type CacheEvent } from './semantic.js';
 
 let shared: SemanticCache | undefined;
 function configuredCache(): SemanticCache | undefined {
-  if (process.env.SEMANTIC_CACHE_ENABLED !== 'true' || !process.env.OPENAI_API_KEY)
-    return undefined;
+  if (process.env.SEMANTIC_CACHE_ENABLED !== 'true') return undefined;
+  const local = process.env.SEMANTIC_CACHE_PROVIDER === 'apple';
+  if (!local && !process.env.OPENAI_API_KEY) return undefined;
   return (shared ??= new SemanticCache(
-    new OpenAIEmbeddings(process.env.OPENAI_API_KEY),
+    local ? new AppleWordEmbeddings() : new OpenAIEmbeddings(process.env.OPENAI_API_KEY!),
     Number(process.env.SEMANTIC_CACHE_THRESHOLD ?? 0.9),
     Number(process.env.SEMANTIC_CACHE_TTL_MS ?? 3_600_000),
   ));

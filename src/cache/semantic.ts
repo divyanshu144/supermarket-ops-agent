@@ -115,6 +115,7 @@ export class SemanticCache {
     scope: string,
   ): Promise<{
     answer?: string;
+    matchedQuestion?: string;
     candidate?: Omit<CacheEntry, 'answer' | 'expiresAt'>;
     event: CacheEvent;
   }> {
@@ -157,7 +158,12 @@ export class SemanticCache {
         event.reason = 'similar';
       } else event.reason = best ? 'below_threshold' : 'cold';
       event.latencyMs = performance.now() - started;
-      return { ...(event.status === 'hit' ? { answer: best!.answer } : { candidate }), event };
+      return {
+        ...(event.status === 'hit'
+          ? { answer: best!.answer, matchedQuestion: best!.question }
+          : { candidate }),
+        event,
+      };
     } catch {
       return {
         event: { ...event, reason: 'embedding_error', latencyMs: performance.now() - started },

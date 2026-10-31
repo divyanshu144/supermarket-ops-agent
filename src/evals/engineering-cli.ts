@@ -23,6 +23,15 @@ const sandbox = await createSandbox({
 });
 try {
   await mkdir('artifacts/engineering', { recursive: true });
+  if (mode === 'cache' && !process.env.OPENAI_API_KEY && process.platform === 'darwin') {
+    await run('swiftc', [
+      '-module-cache-path',
+      '/tmp/superops-swift-cache',
+      'scripts/apple-embedding.swift',
+      '-o',
+      'artifacts/engineering/apple-embedding',
+    ]);
+  }
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH,
     HOME: process.env.HOME,
