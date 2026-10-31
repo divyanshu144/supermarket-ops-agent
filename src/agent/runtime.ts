@@ -1,3 +1,4 @@
+import { DATA_POLICY, containsPromptLeak } from '../security/boundaries.js';
 import { query, type HookCallback } from '@anthropic-ai/claude-agent-sdk';
 import { loadEnv } from '../config/env.js';
 import {
@@ -32,7 +33,7 @@ rather than inventing one.
 /** Validated preferences are rendered as bounded data, not instructions. */
 function withPreferences(prefs: Record<string, unknown>): string {
   const rendered = renderPreferenceContext(prefs);
-  return rendered ? `${SYSTEM_PROMPT}\n\n${rendered}` : SYSTEM_PROMPT;
+  return `${SYSTEM_PROMPT}\n\n${DATA_POLICY}${rendered ? `\n\n${rendered}` : ''}`;
 }
 
 export interface AgentResult {
@@ -376,7 +377,10 @@ async function runOnce(args: {
       }),
     );
   }
-  const reply = finalOutcome === 'ok' ? chunks.join('').trim() : OUTCOME_REPLY[finalOutcome];
+  const rawReply = finalOutcome === 'ok' ? chunks.join('').trim() : OUTCOME_REPLY[finalOutcome];
+  const reply = containsPromptLeak(rawReply, `${SYSTEM_PROMPT}\n${DATA_POLICY}`)
+    ? 'I cannot share private instructions or credentials. Please ask about store operations.'
+    : rawReply;
 
   return {
     reply,

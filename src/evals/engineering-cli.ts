@@ -44,7 +44,11 @@ try {
   const require = createRequire(import.meta.url);
   const args =
     mode === 'test'
-      ? [require.resolve('vitest/vitest.mjs'), 'run', ...process.argv.slice(3)]
+      ? [
+          require.resolve('vitest/package.json').replace('package.json', 'vitest.mjs'),
+          'run',
+          ...process.argv.slice(3),
+        ]
       : [
           require.resolve('tsx/cli'),
           `src/evals/${mode === 'attacks' ? 'injection' : 'cache-benchmark'}.ts`,

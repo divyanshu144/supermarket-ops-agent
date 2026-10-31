@@ -145,6 +145,8 @@ export async function addProduct(
     reorderLevelBase?: number;
   },
 ): Promise<AddProductResult> {
+  if (![0, 500, 1200, 1800].includes(input.gstRateBps))
+    throw new Error('Unsupported catalogue GST slab');
   const inserted = await db
     .insert(products)
     .values({

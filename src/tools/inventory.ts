@@ -160,7 +160,9 @@ export const addProductTool = tool(
     unit: z.enum(['kg', 'g', 'litre', 'ml', 'packet', 'dozen', 'piece']),
     is_loose: z.boolean().optional(),
     hsn_code: z.string().min(4).describe('HSN code for the GST slab.'),
-    gst_rate_bps: z.number().int().describe('Basis points: 0, 500, 1200 or 1800.'),
+    gst_rate_bps: z
+      .union([z.literal(0), z.literal(500), z.literal(1200), z.literal(1800)])
+      .describe('Supported catalogue slabs, in basis points.'),
     cost_price_paise: z.number().int().nonnegative(),
     mrp_paise: z.number().int().positive(),
     opening_qty: z.number().nonnegative().optional(),
