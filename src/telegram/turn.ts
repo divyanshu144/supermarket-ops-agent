@@ -1,5 +1,6 @@
+import { runCachedAgent } from '../cache/agent.js';
 import { InlineKeyboard, InputFile, type Context } from 'grammy';
-import { AgentRunFailure, runAgent } from '../agent/runtime.js';
+import { AgentRunFailure } from '../agent/runtime.js';
 import { deleteSessionEntries } from '../repositories/session-entries.js';
 import { isAuthorizedOwner } from '../repositories/access.js';
 import {
@@ -96,7 +97,7 @@ export async function handleTurn(
 
     const turnContext = newToolContext(storeId, updateId, undefined, BigInt(ctx.from.id));
     const result = await toolContext.run(turnContext, () =>
-      runAgent({ text, sessionId, preferences, priorCostUsd: priorMicro / 1_000_000 }),
+      runCachedAgent({ text, sessionId, preferences, priorCostUsd: priorMicro / 1_000_000 }),
     );
 
     // Accounting must never fail the turn: the owner's reply is more important than the ledger.
