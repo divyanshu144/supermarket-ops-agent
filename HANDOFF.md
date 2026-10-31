@@ -1,3 +1,23 @@
+# Engineering additions checkpoint — 2026-10-31
+
+Branch: `feat/semantic-cache-injection-evals`. User approved implementation and small commits.
+Semantic cache and security defences are implemented; see `evals/engineering/README.md`.
+Real local 120-question retrieval benchmark: 0.90 threshold, 40/120 hits (33.3%), zero false hits,
+zero live/action hits, 29.8 ms mean lookup. Provider is installed macOS 300-dimensional word
+embeddings with mean pooling, no dependency/download. Both completed live injection runs scored
+0/40 successes: baseline `99800a4` and hardened `22025cf`. This is not an improvement claim.
+
+UNFINISHED: Anthropic reported insufficient credit after ten successful live cache baseline
+questions. The final pasted-document wrapper (`253d45c`) rerun has three inconclusive provider
+errors, not a completed after result. No full latency/cost-saving metric exists. User was asked
+asynchronously to top up or defer live metrics; no answer has arrived at this checkpoint.
+Next: after top-up, run `pnpm bench:cache --resume` and `pnpm eval:injection after`, then update
+results tables. Aggregate benchmark cost cap defaults to $40; do not disguise provider failures.
+Full verification: 552 tests passed, 19 existing optional tests skipped; lint/typecheck passed.
+Production config/data/deployment untouched. New local test cluster uses port 55441.
+
+---
+
 # HANDOFF
 
 Written so a cold-start session can resume. Update at every checkpoint.

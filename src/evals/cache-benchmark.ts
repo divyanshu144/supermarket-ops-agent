@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { runAgent } from '../agent/runtime.js';
 import { pool, getPoolTarget } from '../db/client.js';
@@ -18,10 +18,16 @@ const provider = process.env.OPENAI_API_KEY
   ? new OpenAIEmbeddings(process.env.OPENAI_API_KEY)
   : new AppleWordEmbeddings();
 await provider.embed('Embedding availability check');
+const failures: Array<Record<string, unknown>> = [];
 const corpusSha256 = createHash('sha256').update(JSON.stringify(CACHE_QUESTIONS)).digest('hex');
 let sequence = 0;
+let spentUsd = 0;
+const maxCostUsd = Number(process.env.EVAL_MAX_COST_USD ?? 40);
+if (!Number.isFinite(maxCostUsd) || maxCostUsd <= 0) throw new Error('Invalid evaluation cost cap');
 const measuredAgent = async (text: string) => {
   await verify();
+  if (spentUsd + 0.5 > maxCostUsd)
+    throw new Error('Evaluation cost cap reached; resume with an explicit higher cap');
   const store = BigInt(990000 + sequence++);
   await pool.query('INSERT INTO stores(id,owner_user_id,name,gstin) VALUES ($1,$1,$2,$3)', [
     String(store),
@@ -35,8 +41,24 @@ const measuredAgent = async (text: string) => {
   const context = newToolContext(store, store, undefined, store);
   const started = performance.now();
   const result = await toolContext.run(context, () => runAgent({ text }));
-  if (result.outcome !== 'ok')
-    throw new Error(`Incomplete model run (${result.outcome}); refusing benchmark headline`);
+  spentUsd += result.turnCostUsd;
+  if (result.outcome !== 'ok') {
+    failures.push({
+      text,
+      outcome: result.outcome,
+      attempts: result.attempts,
+      costUsd: result.turnCostUsd,
+      latencyMs: performance.now() - started,
+    });
+    await mkdir('evals/engineering/results', { recursive: true });
+    await writeFile(
+      'evals/engineering/results/cache-failures.json',
+      JSON.stringify(failures, null, 2) + '\n',
+    );
+    throw new Error(
+      `Incomplete model run (${result.outcome}); evidence saved, no benchmark headline`,
+    );
+  }
   return {
     answer: result.reply,
     latencyMs: performance.now() - started,
@@ -50,6 +72,23 @@ const measuredAgent = async (text: string) => {
 };
 const rows: Array<Awaited<ReturnType<typeof measuredAgent>> & { id: string }> = [];
 const tables: Array<Record<string, unknown>> = [];
+if (process.argv.includes('--resume')) {
+  const prior = JSON.parse(
+    await readFile('evals/engineering/results/cache-benchmark.json', 'utf8'),
+  );
+  if (
+    prior.corpusSha256 !== corpusSha256 ||
+    prior.provider !== provider.id ||
+    prior.model !== process.env.AGENT_MODEL
+  )
+    throw new Error('Resume metadata mismatch');
+  rows.push(...prior.rows);
+  tables.push(...prior.tables);
+  spentUsd =
+    rows.reduce((sum, row) => sum + row.costUsd, 0) +
+    tables.reduce((sum, row) => sum + Number(row.cacheCostUsd), 0);
+}
+
 const save = async () => {
   await mkdir('evals/engineering/results', { recursive: true });
   await writeFile(
@@ -57,6 +96,9 @@ const save = async () => {
     JSON.stringify(
       {
         provenance: 'live',
+        spentUsd,
+        maxCostUsd,
+        complete: rows.length === CACHE_QUESTIONS.length && tables.length === 3,
         method:
           'separate measured baseline and threshold executions; cold cache per threshold; standalone requests; database fixture setup excluded from model latency',
         corpusSha256,
@@ -72,6 +114,7 @@ const save = async () => {
 };
 try {
   for (const [i, q] of CACHE_QUESTIONS.entries()) {
+    if (i < rows.length) continue;
     rows.push({ id: q.id, ...(await measuredAgent(q.text)) });
     await save();
     console.log(`baseline ${i + 1}/${CACHE_QUESTIONS.length}`);
@@ -79,6 +122,7 @@ try {
   const baselineCostUsd = rows.reduce((s, r) => s + r.costUsd, 0);
   const meanings = new Map(CACHE_QUESTIONS.map((q) => [q.text, q.meaning]));
   for (const threshold of [0.85, 0.9, 0.95]) {
+    if (tables.some((row) => row.threshold === threshold)) continue;
     const cache = new SemanticCache(provider, threshold, 86_400_000);
     let hits = 0,
       falseHits = 0,

@@ -44,6 +44,7 @@ try {
     OPENAI_API_KEY: mode === 'cache' ? process.env.OPENAI_API_KEY : undefined,
     AGENT_MODEL: process.env.AGENT_MODEL ?? 'claude-opus-5',
     AGENT_EFFORT: process.env.AGENT_EFFORT ?? 'medium',
+    EVAL_MAX_COST_USD: process.env.EVAL_MAX_COST_USD ?? '40',
     AGENT_MAX_BUDGET_USD: '0.5',
     AGENT_MAX_TURNS: '10',
     AGENT_TURN_TIMEOUT_MS: '90000',
@@ -60,7 +61,7 @@ try {
         ]
       : [
           require.resolve('tsx/cli'),
-          `src/evals/${mode === 'attacks' ? 'injection' : 'cache-benchmark'}.ts`,
+          `src/evals/${mode === 'attacks' ? 'injection' : process.argv.includes('--retrieval-only') ? 'cache-retrieval' : 'cache-benchmark'}.ts`,
           ...process.argv.slice(3),
         ];
   await run(process.execPath, args, env);

@@ -21,19 +21,18 @@ assertSameDatabaseTarget(getPoolTarget(), databaseTarget(process.env.DATABASE_UR
 if (getPoolTarget().database !== proof.database || getPoolTarget().user !== proof.role)
   throw new Error('Sandbox mismatch');
 const cases = process.argv.includes('--smoke') ? ATTACKS.slice(0, 1) : ATTACKS;
+const revision = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+const maxCostUsd = Number(process.env.EVAL_MAX_COST_USD ?? 40);
+if (!Number.isFinite(maxCostUsd) || maxCostUsd <= 0) throw new Error('Invalid evaluation cost cap');
 const results: Array<Record<string, unknown>> = [];
 const snapshot = async (store: bigint) => {
   const state: Record<string, unknown> = {};
   for (const table of ['products', 'bills', 'khata_accounts', 'preferences', 'stock_movements']) {
     state[table] = (
-      await pool
-        .query(`SELECT * FROM ${table} WHERE store_id = $1 ORDER BY id`, [store.toString()])
-        .catch(async (error) => {
-          if (table !== 'preferences') throw error;
-          return pool.query('SELECT * FROM preferences WHERE store_id = $1 ORDER BY key', [
-            store.toString(),
-          ]);
-        })
+      await pool.query(
+        `SELECT * FROM ${table} WHERE store_id = $1 ORDER BY ${table === 'preferences' ? 'key' : 'id'}`,
+        [store.toString()],
+      )
     ).rows;
   }
   state.items = (
@@ -53,6 +52,8 @@ const snapshot = async (store: bigint) => {
 try {
   for (const [i, attack] of cases.entries()) {
     await verify();
+    const spentUsd = results.reduce((sum, row) => sum + Number(row.costUsd ?? 0.5), 0);
+    if (spentUsd + 0.5 > maxCostUsd) throw new Error('Evaluation cost cap reached');
     const store = BigInt(880000 + i * 2);
     const sentinel = store + 1n;
     await pool.query(
@@ -175,7 +176,7 @@ try {
       JSON.stringify(
         {
           provenance: 'live',
-          revision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+          revision,
           corpusSha256: createHash('sha256').update(JSON.stringify(ATTACKS)).digest('hex'),
           model: process.env.AGENT_MODEL,
           startedAt: new Date().toISOString(),

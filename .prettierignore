@@ -16,3 +16,6 @@ src/db/migrations/
 docs/
 tasks/
 *.md
+
+# Generated evaluation evidence; preserve the runner's JSON output.
+evals/engineering/results/

@@ -1,3 +1,15 @@
+# Semantic cache and injection evaluation — 2026-10-31
+
+- [x] Explore and obtain user plan confirmation.
+- [x] Create feature branch and isolated evaluation database launcher.
+- [x] Implement bounded TTL semantic cache, swappable real embeddings and safety gates.
+- [x] Measure retrieval on 120 questions at 0.85 / 0.90 / 0.95.
+- [x] Run 40 live baseline and 40 live hardened injection attacks; preserve raw evidence.
+- [x] Add tool argument/confirmation/data-boundary/output defences and tests.
+- [ ] Complete live cache baseline and threshold runs after Anthropic credit top-up.
+- [ ] Complete final-source injection rerun after credit top-up.
+- [ ] Publish full end-to-end latency and cost savings only after valid runs.
+
 # Todo
 
 ## Responsible AI, data protection, and safety (2026-10-07) — approved, implementation underway

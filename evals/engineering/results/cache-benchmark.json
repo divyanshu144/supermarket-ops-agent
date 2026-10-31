@@ -1,0 +1,518 @@
+{
+  "provenance": "live",
+  "method": "separate measured baseline and threshold executions; cold cache per threshold; standalone requests; database fixture setup excluded from model latency",
+  "corpusSha256": "17065be8cfda9243748ab814d005a47d62242d052177072728bb5610f6e44564",
+  "provider": "apple:english-word-mean-v1",
+  "model": "claude-opus-5",
+  "rows": [
+    {
+      "id": "p-0-0",
+      "answer": "Just tell me the details in one message. I need:\n\n- Name + pack size (e.g. \"Amul Butter 100g\")\n- Unit (packet / kg / litre / piece…)\n- GST slab (0% loose staples, 5% packaged staples, 12–18% FMCG)\n- HSN code\n- Cost price and MRP\n- Opening quantity, if any\n\nExample: *\"new item: Amul Butter 100g, packet, GST 12%, HSN 0405, cost ₹52, MRP ₹62, 20 packets in\"*\n\nIf you don't know the HSN or GST, say so and I'll ask before saving. For a delivery of something already on the shelf, don't add a product — just tell me what came in.",
+      "latencyMs": 7656.7360419999995,
+      "costUsd": 0.07899225000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005830000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 252,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9841,
+              "costUsd": 0.07840925000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 252,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9841,
+          "costUsd": 0.07899225000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": []
+        }
+      ]
+    },
+    {
+      "id": "p-0-1",
+      "answer": "Just tell me the details and I'll add it. I need:\n\n- Name (with brand + pack size, e.g. \"Amul Butter 100g\")\n- Unit — kg / g / litre / ml / packet / dozen / piece\n- Loose or packaged\n- GST slab — 0% loose staples, 5% packaged staples, 12–18% FMCG\n- HSN code\n- Cost price and MRP\n- Opening quantity and reorder level (optional)\n\nExample: \"new item: Amul Butter 100g, packet, GST 12%, HSN 0405, cost ₹52, MRP ₹62, 20 packets in\"",
+      "latencyMs": 7443.533459000002,
+      "costUsd": 0.07846225,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005780000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 231,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9841,
+              "costUsd": 0.07788425,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 231,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9841,
+          "costUsd": 0.07846225,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": []
+        }
+      ]
+    },
+    {
+      "id": "p-0-2",
+      "answer": "To add a product I need: name, unit (kg/g/litre/ml/packet/dozen/piece), HSN code, GST slab (0 / 5 / 12 / 18%), cost price, MRP. Optional: brand, pack size, opening qty, reorder level, loose or packaged.\n\nJust say it in one line, e.g.:\n\n\"new item: Amul Butter 100g, packet, HSN 0405, GST 12%, cost ₹52, MRP ₹62, 20 in stock\"\n\nTell me the item and I'll add it.",
+      "latencyMs": 5535.210875000001,
+      "costUsd": 0.07764225000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005830000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 198,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9841,
+              "costUsd": 0.07705925000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 198,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9841,
+          "costUsd": 0.07764225000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": []
+        }
+      ]
+    },
+    {
+      "id": "p-0-3",
+      "answer": "Just tell me the product details in one line and I'll add it. I need:\n\n- **Name + pack size** — e.g. \"Amul Butter 100g\"\n- **Unit** — kg / g / litre / ml / packet / dozen / piece\n- **GST slab** — 0% loose staples, 5% packaged staples, 12–18% FMCG\n- **Cost price and MRP**\n\nOptional but useful: brand, HSN code, opening quantity, reorder level.\n\nExample: *\"new item: Amul Butter 100g, packet, GST 12%, cost ₹54, MRP ₹62, 20 in stock, reorder at 5\"*\n\nIf you don't give the HSN I'll pick the standard one for that slab. Give me the line and I'll register it.",
+      "latencyMs": 6459.563624999999,
+      "costUsd": 0.081098,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005949999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 335,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.080503,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 335,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.081098,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": []
+        }
+      ]
+    },
+    {
+      "id": "p-0-4",
+      "answer": "To add a new product I need:\n\n1. **Name** — brand + item, e.g. \"Amul Butter\"\n2. **Pack size & unit** — \"100g\", packet/kg/litre/piece\n3. **Loose or packaged**\n4. **Cost price** and **MRP**\n5. **GST slab** — 0% loose staples, 5% packaged staples, 12–18% FMCG\n6. **HSN code** — if you don't know it, I'll copy from a similar product already on the shelf and tell you\n7. **Opening quantity** and **reorder level** (optional)\n\nJust say it in one line — \"new item: Amul Butter 100g, cost ₹52, MRP ₹62, 20 packets\" — and I'll fill the rest and ask if anything's unclear.",
+      "latencyMs": 7423.147165999999,
+      "costUsd": 0.10242550000000002,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000585,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 356,
+              "cacheReadInputTokens": 52216,
+              "cacheCreationInputTokens": 10690,
+              "costUsd": 0.10184050000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 356,
+          "cacheReadInputTokens": 52216,
+          "cacheCreationInputTokens": 10690,
+          "costUsd": 0.10242550000000002,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01CCuiCaBqXTGb8yoaNAwrnV",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p-0-5",
+      "answer": "Just tell me in one line, like:\n\n**\"new item: Amul Butter 100g, GST 12%, MRP ₹62, cost ₹55, 20 packets\"**\n\nWhat I need:\n- **Name** (with brand + pack size)\n- **Unit** — packet / kg / litre / piece / dozen\n- **GST slab** — 0% loose staples, 5% packaged staples, 12–18% FMCG\n- **MRP** and **cost**\n- **Opening quantity** (optional)\n\nHSN code — if you don't know it, I'll take the one from a similar product already on the shelf and tell you which.",
+      "latencyMs": 6825.367666999999,
+      "costUsd": 0.1006995,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005840000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 290,
+              "cacheReadInputTokens": 52216,
+              "cacheCreationInputTokens": 10678,
+              "costUsd": 0.1001155,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 290,
+          "cacheReadInputTokens": 52216,
+          "cacheCreationInputTokens": 10678,
+          "costUsd": 0.1006995,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01DTSLAJDLZcGqMpeuZrsVh1",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p-0-6",
+      "answer": "Just tell me the details in one line — I'll register it.\n\nWhat I need:\n- **Name + pack size** — e.g. \"Amul Butter 100g\"\n- **Unit** — kg/g/litre/ml/packet/dozen/piece\n- **GST slab** — 0% loose staples, 5% packaged staples, 12–18% FMCG\n- **HSN code** — if you don't know it, I'll use the one from a similar item already on the shelf and tell you which\n- **Cost price and MRP** — in ₹\n- **Opening quantity** and **reorder level**, if you want them set now\n\nExample: *\"new item: Amul Butter 100g, GST 12%, cost ₹52, MRP ₹62, 20 packets\"* — that's enough for me to add it.",
+      "latencyMs": 9160.2915,
+      "costUsd": 0.10170124999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 331,
+              "cacheReadInputTokens": 52218,
+              "cacheCreationInputTokens": 10673,
+              "costUsd": 0.10111025,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 331,
+          "cacheReadInputTokens": 52218,
+          "cacheCreationInputTokens": 10673,
+          "costUsd": 0.10170124999999999,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01Fzwq8WLi6dThafMrerJvnQ",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p-0-7",
+      "answer": "New product — just tell me the details and I'll register it. I need:\n\n- **Name** (with pack size) — e.g. \"Amul Butter 100g\"\n- **Unit** — kg/g/litre/ml/packet/dozen/piece\n- **GST slab** — 0% loose staples, 5% packaged staples, 12–18% FMCG\n- **HSN code**\n- **Cost price** and **MRP**\n\nOptional: brand, opening stock, reorder level.\n\nExample message: *\"new item: Amul Butter 100g, packet, GST 12%, HSN 0405, cost ₹52, MRP ₹62, 20 in stock, reorder at 5\"*",
+      "latencyMs": 6086.166083000004,
+      "costUsd": 0.078738,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000585,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 241,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.078153,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 241,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.078738,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": []
+        }
+      ]
+    },
+    {
+      "id": "p-0-8",
+      "answer": "Tell me the item in one line and I'll register it. I need:\n\n- **Name + pack size** — e.g. \"Amul Butter 100g\"\n- **Unit** — kg / g / litre / ml / packet / dozen / piece\n- **Cost price and MRP**\n- **GST slab** — 0% loose staples, 5% packaged staples, 12–18% FMCG\n- **HSN code** — if you don't know it, I'll copy it from a similar item already in the shop and tell you which\n\nOptional: opening quantity and reorder level.\n\nExample: *\"new item: Amul Butter 100g, packet, cost ₹48, MRP ₹62, GST 12%, 20 in\"*",
+      "latencyMs": 6652.623166999998,
+      "costUsd": 0.10183249999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.00058,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 332,
+              "cacheReadInputTokens": 52215,
+              "cacheCreationInputTokens": 10692,
+              "costUsd": 0.1012525,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 332,
+          "cacheReadInputTokens": 52215,
+          "cacheCreationInputTokens": 10692,
+          "costUsd": 0.10183249999999999,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01RQu6TUzVwUApRSU2QEs9oa",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 5
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "p-0-9",
+      "answer": "To add a new product I need:\n\n- **Name** (and brand, if any) — e.g. Amul Butter\n- **Pack size / unit** — 100g packet, 1L, loose kg\n- **GST slab** — 0% loose staples, 5% packaged staples, 12–18% FMCG\n- **Cost price** and **MRP**\n- Optional: opening stock qty, reorder level\n\nJust say it in one line, e.g. *\"new item: Amul Butter 100g, GST 12%, cost ₹52, MRP ₹62, 20 packets in\"* — and I'll register it.",
+      "latencyMs": 5225.0770829999965,
+      "costUsd": 0.07816225,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005780000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 219,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9841,
+              "costUsd": 0.07758425000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 219,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9841,
+          "costUsd": 0.07816225,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": []
+        }
+      ]
+    }
+  ],
+  "tables": []
+}

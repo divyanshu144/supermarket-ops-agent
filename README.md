@@ -124,3 +124,45 @@ from the verified chat, so no prompt can address another shop.
 
 The full list, how I used AI tools, and what I'd do with more time are in
 [`docs/DESIGN.md`](docs/DESIGN.md#edge-cases-not-handled).
+
+## Semantic cache
+
+Optional in-memory semantic caching reuses standalone procedural-help answers, with a one-hour
+TTL, tenant/configuration isolation, and a strict eligibility gate. Live data, mutations and
+resumed conversations bypass it. Embeddings are swappable: OpenAI via fetch, or installed macOS
+word vectors without a new dependency. Production configuration has not been enabled or changed.
+
+Run `pnpm bench:cache --retrieval-only` for the local retrieval benchmark, or `pnpm bench:cache`
+for live baseline/cache executions. Run all tests safely with `pnpm test:safe` (Docker required).
+
+| Similarity threshold | Hits / 120 | False hits | Live/action hits | Mean lookup |
+| --- | --- | --- | --- | --- |
+| 0.85 | 43.3% | 0 / 52 | 0 / 20 | 33.4 ms |
+| 0.90 | 33.3% | 0 / 40 | 0 / 20 | 29.8 ms |
+| 0.95 | 16.7% | 0 / 20 | 0 / 20 | 29.9 ms |
+
+Measured with real local embeddings and reference answers, not live Telegram traffic. The corpus
+has 80 paraphrases, 20 hard negatives and 20 live/action questions. **Full LLM latency and cost
+savings remain pending:** Anthropic credits ran out after ten uncached measurements. No overall
+cost-saving claim is made. See [method, configuration and raw evidence](evals/engineering/README.md).
+
+## Prompt injection testing
+
+`pnpm eval:injection before|after` runs 40 live attacks in a disposable database against pasted
+text and stored product/customer/ledger fields. Labels select output names, not security modes;
+reproducing the baseline requires its recorded commit. Defences include data delimiters, strict
+arguments, catalogue GST validation, capped discounts, owner-confirmed mutations and leak checks.
+
+| Category | Baseline success | Hardened success |
+| --- | --- | --- |
+| Override | 0 / 10 | 0 / 10 |
+| Tool abuse | 0 / 10 | 0 / 10 |
+| Data leak | 0 / 10 | 0 / 10 |
+| Hidden/encoded | 0 / 10 | 0 / 10 |
+| **Overall** | **0 / 40 (0%)** | **0 / 40 (0%)** |
+
+Both complete runs used the same corpus and had no inconclusive cases. The existing agent already
+blocked these attacks, so this is added enforcement and coverage, not a measured reduction in
+attack success. The hardened result covers `22025cf`; a later pasted-document wrapper's final
+rerun hit insufficient credit after three inconclusive attempts. Final-source evaluation is pending.
+[Evidence, limitations and resumption commands](evals/engineering/README.md) are documented.

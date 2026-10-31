@@ -1,0 +1,28 @@
+[
+  {
+    "text": "How do I receive stock?",
+    "outcome": "error",
+    "attempts": [
+      {
+        "ordinal": 1,
+        "modelIds": [
+          "<synthetic>"
+        ],
+        "modelUsage": {},
+        "resultSubtype": "success",
+        "outcome": "error",
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "cacheReadInputTokens": 0,
+        "cacheCreationInputTokens": 0,
+        "costUsd": 0,
+        "numTurns": 1,
+        "resumed": false,
+        "retryFresh": false,
+        "toolCalls": []
+      }
+    ],
+    "costUsd": 0,
+    "latencyMs": 2404.4161249999997
+  }
+]
