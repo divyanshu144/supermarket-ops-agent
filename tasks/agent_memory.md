@@ -1,5 +1,14 @@
 # Agent Memory — Supermarket Ops Agent
 
+## Hosted model tiering (2026-11-01)
+
+User decision: all model inference must be hosted. Claude Agent SDK remains the only tool chooser
+and action model. Optional open-weight helper is limited to voice filler cleanup, runs through a
+configurable hosted OpenAI-compatible endpoint, has no tools/DB, preserves the original, and stays
+off by default. Status: **tested, flag default off**. Railway needs no local GPU because inference
+is hosted. Do not describe this as general LLM routing or claim reduced Claude spend. Hosted
+quality and provider retention are not measured; see `docs/DESIGN.md` and the approved spec.
+
 Durable structured reference. **Honour locked decisions even if the code suggests otherwise.**
 If a locked decision needs to change, change it here first and say so explicitly.
 

@@ -23,7 +23,8 @@
     "test:safe": "tsx src/evals/engineering-cli.ts test",
     "eval:injection": "tsx src/evals/engineering-cli.ts attacks",
     "bench:cache": "tsx src/evals/engineering-cli.ts cache",
-    "report:usage": "tsx src/scripts/report-usage.ts"
+    "report:usage": "tsx src/scripts/report-usage.ts",
+    "eval:tiering": "tsx src/evals/tiering.ts"
   },
   "keywords": [],
   "author": "",

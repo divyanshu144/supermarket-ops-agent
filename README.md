@@ -180,7 +180,33 @@ production data while building this change.
 
 | Evidence | Result | Measurement |
 | --- | --- | --- |
-| Automated trace privacy/fail-open tests | 4 passed | `pnpm test:safe` |
-| Full disposable-database test suite | 567 passed, 19 skipped | `pnpm test:safe` |
-| Database-backed usage report and trace-cost reconciliation | Tested in suite | `pnpm test:safe` |
+| Automated trace privacy/fail-open tests | 5 passed | `pnpm test:safe` |
+| Full disposable-database test suite | 570 passed, 19 skipped | `pnpm test:safe` |
+| Database-backed usage report and trace-cost reconciliation | Verified in suite | `pnpm test:safe` |
 | Live Langfuse export and production usage figures | Not measured | No Langfuse credentials or production database access used |
+
+## Hosted voice transcript helper
+
+An optional hosted open-weight model can classify and clean up speech fillers before Claude sees
+the turn. Claude Agent SDK remains the only model with SuperOps tools. The helper receives only
+the transcript, has no database or tools, preserves the original, and falls back on uncertainty;
+it is disabled by default. Configure `TIERING_BASE_URL`, `TIERING_API_KEY`, and `TIERING_MODEL`,
+then explicitly set `TIERING_ENABLED=true`. Transcript text then goes to that hosted provider;
+check its retention and no-training settings before enabling it. Offline tests use mocked
+responses and do not establish hosted-model quality. The adapter contract test sent all 30
+synthetic action/injection cases through mocked model triage and used the mocked refusal for each;
+this does not measure real model safety. Hosted quality, latency and critical-field error rate are
+not measured. Run `pnpm test:safe` for the adapter tests. `pnpm eval:tiering` sends a bounded set
+of synthetic cases to the configured hosted model and reports its confusion matrix, unsafe-wrongly-
+safe count, critical-field preservation, correction usefulness, fallback rate and latency. It
+makes no Claude calls and prints no transcript contents. It refuses to run without
+`TIERING_BASE_URL`, `TIERING_API_KEY` and `TIERING_MODEL`; it evaluates 45 synthetic cases. I
+verified the missing-configuration path: it exited 1 and sent no request. The settings are not
+configured, so hosted quality, critical-field preservation, confusion matrix and latency are not
+measured. The 30 mocked refusal cases are adapter-contract coverage, not model-quality evidence.
+
+| Hosted helper evidence | Result | Command |
+| --- | --- | --- |
+| Synthetic labelled cases in harness | 45 | `pnpm eval:tiering` |
+| Missing-configuration safety check | Exit 1, no request sent | `TIERING_BASE_URL= TIERING_API_KEY= TIERING_MODEL= pnpm eval:tiering` |
+| Hosted triage quality, safety confusion matrix and latency | Not measured | Provider settings not configured |

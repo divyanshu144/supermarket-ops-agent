@@ -1,5 +1,20 @@
 # Design notes
 
+## Hosted helper model experiment (2026-11-01)
+
+Claude Agent SDK remains the sole model with SuperOps tools and continues to choose all actions.
+All inference is hosted: an optional OpenAI-compatible hosted open-weight endpoint can only
+classify/clean the voice transcript by removing explicit fillers (`um`, `uh`, `erm`, `hmm`). It
+has no DB, tools, bill data, or confirmation surface. It is disabled by default. The original
+transcript remains the source shown to Claude and to the user; the helper's cleanup is separately
+delimited as untrusted data. Provider timeout, bad output, model refusal, uncertainty, or failed
+preservation checks use the original. The triage is model-based; there is no keyword intent
+router. Offline tests use mocked responses for 30 synthetic instruction and action phrases, so
+hosted quality, latency and provider retention are not measured. Status: **tested, flag default
+off**. Railway needs no local GPU because inference is hosted. Keep the feature off until provider
+retention/training settings and real hosted-model quality are reviewed. Configuration is
+`TIERING_ENABLED`, `TIERING_BASE_URL`, `TIERING_API_KEY` and `TIERING_MODEL`.
+
 The full reasoning behind the README. Everything from "The harness, and why" down to "What I'd do
 differently" is the original README text, moved here unchanged except for one corrected sentence
 under Engineering standards. "Access and spend" and "Restarts and conversation storage" at the end

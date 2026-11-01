@@ -10,14 +10,27 @@
 - [ ] Complete final-source injection rerun after credit top-up.
 - [ ] Publish full end-to-end latency and cost savings only after valid runs.
 
-## Langfuse Cloud tracing — 2026-11-01
+## Langfuse and hosted open-model helper — 2026-11-01
 
-Plan: `docs/plans/2026-11-01-langfuse-and-tiering.md`.
+Spec: `docs/specs/2026-11-01-model-tiering.md`. Plan:
+`docs/plans/2026-11-01-langfuse-and-tiering.md`. Owner approved the work; all inference is hosted.
 
-- [x] Implement fail-open Langfuse tracing and privacy disclosure.
-- [x] Reconcile trace cost with usage table and add read-only usage report.
-- [x] Run the disposable-database suite: 567 passed, 19 skipped; format, lint and typecheck pass.
-- [ ] Commit the Phase 1 checkpoint before Phase 2.
+- [x] Phase 1: implement fail-open Langfuse tracing and privacy disclosure.
+- [x] Phase 1: reconcile trace cost with usage table and add read-only usage report.
+- [x] Phase 1: verify the disposable-database gate (562 passed, 19 skipped) and commit a Phase 1-only
+      checkpoint as `1ebae8e` before starting Phase 2.
+- [x] Phase 2: implement optional hosted open-weight transcript helper; Claude remains the only
+      tool selector; flag defaults off.
+- [x] Phase 2: add bounded hosted evaluation command `pnpm eval:tiering`; test its dataset and
+      metric calculations without provider calls.
+- [ ] Phase 2: run a real hosted-provider evaluation. `TIERING_API_KEY`, `TIERING_BASE_URL` and
+      `TIERING_MODEL` are not configured; model quality, latency and confusion matrix remain
+      “not measured”. Mocked contract cases are not a model evaluation.
+- [x] Phase 2: update architecture memory, lessons and handoff; latest full safe gate passed
+      (570 passed, 19 skipped).
+- [ ] Phase 2: run the hosted provider evaluation. No endpoint/key/model configuration is present;
+      keep the feature disabled and do not treat mocked outputs as quality results.
+- [x] Commit the Phase 2 changes after final review.
 
 # Todo
 

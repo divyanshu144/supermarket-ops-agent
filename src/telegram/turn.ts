@@ -46,12 +46,21 @@ export async function dailyCapReached(storeId: bigint): Promise<boolean> {
 export async function handleTurn(
   ctx: Context,
   text: string,
-  options: { alreadyClaimed?: boolean; prepaidCostMicroUsd?: number } = {},
+  options: {
+    alreadyClaimed?: boolean;
+    prepaidCostMicroUsd?: number;
+    tiering?: { selected: string; escalationReason: string; latencyMs: number };
+  } = {},
 ): Promise<void> {
   const updateId = BigInt(ctx.update.update_id);
   const storeId = BigInt(ctx.chat!.id);
   const startedAt = Date.now();
   const trace = new LangfuseTurn(env, storeId);
+  trace.recordTier({
+    selected: options.tiering?.selected ?? 'claude',
+    escalation_reason: options.tiering?.escalationReason ?? 'tier0_disabled_or_not_used',
+    tier0_latency_ms: options.tiering?.latencyMs ?? 0,
+  });
 
   if (!options.alreadyClaimed) {
     // Claim, don't mark done. See repositories/updates.ts for why the difference matters.
