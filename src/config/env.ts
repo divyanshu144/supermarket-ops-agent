@@ -9,6 +9,13 @@ const schema = z
     TELEGRAM_BOT_TOKEN: z.string().min(1),
     ANTHROPIC_API_KEY: z.string().min(1),
     OPENAI_API_KEY: z.string().optional(),
+    LANGFUSE_PUBLIC_KEY: z.string().min(1).optional(),
+    LANGFUSE_SECRET_KEY: z.string().min(1).optional(),
+    LANGFUSE_BASE_URL: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.string().url().optional(),
+    ),
+    LANGFUSE_CAPTURE_CONTENT: z.enum(['true', 'false']).default('false'),
     AGENT_EFFORT: z.enum(['low', 'medium', 'high']).default('medium'),
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     LOG_MESSAGE_TEXT: z.enum(['true', 'false']).optional(),

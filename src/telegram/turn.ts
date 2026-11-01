@@ -11,7 +11,7 @@ import {
   getSessionId,
   setSessionId,
 } from '../repositories/updates.js';
-import { recordUsage, spentTodayMicroUsd } from '../repositories/usage.js';
+import { spentTodayMicroUsd } from '../repositories/usage.js';
 import { microUsd } from '../agent/limits.js';
 import { turnLimiter } from './rate-limit.js';
 import { DAILY_CAP_REPLY, PRIVATE_MESSAGE, RATE_LIMITED_REPLY } from './messages.js';
@@ -20,6 +20,9 @@ import { newToolContext, toolContext } from '../tools/context.js';
 import { logTurn } from '../observability/log.js';
 import { loadEnv, shouldLogMessageText } from '../config/env.js';
 import { redact } from './redact.js';
+import { LangfuseTurn } from '../observability/langfuse.js';
+import { CONFIRM_TOOLS } from '../security/tools.js';
+import { recordTurnCost } from '../observability/turn-accounting.js';
 
 const env = loadEnv();
 const DAILY_CAP_MICRO_USD = microUsd(env.STORE_DAILY_BUDGET_USD);
@@ -43,11 +46,12 @@ export async function dailyCapReached(storeId: bigint): Promise<boolean> {
 export async function handleTurn(
   ctx: Context,
   text: string,
-  options: { alreadyClaimed?: boolean } = {},
+  options: { alreadyClaimed?: boolean; prepaidCostMicroUsd?: number } = {},
 ): Promise<void> {
   const updateId = BigInt(ctx.update.update_id);
   const storeId = BigInt(ctx.chat!.id);
   const startedAt = Date.now();
+  const trace = new LangfuseTurn(env, storeId);
 
   if (!options.alreadyClaimed) {
     // Claim, don't mark done. See repositories/updates.ts for why the difference matters.
@@ -65,6 +69,7 @@ export async function handleTurn(
   ): Promise<void> => {
     await ctx.reply(message);
     await completeUpdate(updateId);
+    trace.finish({ outcome, costMicroUsd: 0, input: text, output: message });
     logTurn(
       { updateId, storeId, text, tools: [], durationMs: Date.now() - startedAt, outcome },
       logOptions,
@@ -96,13 +101,35 @@ export async function handleTurn(
     const preferences = await readPreferences(storeId);
 
     const turnContext = newToolContext(storeId, updateId, undefined, BigInt(ctx.from.id));
+    turnContext.trace = trace;
+    turnContext.observer = (event) =>
+      trace.recordTool({
+        callId: event.callId,
+        toolName: event.toolName,
+        durationMs: event.durationMs,
+        startedAtMs: event.startedAtMs,
+        endedAtMs: event.endedAtMs,
+        outcome: event.outcome,
+        refusalCode: event.refusalCode,
+        errorClass: event.errorClass,
+        input: event.input,
+        result: event.result,
+        neededConfirmation: CONFIRM_TOOLS.has(event.toolName),
+      });
     const result = await toolContext.run(turnContext, () =>
       runCachedAgent({ text, sessionId, preferences, priorCostUsd: priorMicro / 1_000_000 }),
     );
 
     // Accounting must never fail the turn: the owner's reply is more important than the ledger.
     try {
-      await recordUsage(storeId, microUsd(result.turnCostUsd));
+      await recordTurnCost(
+        storeId,
+        result.turnCostUsd,
+        trace.usageMetrics(),
+        (cost) => trace.recordCost(cost),
+        undefined,
+        options.prepaidCostMicroUsd,
+      );
     } catch (error) {
       console.error(redact({ scope: 'usage', storeId: String(storeId), error }));
     }
@@ -141,6 +168,13 @@ export async function handleTurn(
     }
 
     await completeUpdate(updateId);
+    trace.finish({
+      outcome: result.outcome,
+      costMicroUsd: trace.costMicroUsd,
+      attempts: result.attempts,
+      input: text,
+      output: result.reply,
+    });
 
     logTurn(
       {
@@ -161,11 +195,24 @@ export async function handleTurn(
       // A failed resume and failed fresh retry have no owner reply, but their known or
       // conservative spend still belongs in the per-store daily budget.
       try {
-        await recordUsage(storeId, microUsd(error.conservativelyChargedTurnCostUsd));
+        await recordTurnCost(
+          storeId,
+          error.conservativelyChargedTurnCostUsd,
+          trace.usageMetrics(),
+          (cost) => trace.recordCost(cost),
+          undefined,
+          options.prepaidCostMicroUsd,
+        );
       } catch (usageError) {
         console.error(redact({ scope: 'usage', storeId: String(storeId), error: usageError }));
       }
     }
+    trace.finish({
+      outcome: 'error',
+      costMicroUsd: trace.costMicroUsd,
+      attempts: error instanceof AgentRunFailure ? error.attempts : [],
+      input: text,
+    });
     console.error(redact({ updateId: String(updateId), storeId: String(storeId), error }));
     logTurn(
       {

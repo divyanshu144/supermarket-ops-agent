@@ -9,7 +9,7 @@ export const WELCOME = [
   '/new — fresh conversation (your stock, khata and preferences stay)',
   '/reset — restore this shop to its starting state (asks you to confirm)',
   '',
-  'AI notice: messages and relevant shop data may be processed by Anthropic. Voice audio goes to OpenAI for transcription.',
+  'AI notice: messages and relevant shop data may be processed by Anthropic. Voice audio goes to OpenAI for transcription. If Langfuse tracing is enabled, pseudonymous usage metadata goes to Langfuse; message content is off by default.',
   'Send /privacy for app storage, current retention, and privacy contact details.',
 ].join('\n');
 
@@ -22,9 +22,9 @@ export function privacyMessage(contact?: string, retentionDays = 30): string {
   return [
     'Privacy and AI use',
     '',
-    'This bot uses Anthropic to process owner messages and relevant shop data for replies and tool use. If you send a voice note, its audio is sent to OpenAI for transcription.',
+    'This bot uses Anthropic to process owner messages and relevant shop data for replies and tool use. If you send a voice note, its audio is sent to OpenAI for transcription. If Langfuse tracing is enabled, it receives pseudonymous usage metadata; message content is off by default and can be enabled by the operator with redaction.',
     'The app stores shop and product records, bills, customer names and khata records, preferences, conversation transcripts, usage records, and generated invoice/deck files.',
-    `Current app retention: transcripts and new indexed files are removed after ${retentionDays} days without an authenticated owner update. Older unindexed files expire by file modification time. If an indexed invoice still has a finalized bill, it is regenerated before the old PDF is deleted. Telegram and AI-provider retention is outside this app and is not stated here.`,
+    `Current app retention: transcripts and new indexed files are removed after ${retentionDays} days without an authenticated owner update. Older unindexed files expire by file modification time. If an indexed invoice still has a finalized bill, it is regenerated before the old PDF is deleted. Telegram, AI-provider, and optional Langfuse retention is outside this app and is not stated here.`,
     'Use /export to download this store’s app records. Use /pseudonymise <exact customer name> to preview and request confirmation to replace direct customer identifiers while retaining financial amounts. Store erasure is not available.',
     contactLine,
   ].join('\n');

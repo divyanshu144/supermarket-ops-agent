@@ -20,6 +20,20 @@ Production config/data/deployment untouched. New local test cluster uses port 55
 
 # HANDOFF
 
+## 2026-11-01 — Phase 1 Langfuse checkpoint
+
+Current branch: `feat/langfuse-checkpointed-from-semantic-evals`, based on
+`feat/semantic-cache-injection-evals`. Phase 1 adds optional Langfuse Cloud tracing and a read-only
+local usage report. Trace export is disabled without all credentials, excludes content by default,
+uses a keyed HMAC store pseudonym, and runs off the Telegram reply path. Retention is controlled by
+Langfuse. The report is implemented but has not been run against production data; one live store/user
+is the known sample-size context. No live Langfuse or Claude calls, production data/config reads,
+Railway actions or pushes occurred. `pnpm fmt:check`, `pnpm lint`, `pnpm typecheck` and
+`pnpm test:safe` passed; the disposable-database suite reported 567 passed and 19 skipped. A direct
+`pnpm test` attempt hit the inherited local database on port 5435 with an old schema and failed;
+no migration was run against that database. The user-provided task prompt remains untracked and
+untouched.
+
 Written so a cold-start session can resume. Update at every checkpoint.
 
 **Last updated:** 2026-10-09 (added `list_stock` tool; live cost probe run, `SDK_COST_IS_CUMULATIVE=false`); previously 2026-10-07, W3 correction committed as `8d34362`; W6 verified and ready for local commit

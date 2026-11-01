@@ -29,6 +29,14 @@ export async function runCachedAgent(
     embeddingTokens: 0,
     estimatedEmbeddingCostUsd: 0,
   };
+  try {
+    requireContext().trace?.recordCache({
+      status: 'miss',
+      reason: cache ? 'conversation' : 'disabled',
+    });
+  } catch {
+    // Non-transport callers have no trace context.
+  }
   let candidate: Awaited<ReturnType<SemanticCache['lookup']>>['candidate'];
   // Resumed sessions may refer to facts or instructions not represented in the question vector.
   // Until transcript continuity is implemented, only standalone turns are eligible.
@@ -45,6 +53,7 @@ export async function runCachedAgent(
       .digest('hex');
     const found = await cache.lookup(input.text, scope);
     event = found.event;
+    requireContext().trace?.recordCache(event as unknown as Record<string, unknown>);
     candidate = found.candidate;
     if (found.answer !== undefined) {
       console.log(

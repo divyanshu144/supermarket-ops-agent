@@ -74,6 +74,8 @@ export interface ModelToolCallEvidence {
 
 export interface ModelAttemptEvidence {
   ordinal: number;
+  startedAtMs?: number;
+  endedAtMs?: number;
   /** Every raw model ID seen on assistant messages during this attempt. */
   modelIds: string[];
   /** Per-model usage reported by the SDK result, keyed by its declared modelUsage keys. */
@@ -146,6 +148,7 @@ async function runOnce(args: {
   const chunks: string[] = [];
   const toolsUsed: string[] = [];
   let sessionId = args.resume ?? '';
+  const attemptStartedAtMs = Date.now();
   let outcome: AgentOutcome | undefined;
   let totalCostUsd = prior;
   let numTurns = 0;
@@ -350,6 +353,8 @@ async function runOnce(args: {
       throw new RunFailed(error, chunks.length > 0 || toolsUsed.length > 0);
     }
   } finally {
+    attempt.startedAtMs = attemptStartedAtMs;
+    attempt.endedAtMs = Date.now();
     args.attempts.push(attempt);
     clearTimeout(timer);
   }

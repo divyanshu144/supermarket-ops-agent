@@ -6,7 +6,7 @@ import { loadEnv } from '../config/env.js';
 import { downloadTelegramFile } from '../media/download.js';
 import { transcribe, whisperCostMicroUsd } from '../media/transcribe.js';
 import { claimUpdate, completeUpdate } from '../repositories/updates.js';
-import { recordUsage } from '../repositories/usage.js';
+import { recordCostOnly } from '../repositories/usage.js';
 import {
   newCommand,
   privacyCommand,
@@ -254,11 +254,11 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
       return;
     }
 
-    // Whisper bills the clip whether or not it contained speech, so record it before the empty
-    // check. recordUsage also bumps the informational `turns` counter; accepted. A bookkeeping
-    // failure must never fail the turn.
+    // Whisper bills the clip whether or not it contained speech, so account for its spend before
+    // the empty check without counting a separate model turn. A bookkeeping failure must never
+    // fail the turn.
     try {
-      await recordUsage(storeId, whisperCostMicroUsd(ctx.message.voice.duration));
+      await recordCostOnly(storeId, whisperCostMicroUsd(ctx.message.voice.duration));
     } catch (error) {
       console.error(redact({ scope: 'voice-usage', chatId: String(ctx.chat.id), error }));
     }
@@ -268,11 +268,14 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
       return;
     }
 
-    // Echo before acting. "Do" (2) and "das" (10) differ by one phoneme, and a misheard
+    // Echo original before acting. "Do" (2) and "das" (10) differ by one phoneme, and a misheard
     // quantity silently becomes a wrong bill. This does NOT wait for confirmation — it makes
     // the mistake visible in the same turn the money moves.
     await ctx.reply(`Heard: ${transcript}`);
-    await handleTurn(ctx, transcript, { alreadyClaimed: true });
+    await handleTurn(ctx, transcript, {
+      alreadyClaimed: true,
+      prepaidCostMicroUsd: whisperCostMicroUsd(ctx.message.voice.duration),
+    });
   });
 
   /**

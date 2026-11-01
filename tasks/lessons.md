@@ -3,6 +3,17 @@
 Chronological. After **any** correction or non-obvious discovery, append an entry:
 what broke / the root cause / what to do next time.
 
+## 2026-11-01: trace ingestion must use the current OTLP endpoint
+
+Langfuse's legacy ingestion API is scheduled for Cloud sunset on 2026-11-16. Use the supported
+OTLP trace endpoint and version header; a one-off direct POST to `/api/public/ingestion` would have
+worked briefly and then silently broken. Keep export queued off the Telegram path and bound the
+shutdown drain. Langfuse retention remains an account setting, outside app retention controls.
+
+Voice has a separate pre-agent cost: Whisper is billed before the agent starts. Counting it as an
+extra turn made per-turn trace cost disagree with usage. Record the Whisper amount as cost-only, add
+the model cost once, and attach the combined integer micro-USD amount to the voice turn trace.
+
 ---
 
 ## 2026-07-29 — Assignment.md was replaced mid-session

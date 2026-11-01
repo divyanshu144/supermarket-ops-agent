@@ -10,6 +10,15 @@
 - [ ] Complete final-source injection rerun after credit top-up.
 - [ ] Publish full end-to-end latency and cost savings only after valid runs.
 
+## Langfuse Cloud tracing — 2026-11-01
+
+Plan: `docs/plans/2026-11-01-langfuse-and-tiering.md`.
+
+- [x] Implement fail-open Langfuse tracing and privacy disclosure.
+- [x] Reconcile trace cost with usage table and add read-only usage report.
+- [x] Run the disposable-database suite: 567 passed, 19 skipped; format, lint and typecheck pass.
+- [ ] Commit the Phase 1 checkpoint before Phase 2.
+
 # Todo
 
 ## Responsible AI, data protection, and safety (2026-10-07) — approved, implementation underway

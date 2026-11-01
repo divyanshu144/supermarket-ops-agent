@@ -166,3 +166,21 @@ blocked these attacks, so this is added enforcement and coverage, not a measured
 attack success. The hardened result covers `22025cf`; a later pasted-document wrapper's final
 rerun hit insufficient credit after three inconclusive attempts. Final-source evaluation is pending.
 [Evidence, limitations and resumption commands](evals/engineering/README.md) are documented.
+
+## Langfuse tracing and usage report
+
+Optional Langfuse Cloud OTLP tracing runs when `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and
+`LANGFUSE_BASE_URL` are configured. It exports pseudonymous metadata in the background; content
+capture defaults off. Langfuse controls its own retention. Run
+`DATABASE_URL=<read-only-local-postgres> pnpm report:usage` to print the local database's last 90
+IST-day metrics without store identifiers.
+The report covers requests, thrown tool-handler error rate, idempotent replays, semantic-cache hit
+rate and cost per model turn. The current deployment has one live store/user; I did not query live
+production data while building this change.
+
+| Evidence | Result | Measurement |
+| --- | --- | --- |
+| Automated trace privacy/fail-open tests | 4 passed | `pnpm test:safe` |
+| Full disposable-database test suite | 567 passed, 19 skipped | `pnpm test:safe` |
+| Database-backed usage report and trace-cost reconciliation | Tested in suite | `pnpm test:safe` |
+| Live Langfuse export and production usage figures | Not measured | No Langfuse credentials or production database access used |

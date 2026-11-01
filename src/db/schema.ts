@@ -226,6 +226,7 @@ export const idempotencyKeys = pgTable(
     key: text('key').notNull(),
     operation: text('operation').notNull(),
     result: jsonb('result').notNull(),
+    replayCount: integer('replay_count').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.storeId, t.key] })],
@@ -301,6 +302,10 @@ export const usage = pgTable(
     day: date('day').notNull(),
     costMicroUsd: bigint('cost_micro_usd', { mode: 'number' }).notNull().default(0),
     turns: integer('turns').notNull().default(0),
+    toolCalls: integer('tool_calls').notNull().default(0),
+    toolErrors: integer('tool_errors').notNull().default(0),
+    cacheLookups: integer('cache_lookups').notNull().default(0),
+    cacheHits: integer('cache_hits').notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.storeId, t.day] })],
 );

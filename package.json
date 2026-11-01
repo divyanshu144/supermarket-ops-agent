@@ -22,7 +22,8 @@
     "eval:safety": "tsx src/evals/safety-replay-cli.ts",
     "test:safe": "tsx src/evals/engineering-cli.ts test",
     "eval:injection": "tsx src/evals/engineering-cli.ts attacks",
-    "bench:cache": "tsx src/evals/engineering-cli.ts cache"
+    "bench:cache": "tsx src/evals/engineering-cli.ts cache",
+    "report:usage": "tsx src/scripts/report-usage.ts"
   },
   "keywords": [],
   "author": "",

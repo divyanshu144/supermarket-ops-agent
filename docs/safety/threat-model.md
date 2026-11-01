@@ -11,8 +11,8 @@ schemas, repositories and Telegram owner checks enforce business actions.
 Assets include stock, prices, bills and tax, customer credit and contact details, owner preferences,
 conversation transcripts, generated files, confirmation rows, invite hashes, spend records and
 credentials. Trust boundaries are Telegram input and callbacks, model output, catalogue and
-preference text, store-scoped database access, filesystem artifacts, logs, Anthropic text processing
-and OpenAI voice transcription.
+preference text, store-scoped database access, filesystem artifacts, logs, Anthropic text processing,
+OpenAI voice transcription and optional Langfuse Cloud tracing.
 
 ## Threats and controls
 
@@ -27,6 +27,7 @@ and OpenAI voice transcription.
 | Transcript disclosure or unsafe export of another tenant | Owner-only export, store-scoped data queries, fail-closed orphan transcript check, temporary export deletion after delivery attempt. | partial | Indexed artifact metadata is exported; file contents and metadata for historical unindexed files are omitted. Provider-held data is outside app export. |
 | Credential exposure in deployment logs or configuration | Existing redactor; secrets are read from environment and must not be copied into reports. | partial | The Telegram bot token and Anthropic API key previously reached deployment logs and must be rotated. Rotation is an operator action still pending. |
 | Resource and spend abuse | Per-run limits, per-store daily spend limit, per-chat rate limit, update claims and fixed tool allow-list. | partial | No live cost semantics run is accepted; budget behavior is tested with synthetic/mocked usage. |
+| Trace export discloses customer content or raw store identifiers | Content omitted by default; HMAC store pseudonym; optional capture masks fields and excludes free-form user/assistant text. | partial | Automated serialization tests cover default omission and pseudonymization; Langfuse retention/access remain account controls outside the app. |
 | User asks for store erasure before record treatment is reviewed | No store-erasure command or mutation path exists. | not done | Legal review must decide treatment of accounting, audit, invoice and provider data first. |
 
 ## Reference mapping
