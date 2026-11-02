@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { normalizeTranscript } from '../media/tiering.js';
 
 export interface TieringCase {
