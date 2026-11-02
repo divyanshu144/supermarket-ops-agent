@@ -133,7 +133,8 @@ resumed conversations bypass it. Embeddings are swappable: OpenAI via fetch, or 
 word vectors without a new dependency. Production configuration has not been enabled or changed.
 
 Run `pnpm bench:cache --retrieval-only` for the local retrieval benchmark, or `pnpm bench:cache`
-for live baseline/cache executions. Run all tests safely with `pnpm test:safe` (Docker required).
+for live baseline/cache executions. Run all tests safely with `pnpm test` (Docker required);
+`pnpm test:safe` remains an alias.
 
 | Similarity threshold | Hits / 120 | False hits | Live/action hits | Mean lookup |
 | --- | --- | --- | --- | --- |
@@ -180,9 +181,9 @@ production data while building this change.
 
 | Evidence | Result | Measurement |
 | --- | --- | --- |
-| Automated trace privacy/fail-open tests | 5 passed | `pnpm test:safe` |
-| Full disposable-database test suite | 570 passed, 19 skipped | `pnpm test:safe` |
-| Database-backed usage report and trace-cost reconciliation | Verified in suite | `pnpm test:safe` |
+| Automated trace privacy/fail-open tests | 4 passed | `pnpm test` |
+| Full disposable-database test suite | 570 passed, 19 skipped | `pnpm test` |
+| Database-backed usage report and trace-cost reconciliation | Verified in suite | `pnpm test` |
 | Live Langfuse export and production usage figures | Not measured | No Langfuse credentials or production database access used |
 
 ## Hosted voice transcript helper
@@ -196,7 +197,7 @@ check its retention and no-training settings before enabling it. Offline tests u
 responses and do not establish hosted-model quality. The adapter contract test sent all 30
 synthetic action/injection cases through mocked model triage and used the mocked refusal for each;
 this does not measure real model safety. Hosted quality, latency and critical-field error rate are
-not measured. Run `pnpm test:safe` for the adapter tests. `pnpm eval:tiering` sends a bounded set
+not measured. Run `pnpm test` for the adapter tests. `pnpm eval:tiering` sends a bounded set
 of synthetic cases to the configured hosted model and reports its confusion matrix, unsafe-wrongly-
 safe count, critical-field preservation, correction usefulness, fallback rate and latency. It
 makes no Claude calls and prints no transcript contents. It refuses to run without

@@ -38,7 +38,7 @@
   quality, confusion matrix and latency are therefore not measured. The feature stays disabled.
 - [x] Update architecture memory, privacy disclosures, `HANDOFF.md` and `.env.example` for the
   hosted-only design chosen by the user.
-- [x] Run the full safe suite after the helper and evaluation harness: `pnpm test:safe`, 570 passed,
+- [x] Run the full safe suite after the helper and evaluation harness: `pnpm test`, 570 passed,
   19 skipped; formatting, lint and typecheck pass.
 - [x] Commit Phase 2 after final review.
 

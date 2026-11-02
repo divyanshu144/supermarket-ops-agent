@@ -28,7 +28,8 @@ The user clarified “everything hosted”:
 Claude Agent SDK remains the sole SuperOps tool chooser; the optional open-weight helper uses a
 hosted OpenAI-compatible endpoint only for voice filler cleanup and is disabled by default.
 Phase 1 Langfuse tracing and read-only local usage reporting are implemented. Phase 2 hosted voice
-helper is implemented with tests and privacy disclosure. Latest full safe suite: 570 passed, 19
+helper is implemented with tests and privacy disclosure. Latest `pnpm test` disposable-database gate:
+570 passed, 19
 skipped; formatting, lint, typecheck and diff check passed. Thirty synthetic action/injection
 cases were tested against mocked triage refusals; this is adapter contract coverage, not hosted
 model quality evidence. No live Langfuse/provider/Claude call,
@@ -49,7 +50,8 @@ matrix and latency remain unmeasured. The command was verified with empty settin
 request. Phase 1 was committed separately before Phase 2 on this branch. The earlier implementation
 branch is preserved locally and still has the mixed initial commit; use this checkpointed branch
 for review. The isolated Phase 1 checkpoint itself passed format, lint, typecheck and
-`pnpm test:safe` with 562 passed and 19 skipped.
+`pnpm test:safe` with 562 passed and 19 skipped. `pnpm test` now invokes the same isolated runner;
+CI keeps its separately migrated database for the offline safety replay.
 
 Written so a cold-start session can resume. Update at every checkpoint.
 

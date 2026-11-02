@@ -9,7 +9,8 @@ must be running. The dedicated container remains available between runs; stop it
 ## Commands
 
 ```sh
-pnpm test:safe                          # all unit/integration tests, disposable DB
+pnpm test                               # all unit/integration tests, disposable DB
+pnpm test:safe                          # alias for the same isolated test gate
 pnpm bench:cache --retrieval-only       # real embeddings, reference answers, no LLM spend
 pnpm bench:cache                        # 120 baseline calls + three measured cache runs
 pnpm bench:cache --resume               # resume completed baseline rows / threshold tables
