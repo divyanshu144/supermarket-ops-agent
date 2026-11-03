@@ -1,5 +1,8 @@
 {
   "provenance": "live",
+  "spentUsd": 8.40015775,
+  "maxCostUsd": 40,
+  "complete": false,
   "method": "separate measured baseline and threshold executions; cold cache per threshold; standalone requests; database fixture setup excluded from model latency",
   "corpusSha256": "17065be8cfda9243748ab814d005a47d62242d052177072728bb5610f6e44564",
   "provider": "apple:english-word-mean-v1",
@@ -510,6 +513,4566 @@
           "resumed": false,
           "retryFresh": false,
           "toolCalls": []
+        }
+      ]
+    },
+    {
+      "id": "p-1-0",
+      "answer": "Just tell me what came in, in plain words. Like:\n\n- \"50 packets Maggi came in, cost ₹12, MRP ₹14\"\n- \"25kg sugar aaya\"\n- \"2 cases Amul milk, cost ₹26\"\n\nI'll book it in. Prices only change if you say them.\n\nIf it's something the shop has never stocked, say \"new item\" and give name, pack size, GST % and MRP — e.g. \"new item: Amul Butter 100g, GST 12%, MRP ₹62\".",
+      "latencyMs": 6086.831292000001,
+      "costUsd": 0.199217,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 522,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000582,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 188,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 31028,
+              "costUsd": 0.198635,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 188,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 31028,
+          "costUsd": 0.199217,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709084454,
+          "endedAtMs": 1793709090539
+        }
+      ]
+    },
+    {
+      "id": "p-1-1",
+      "answer": "Just tell me what came in, with cost and MRP if they changed. Like:\n\n- \"50 packets Maggi came in, cost ₹12, MRP ₹14\"\n- \"20kg sugar arrived\"\n- \"received 10 Aashirvaad atta 5kg at ₹240\"\n\nIf it's an item the shop has never stocked, say \"new item\" and give pack size, MRP and GST slab — I'll register it first, then book the stock in.",
+      "latencyMs": 6392.698917,
+      "costUsd": 0.07627474999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005780000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 143,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9843,
+              "costUsd": 0.07569675,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 143,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9843,
+          "costUsd": 0.07627474999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709090550,
+          "endedAtMs": 1793709096942
+        }
+      ]
+    },
+    {
+      "id": "p-1-2",
+      "answer": "Just tell me what came in — product, quantity, and prices if they changed. E.g.:\n\n- \"50 packets Maggi came in, cost ₹12, MRP ₹14\"\n- \"20kg sugar received\"\n- \"new item: Amul Butter 100g, GST 12%, MRP ₹62\" — for something we've never stocked\n\nI'll book it in and confirm the new stock level. Prices only change if you say them.",
+      "latencyMs": 9517.530750000002,
+      "costUsd": 0.07734200000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000589,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 185,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.076753,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 185,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.07734200000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709096948,
+          "endedAtMs": 1793709106465
+        }
+      ]
+    },
+    {
+      "id": "p-1-3",
+      "answer": "Two ways:\n\n**Delivery of something you already stock** — just say it:\n- \"50 packets Maggi came in, cost ₹12, MRP ₹14\"\n- \"20kg sugar aaya\"\n\nPrices only change if you state them.\n\n**Brand new item never stocked** — tell me the details:\n- \"new item: Amul Butter 100g, GST 12%, MRP ₹62, cost ₹55, 24 packets\"\n\nI need name, unit, GST slab and MRP at minimum.\n\n**Fixing a count** (spoilage, miscount) — \"2kg tomato spoiled, write it off\". That's an adjustment, not a delivery, and it stays on the record with the reason.",
+      "latencyMs": 6193.947082999999,
+      "costUsd": 0.07876475,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000593,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 242,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9843,
+              "costUsd": 0.07817175,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 242,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9843,
+          "costUsd": 0.07876475,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709106469,
+          "endedAtMs": 1793709112663
+        }
+      ]
+    },
+    {
+      "id": "p-1-4",
+      "answer": "Just tell me what came in. Like:\n\n- \"50 packets Maggi came in, cost ₹12, MRP ₹14\"\n- \"25kg sugar aaya\"\n\nI book it against the existing product. Prices only change if you say them.\n\nIf it's something we've never stocked, give me name, pack size, unit, GST %, cost and MRP — I'll add the product first, then book the quantity.",
+      "latencyMs": 5504.418417000001,
+      "costUsd": 0.07731824999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005840000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 184,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07673424999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 184,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07731824999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709112667,
+          "endedAtMs": 1793709118171
+        }
+      ]
+    },
+    {
+      "id": "p-1-5",
+      "answer": "Just tell me what arrived, with quantity — and prices if they changed.\n\nExamples:\n- \"50 packets Maggi came in\"\n- \"20kg sugar, cost ₹42, MRP ₹48\"\n- \"10 Amul butter 100g at ₹52 cost\"\n\nIf it's something the shop has never stocked, say \"new item\" and give pack size, cost, MRP and GST slab — I'll register it first, then book it in.",
+      "latencyMs": 5296.054250000001,
+      "costUsd": 0.0767945,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005790000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 163,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0762155,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 163,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0767945,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709118176,
+          "endedAtMs": 1793709123472
+        }
+      ]
+    },
+    {
+      "id": "p-1-6",
+      "answer": "Just tell me what came in, in plain words. Example:\n\n**\"50 packets Maggi came in, cost ₹12, MRP ₹14\"** — one line, done.\n\n- Quantity + unit is all I really need. Cost/MRP only if the prices changed — otherwise I leave the old ones alone.\n- Several items in one message is fine.\n- If the name is vague (\"atta came in\"), I'll ask which pack before booking it.\n- Brand new item never stocked before — say so and give pack size, MRP, GST slab; I'll register it first, then book the stock.\n- Spoilage or a miscount isn't a shipment — tell me and I'll record a correction with the reason.",
+      "latencyMs": 10364.936167,
+      "costUsd": 0.10186624999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000592,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 331,
+              "cacheReadInputTokens": 52221,
+              "cacheCreationInputTokens": 10699,
+              "costUsd": 0.10127425000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 331,
+          "cacheReadInputTokens": 52221,
+          "cacheCreationInputTokens": 10699,
+          "costUsd": 0.10186624999999999,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_016YGrZcnG3CYJr65jDxuFc4",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 5
+              }
+            }
+          ],
+          "startedAtMs": 1793709123479,
+          "endedAtMs": 1793709133844
+        }
+      ]
+    },
+    {
+      "id": "p-1-7",
+      "answer": "Two ways:\n\n**Delivery of something we already stock** — just say it:\n\"50 packets Maggi came in, cost ₹12, MRP ₹14\"\nPrice bits are optional — leave them out and the old prices stay.\n\n**Something new to the shop** — say \"new item\":\n\"new item: Amul Butter 100g, GST 12%, MRP ₹62, cost ₹55, 20 packets\"\n\n**Fixing a count** (spoilage, miscount) — give a reason:\n\"2kg sugar spoiled, write it off\"\n\nTell me what came in and I'll book it.",
+      "latencyMs": 5582.411458000002,
+      "costUsd": 0.07795474999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005830000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 210,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9843,
+              "costUsd": 0.07737174999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 210,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9843,
+          "costUsd": 0.07795474999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709133848,
+          "endedAtMs": 1793709139430
+        }
+      ]
+    },
+    {
+      "id": "p-1-8",
+      "answer": "Just tell me what came in, with quantity and price if it changed. Examples:\n\n- \"50 packets Maggi came in, cost ₹12, MRP ₹14\"\n- \"25 kg sugar aaya\"\n- \"10 Aashirvaad atta 5kg\"\n\nI'll book it into stock right away. If the item is new to the shop, say so and give GST slab and MRP — I'll add the product first, then take it in.",
+      "latencyMs": 6333.106041999999,
+      "costUsd": 0.07784200000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000589,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 205,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.077253,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 205,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.07784200000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709139437,
+          "endedAtMs": 1793709145770
+        }
+      ]
+    },
+    {
+      "id": "p-1-9",
+      "answer": "Just tell me what came in, like you'd say it out loud:\n\n- \"50 packets Maggi came in\" — that's enough\n- Add cost/MRP only if they changed: \"50 packets Maggi, cost ₹12, MRP ₹14\"\n- Loose goods by weight: \"25 kg sugar aaya\"\n\nSeveral items in one message is fine. If it's something the shop has never stocked, say \"new item\" and give me pack size and MRP, and I'll register it first.",
+      "latencyMs": 5947.317749999995,
+      "costUsd": 0.09984299999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005780000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 253,
+              "cacheReadInputTokens": 52215,
+              "cacheCreationInputTokens": 10690,
+              "costUsd": 0.09926499999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 253,
+          "cacheReadInputTokens": 52215,
+          "cacheCreationInputTokens": 10690,
+          "costUsd": 0.09984299999999999,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01E9PigDLmr8wpsryxDd55TY",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 3
+              }
+            }
+          ],
+          "startedAtMs": 1793709145777,
+          "endedAtMs": 1793709151724
+        }
+      ]
+    },
+    {
+      "id": "p-2-0",
+      "answer": "Say the first item and I'll start one — e.g. \"2kg sugar, 1 Maggi\". Or say \"new bill for Ramesh\" to open it against a customer.",
+      "latencyMs": 5004.866792000001,
+      "costUsd": 0.07409349999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005780000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 56,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9842,
+              "costUsd": 0.0735155,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 56,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9842,
+          "costUsd": 0.07409349999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709151729,
+          "endedAtMs": 1793709156734
+        }
+      ]
+    },
+    {
+      "id": "p-2-1",
+      "answer": "Open a bill, add items, then finalize with the payment mode.\n\nSay something like: *\"new bill for Ramesh\"* → *\"2kg sugar, 3 maggi\"* → *\"done, cash\"*.\n\nItems can be added or changed over several messages — stock only moves when you finalize.\n\nWant me to open one now?",
+      "latencyMs": 5203.379625000001,
+      "costUsd": 0.07526849999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005780000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 103,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9842,
+              "costUsd": 0.07469049999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 103,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9842,
+          "costUsd": 0.07526849999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709156740,
+          "endedAtMs": 1793709161944
+        }
+      ]
+    },
+    {
+      "id": "p-2-2",
+      "answer": "Just tell me the sale in plain words — I'll do it.\n\n1. \"Bill for Ramesh: 2kg sugar, 1 Aashirvaad 5kg, 4 Maggi\" — I open the bill and add the lines.\n2. Change anything mid-way: \"make it 6 Maggi\", \"drop the sugar\".\n3. \"Cash\" / \"UPI\" / \"on khata\" — I finalize it. Stock moves only here.\n4. \"PDF\" — I send the GST invoice.\n\nWant to start one now?",
+      "latencyMs": 6378.466832999999,
+      "costUsd": 0.07930475,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005830000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 264,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9843,
+              "costUsd": 0.07872175,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 264,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9843,
+          "costUsd": 0.07930475,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709161947,
+          "endedAtMs": 1793709168325
+        }
+      ]
+    },
+    {
+      "id": "p-2-3",
+      "answer": "Just tell me who it's for and what they're buying — \"bill for Ramesh: 2kg sugar, 1 Maggi\" — and I'll open it and add the lines.\n\nYou can also just say \"new bill\" and add items one by one as they come. Nothing moves off the shelf until you say the payment — cash, UPI, card, or khata. Before that you can change quantities or drop items freely.",
+      "latencyMs": 5744.271166999999,
+      "costUsd": 0.076722,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000594,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 160,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.076128,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 160,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.076722,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709168331,
+          "endedAtMs": 1793709174075
+        }
+      ]
+    },
+    {
+      "id": "p-2-4",
+      "answer": "Just tell me the items — I'll open the bill myself.\n\nHow it goes:\n1. You say \"bill for Ramesh\" (name optional) — I open a draft.\n2. You list items: \"2kg sugar, 5 Maggi, 1 Aashirvaad 5kg\". I add each.\n3. Edit anytime — \"make it 6 Maggi\", \"drop the sugar\".\n4. Say \"done, cash\" / \"UPI\" / \"khata\" — I finalize. Stock moves only here.\n5. Want a PDF, say so.\n\nStart whenever.",
+      "latencyMs": 7330.979082999998,
+      "costUsd": 0.07869924999999998,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005899999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 239,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07810924999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 239,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07869924999999998,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709174079,
+          "endedAtMs": 1793709181409
+        }
+      ]
+    },
+    {
+      "id": "p-2-5",
+      "answer": "Just tell me the items — I'll open the bill.\n\nExample: \"Ramesh — 2kg sugar, 1 Aashirvaad atta 5kg, 4 Maggi\"\n\nThen:\n- Add more any time: \"add 1 litre milk\"\n- Edit: \"make it 6 Maggi\" / \"drop the butter\"\n- Close it: \"cash\" / \"UPI\" / \"khata Ramesh\"\n\nStock only moves when you close the bill. Want to start one now?",
+      "latencyMs": 4961.515207999997,
+      "costUsd": 0.07717824999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000594,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 178,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07658424999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 178,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07717824999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709181414,
+          "endedAtMs": 1793709186375
+        }
+      ]
+    },
+    {
+      "id": "p-2-6",
+      "answer": "Bill first, invoice after. Steps:\n\n1. **Open a bill** — I start a draft, optionally with customer name.\n2. **Add items** — tell me each item and qty (\"2kg sugar, 1 Maggi\"). Can edit or drop lines any time; stock isn't touched yet.\n3. **Finalize** — tell me the payment mode (cash / UPI / card / khata). Only now stock moves. Guards kick in here: short stock, below cost, above MRP.\n4. **PDF invoice** — say \"invoice for that bill\" and I generate the GST PDF and send it.\n\nJust say the items and I'll do all of it in one go.",
+      "latencyMs": 6633.547250000003,
+      "costUsd": 0.07966400000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000586,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 277,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.07907800000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 277,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.07966400000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709186380,
+          "endedAtMs": 1793709193013
+        }
+      ]
+    },
+    {
+      "id": "p-2-7",
+      "answer": "Just tell me the items. Like:\n\n- \"bill: 2 kg sugar, 1 Aashirvaad 5kg, 4 Maggi\"\n\nThen I open the bill, add the lines, and read back the total with GST. You can keep adding or changing things across messages — \"add 1 butter\", \"make it 6 Maggi\", \"drop the sugar\" — stock doesn't move until you say how it's paid.\n\nFinish with \"cash\", \"UPI\", \"card\", or \"khata Ramesh\". Want the invoice PDF after, just say so.",
+      "latencyMs": 6470.862500000003,
+      "costUsd": 0.078462,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005840000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 230,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.077878,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 230,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.078462,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709193020,
+          "endedAtMs": 1793709199491
+        }
+      ]
+    },
+    {
+      "id": "p-2-8",
+      "answer": "Open a bill → add items → finalize.\n\n1. **Open** — \"new bill for Ramesh\" (name optional). Gives a draft bill.\n2. **Add items** — \"2kg sugar, 5 Maggi\". Add, change qty, or drop lines across as many messages as you like. Stock doesn't move yet.\n3. **Finalize** — \"cash\" / \"UPI\" / \"on Ramesh's khata\". Only then is stock taken and the khata entry written.\n\nRefuses at finalize if stock is short, a line is below cost (needs your confirm) or above MRP (never allowed).\n\nWant me to open one now?",
+      "latencyMs": 5754.841708000007,
+      "costUsd": 0.07829299999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005899999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 223,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.077703,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 223,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.07829299999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709199496,
+          "endedAtMs": 1793709205251
+        }
+      ]
+    },
+    {
+      "id": "p-2-9",
+      "answer": "Just tell me the items — e.g. \"2kg sugar, 1 Maggi, 500g dal\". I'll open a bill, add them, and read back the total with GST.\n\nThen say the payment mode — cash, UPI, card, or khata (with the customer's name) — and I'll finalize. Stock only moves at that point, so you can keep adding or editing lines until then.",
+      "latencyMs": 5650.729582999993,
+      "costUsd": 0.0756935,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005780000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 120,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9842,
+              "costUsd": 0.0751155,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 120,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9842,
+          "costUsd": 0.0756935,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709205257,
+          "endedAtMs": 1793709210908
+        }
+      ]
+    },
+    {
+      "id": "p-3-0",
+      "answer": "Three ways, while the bill is still a draft:\n\n- **Change a quantity** — \"make it 6 Maggi\"\n- **Drop a line** — \"remove the butter\"\n- **Add more** — just tell me the item and qty\n\nStock only moves when you finalize, so edit as much as you like before that. Say \"show the bill\" any time to see the lines and total.",
+      "latencyMs": 5253.984125000003,
+      "costUsd": 0.07621825,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005840000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 140,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07563425,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 140,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07621825,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709210911,
+          "endedAtMs": 1793709216165
+        }
+      ]
+    },
+    {
+      "id": "p-3-1",
+      "answer": "Three ways, while the bill is still a draft (stock doesn't move till you finalize):\n\n- **Change a quantity** — \"make it 6 Maggi\"\n- **Drop a line** — \"remove the butter\"\n- **Add more** — just say \"add 2kg sugar\"\n\nTell me which bill (or I'll look it up), and what to change.",
+      "latencyMs": 4271.318625000014,
+      "costUsd": 0.0761355,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005949999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 136,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0755405,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 136,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0761355,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709216171,
+          "endedAtMs": 1793709220442
+        }
+      ]
+    },
+    {
+      "id": "p-3-2",
+      "answer": "Say it in plain words while the bill's open:\n\n- **Change a quantity** — \"make it 6 Maggi\"\n- **Add more** — \"add 2kg sugar\"\n- **Drop a line** — \"remove the butter\"\n- **Check it** — \"read back the bill\"\n- **Close it** — \"cash\" / \"UPI\" / \"on Ramesh's khata\"\n\nNothing touches stock until you finalize, so edit as much as you like before that.",
+      "latencyMs": 5278.579208999989,
+      "costUsd": 0.07690475,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005830000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 168,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9843,
+              "costUsd": 0.07632175,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 168,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9843,
+          "costUsd": 0.07690475,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709220446,
+          "endedAtMs": 1793709225725
+        }
+      ]
+    },
+    {
+      "id": "p-3-3",
+      "answer": "Tell me the change in plain words while the bill is still open — I handle it:\n\n- **Change quantity** — \"make it 6 Maggi\", \"2kg sugar not 1\"\n- **Add item** — \"add 1 litre milk\"\n- **Drop item** — \"remove the butter\"\n- **Different price** — \"give the atta at ₹240\"\n\nStock doesn't move until you say finalize — \"cash\", \"UPI\", or \"on Ramesh's khata\". Till then the bill can be edited as many times as you like.\n\nWant me to open one now?",
+      "latencyMs": 6204.947542000009,
+      "costUsd": 0.0787855,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005949999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 242,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0781905,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 242,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0787855,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709225731,
+          "endedAtMs": 1793709231936
+        }
+      ]
+    },
+    {
+      "id": "p-3-4",
+      "answer": "Open bill → add items → change or drop as needed → finalize.\n\n- \"make it 6 Maggi\" — changes the quantity on the line\n- \"drop the butter\" — removes the line entirely\n- add more items any time before finalizing\n\nStock only moves at finalize, so you can edit across as many messages as you like. Once finalized, the only way back is voiding the bill (needs your confirm).",
+      "latencyMs": 4426.326582999987,
+      "costUsd": 0.076794,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 162,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.076203,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 162,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.076794,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709231940,
+          "endedAtMs": 1793709236366
+        }
+      ]
+    },
+    {
+      "id": "p-3-5",
+      "answer": "While a bill is still a draft (not finalized), you can:\n\n- **Add items** — just tell me, e.g. \"add 2 kg sugar\"\n- **Change quantity** — \"make it 6 Maggi\"\n- **Drop a line** — \"remove the butter\"\n- **Check it** — \"read back the bill\" for lines, GST and total\n\nStock doesn't move until you finalize, so edit as much as you like. Once finalized it's locked — then the only fix is voiding the bill (needs your Confirm tap) and cutting a fresh one.\n\nWant me to pull up a draft now?",
+      "latencyMs": 5412.61275,
+      "costUsd": 0.07810525,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000596,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 214,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9849,
+              "costUsd": 0.07750925,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 214,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9849,
+          "costUsd": 0.07810525,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709236370,
+          "endedAtMs": 1793709241781
+        }
+      ]
+    },
+    {
+      "id": "p-3-6",
+      "answer": "Three ways, on an open draft:\n\n- **Change a quantity** — \"make it 6 Maggi\"\n- **Drop a line** — \"remove the butter\"\n- **Add more** — just say the item and qty\n\nStock doesn't move until you finalize, so edit freely before that. Tell me the bill (or customer) and the change, and I'll do it.",
+      "latencyMs": 4121.972624999995,
+      "costUsd": 0.07613900000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000586,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 136,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.07555300000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 136,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.07613900000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709241788,
+          "endedAtMs": 1793709245910
+        }
+      ]
+    },
+    {
+      "id": "p-3-7",
+      "answer": "Just tell me in plain words while the bill is open. I'll do it.\n\n- **Change quantity** — \"make it 6 Maggi\"\n- **Add an item** — \"add 2kg sugar\"\n- **Drop an item** — \"remove the butter\"\n- **Check it** — \"read back the bill\"\n- **Close it** — \"cash\" / \"UPI\" / \"on Ramesh's khata\"\n\nStock only moves when you finalise, so you can edit as much as you like before that.\n\nWant me to open a bill now?",
+      "latencyMs": 6368.925292,
+      "costUsd": 0.07942550000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000585,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 268,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.07884050000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 268,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.07942550000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709245916,
+          "endedAtMs": 1793709252285
+        }
+      ]
+    },
+    {
+      "id": "p-3-8",
+      "answer": "Just talk to me — nothing is final until you say so.\n\n1. **Start** — \"new bill for Ramesh\"\n2. **Add** — \"2kg sugar, 5 Maggi\"\n3. **Change qty** — \"make it 6 Maggi\"\n4. **Drop a line** — \"remove the sugar\"\n5. **Check** — \"read back the bill\"\n6. **Close** — \"done, cash\" / \"UPI\" / \"on his khata\"\n\nStock only moves at step 6. Before that you can edit as much as you like. After finalizing, the only fix is voiding the bill — that needs your Confirm tap.",
+      "latencyMs": 6630.701707999979,
+      "costUsd": 0.08013775,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 296,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07954675,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 296,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.08013775,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709252290,
+          "endedAtMs": 1793709258920
+        }
+      ]
+    },
+    {
+      "id": "p-3-9",
+      "answer": "While a bill is still a draft, nothing has moved — stock only comes off at finalize. So you can just tell me the change:\n\n- **Add** — \"add 2 kg sugar\"\n- **Change qty** — \"make it 6 Maggi\"\n- **Remove** — \"drop the butter\"\n- **Check** — \"read back the bill\" and I'll show lines, GST and total\n- **Close** — \"cash\" / \"UPI\" / \"on Ramesh's khata\"\n\nOnce it's finalized it's no longer a draft — then the only fix is voiding it (needs your Confirm tap in Telegram) and cutting a fresh bill.\n\nGot a draft open you want changed?",
+      "latencyMs": 6069.600458000001,
+      "costUsd": 0.0791855,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005949999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 258,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.07859050000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 258,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0791855,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709258928,
+          "endedAtMs": 1793709264997
+        }
+      ]
+    },
+    {
+      "id": "p-4-0",
+      "answer": "Tell me which bill — I'll look it up, then voiding it sends a Confirm button to your Telegram. Stock goes back and any khata charge is reversed. Nothing gets deleted; the reversal is recorded.",
+      "latencyMs": 4272.431082999974,
+      "costUsd": 0.07455424999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005949999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 73,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07395924999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 73,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07455424999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709265002,
+          "endedAtMs": 1793709269274
+        }
+      ]
+    },
+    {
+      "id": "p-4-1",
+      "answer": "Use void_bill — tell me which bill (I can look it up with find_bills if you don't have the id).\n\nIt puts the stock back and reverses any khata charge. Nothing gets deleted; the reversal is recorded as its own entry. You'll get a Confirm button in Telegram — it only goes through after you tap it.\n\nWant me to pull up a recent bill?",
+      "latencyMs": 6267.971665999998,
+      "costUsd": 0.0767545,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000589,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 161,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0761655,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 161,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0767545,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709269278,
+          "endedAtMs": 1793709275545
+        }
+      ]
+    },
+    {
+      "id": "p-4-2",
+      "answer": "Use void on the bill — it puts stock back and reverses any khata charge. Nothing gets deleted; the reversal is recorded as its own entry.\n\nTwo things to know:\n- You'll get a Telegram Confirm button — it only goes through after you tap it.\n- If you don't have the bill id, I'll look it up first (\"Ramesh's bill from yesterday\" is enough).\n\nTell me which bill and I'll start it.",
+      "latencyMs": 5264.0199589999975,
+      "costUsd": 0.07738575,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000589,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 186,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07679675,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 186,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.07738575,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709275552,
+          "endedAtMs": 1793709280816
+        }
+      ]
+    },
+    {
+      "id": "p-4-3",
+      "answer": "Use void_bill. How it works:\n\n1. I need the bill id — if you just say \"that bill\" or \"Ramesh's bill yesterday\", I look it up in recent bills first and confirm which one.\n2. Voiding sends you a Confirm button on Telegram. Nothing happens until you tap it.\n3. On confirm: stock goes back on the shelf, and if it was on khata, that charge is reversed too.\n4. Nothing is deleted. The original bill stays, the reversal is recorded on top of it — so the GST trail and the audit trail stay intact.\n\nIf an invoice PDF was already given to the customer, it's still valid as a record; the void is the correcting entry.\n\nWhich bill do you want reversed?",
+      "latencyMs": 6553.929166999995,
+      "costUsd": 0.07960525,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000596,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 274,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9849,
+              "costUsd": 0.07900925,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 274,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9849,
+          "costUsd": 0.07960525,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709280819,
+          "endedAtMs": 1793709287373
+        }
+      ]
+    },
+    {
+      "id": "p-4-4",
+      "answer": "To void a finalized bill:\n\n1. Tell me which bill — if you don't have the id, I'll look it up (customer name, \"yesterday's bill\", etc.).\n2. I call void_bill on it.\n3. You get a Confirm button in Telegram. Nothing moves until you tap it.\n4. On confirm: stock goes back, any khata charge is reversed. Nothing is deleted — the reversal is recorded as its own entry.\n\nWant me to void one now?",
+      "latencyMs": 5465.121625,
+      "costUsd": 0.07845500000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 15,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000602,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 228,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.077853,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 228,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.07845500000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709287381,
+          "endedAtMs": 1793709292846
+        }
+      ]
+    },
+    {
+      "id": "p-4-5",
+      "answer": "Use void_bill. Flow:\n\n1. If you don't have the bill id, I find it first (find_bills — by customer or last few days).\n2. I call void_bill on it.\n3. Telegram sends you a Confirm button — it only goes through when you tap it.\n\nOn confirm: stock goes back, any khata charge is reversed. Nothing gets deleted — the reversal is recorded as its own entry, so the trail stays.\n\nWant me to reverse one now? Tell me which bill or customer.",
+      "latencyMs": 6638.319499999983,
+      "costUsd": 0.07782425,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005899999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 203,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9849,
+              "costUsd": 0.07723425,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 203,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9849,
+          "costUsd": 0.07782425,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709292854,
+          "endedAtMs": 1793709299492
+        }
+      ]
+    },
+    {
+      "id": "p-4-6",
+      "answer": "To cancel a finalized bill:\n\n1. Find the bill — tell me the customer or \"that bill from yesterday\" and I'll look it up.\n2. I run void_bill on it. Stock goes back on the shelf and any khata charge is reversed, in one go.\n3. You tap **Confirm** in Telegram — nothing happens until you do.\n\nNothing gets deleted. The reversal is recorded as its own movement, so the original bill and the void both stay in the trail. If you already sent the customer the PDF, that invoice number stays voided, not reused — cut a fresh bill for the corrected sale.\n\nWant me to pull up a bill to void?",
+      "latencyMs": 6694.787041999982,
+      "costUsd": 0.07927,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000592,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 260,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9852,
+              "costUsd": 0.078678,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 260,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9852,
+          "costUsd": 0.07927,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709299496,
+          "endedAtMs": 1793709306190
+        }
+      ]
+    },
+    {
+      "id": "p-4-7",
+      "answer": "To reverse one, I use the void bill tool — stock goes back on the shelf and any khata charge is undone. Nothing gets deleted; the reversal is recorded as its own entry, so the trail stays intact.\n\nHow it goes:\n1. You tell me which bill — \"void Ramesh's bill from yesterday\" is enough, I'll look it up if you don't have the id.\n2. I'll read it back to you so you can check it's the right one.\n3. A Confirm button comes to you on Telegram. It only reverses after you tap it.\n\nWant me to void one now? Tell me which.",
+      "latencyMs": 6204.20433399998,
+      "costUsd": 0.07865525,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000596,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 236,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9849,
+              "costUsd": 0.07805925,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 236,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9849,
+          "costUsd": 0.07865525,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709306198,
+          "endedAtMs": 1793709312402
+        }
+      ]
+    },
+    {
+      "id": "p-4-8",
+      "answer": "Void works like this:\n\n1. Find the bill — if you don't have the id, I look it up (customer or \"yesterday's bill\").\n2. I call void on it.\n3. **You get a Telegram Confirm button.** Nothing happens until you tap it — this one is never automatic.\n4. On confirm: stock goes back on the shelf, any khata charge is reversed.\n\nNothing is deleted — the reversal is recorded as its own entry, so the original bill and the void both stay in the trail.\n\nGot a bill you want voided?",
+      "latencyMs": 5342.770041999989,
+      "costUsd": 0.07764875,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 15,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000602,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 196,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07704675,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 196,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.07764875,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709312409,
+          "endedAtMs": 1793709317751
+        }
+      ]
+    },
+    {
+      "id": "p-4-9",
+      "answer": "Use void bill — tell me which bill (or \"that last one\" and I'll find it). It puts the stock back and reverses any khata charge. Nothing gets deleted; the reversal is recorded as its own entry.\n\nIt needs you to tap Confirm in Telegram before it goes through.",
+      "latencyMs": 5577.807375000004,
+      "costUsd": 0.0761295,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000589,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 136,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0755405,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 136,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0761295,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709317755,
+          "endedAtMs": 1793709323332
+        }
+      ]
+    },
+    {
+      "id": "p-5-0",
+      "answer": "Tell me which bill — \"invoice for Ramesh's last bill\", or just \"pdf of that bill\" right after you finalize one. I find the bill, make the GST PDF and it lands in this chat.\n\nWant one now?",
+      "latencyMs": 5293.46649999998,
+      "costUsd": 0.07520075,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005790000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 99,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07462175,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 99,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.07520075,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709323343,
+          "endedAtMs": 1793709328637
+        }
+      ]
+    },
+    {
+      "id": "p-5-1",
+      "answer": "Just tell me which bill. Say something like \"invoice for Ramesh's bill from yesterday\" or \"invoice for the last bill\" — I'll find it and send the PDF to this chat.",
+      "latencyMs": 4201.099709,
+      "costUsd": 0.0742695,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005790000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 62,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0736905,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 62,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0742695,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709527061,
+          "endedAtMs": 1793709531261
+        }
+      ]
+    },
+    {
+      "id": "p-5-2",
+      "answer": "Just tell me which bill — e.g. \"invoice for Ramesh's bill from yesterday\" or give the bill id. I'll find the finalized bill and send the GST PDF to this chat.\n\nOnly finalized bills can be invoiced, not drafts.",
+      "latencyMs": 5333.955042,
+      "costUsd": 0.07734175,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005949999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 184,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07674675,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 184,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.07734175,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709531265,
+          "endedAtMs": 1793709536598
+        }
+      ]
+    },
+    {
+      "id": "p-5-3",
+      "answer": "Just ask me — e.g. \"invoice for Ramesh's bill\" or \"PDF for the last bill\".\n\nWhat happens:\n1. Bill must be **finalized** (drafts can't be invoiced).\n2. If you don't give me a bill id, I look up recent bills and confirm which one.\n3. I generate the GST invoice PDF and it lands in this chat at the end of the turn.\n\nWant one now? Tell me the customer or \"last bill\".",
+      "latencyMs": 5163.789375,
+      "costUsd": 0.077713,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000585,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 199,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.077128,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 199,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.077713,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709536612,
+          "endedAtMs": 1793709541775
+        }
+      ]
+    },
+    {
+      "id": "p-5-4",
+      "answer": "Three steps:\n\n1. **Finalize the bill** — only finalized bills can be invoiced.\n2. **Find the bill id** — if you don't have it, I search recent bills (by customer or date).\n3. **Generate the PDF** — GST-correct invoice, sent to you here automatically.\n\nWant one now? Tell me the customer or \"last bill\".",
+      "latencyMs": 5037.630708000002,
+      "costUsd": 0.07782649999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000586,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 203,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9850,
+              "costUsd": 0.07724049999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 203,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9850,
+          "costUsd": 0.07782649999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709541781,
+          "endedAtMs": 1793709546818
+        }
+      ]
+    },
+    {
+      "id": "p-5-5",
+      "answer": "Just ask me for it. Say \"invoice for Ramesh's bill\" or \"PDF for that last bill\" — I'll find the bill and send the PDF here in the chat. No download link, the file comes straight to you on Telegram.\n\nWant one now?",
+      "latencyMs": 6991.890958,
+      "costUsd": 0.07476425,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.00058,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 81,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9849,
+              "costUsd": 0.07418425000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 81,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9849,
+          "costUsd": 0.07476425,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709546826,
+          "endedAtMs": 1793709553817
+        }
+      ]
+    },
+    {
+      "id": "p-5-6",
+      "answer": "Simple:\n\n1. Bill must be **finalized** — a draft has no invoice number, so it can't be a tax document.\n2. Tell me which bill. If you don't have the id, say something like \"Ramesh's bill from yesterday\" and I'll look it up and confirm which one.\n3. I generate the PDF and it lands in this chat automatically.\n\nWant one now? Tell me the customer or the bill.",
+      "latencyMs": 8125.290875000002,
+      "costUsd": 0.09990500000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 528,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000598,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 304,
+              "cacheReadInputTokens": 52224,
+              "cacheCreationInputTokens": 10492,
+              "costUsd": 0.099307,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 304,
+          "cacheReadInputTokens": 52224,
+          "cacheCreationInputTokens": 10492,
+          "costUsd": 0.09990500000000001,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01C1xpziMwN11AHYDPBUT7rP",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 12
+              }
+            }
+          ],
+          "startedAtMs": 1793709553825,
+          "endedAtMs": 1793709561950
+        }
+      ]
+    },
+    {
+      "id": "p-5-7",
+      "answer": "Just ask for it in chat. Two ways:\n\n- **Right after a bill** — \"invoice for that bill\" / \"PDF bhejo\" — I use the bill I just finalized.\n- **Older bill** — name the customer and roughly when: \"invoice for Ramesh's bill yesterday\". I look it up, confirm if more than one matches, then generate.\n\nBill has to be finalized first — drafts can't be invoiced.\n\nThe PDF lands in this chat on its own.",
+      "latencyMs": 5382.890417000002,
+      "costUsd": 0.07766300000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000585,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 197,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.07707800000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 197,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.07766300000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709561958,
+          "endedAtMs": 1793709567341
+        }
+      ]
+    },
+    {
+      "id": "p-5-8",
+      "answer": "Finalize the bill first — stock only moves then. After that:\n\n1. Tell me which bill (\"Ramesh's bill from yesterday\", or \"that last bill\") — I look it up if I don't have the id.\n2. I generate the PDF with GST breakup (CGST/SGST split, HSN per line).\n3. It lands in this chat automatically.\n\nDraft bills can't be invoiced. Want one now?",
+      "latencyMs": 6667.666417,
+      "costUsd": 0.07859525,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000586,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 234,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9849,
+              "costUsd": 0.07800925,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 234,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9849,
+          "costUsd": 0.07859525,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709567350,
+          "endedAtMs": 1793709574017
+        }
+      ]
+    },
+    {
+      "id": "p-5-9",
+      "answer": "Just ask me. Say \"invoice for Ramesh's bill\" or \"PDF for the last bill\" — I'll find the bill, generate the GST invoice and send the file right here in the chat.\n\nIf you want a specific one, tell me the customer or the day and I'll pick it out.",
+      "latencyMs": 4411.217375,
+      "costUsd": 0.07586949999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005790000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 126,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0752905,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 126,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.07586949999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709574025,
+          "endedAtMs": 1793709578436
+        }
+      ]
+    },
+    {
+      "id": "p-6-0",
+      "answer": "Just tell me: \"Ramesh paid ₹300\" — I'll record it against his khata and tell you the new balance.\n\nNotes:\n- Customer must already have an account, otherwise it's refused.\n- Paying more than outstanding needs your Confirm tap.\n- \"Put ₹500 on Ramesh's credit\" is the opposite direction — that adds to what he owes.",
+      "latencyMs": 5159.099083000001,
+      "costUsd": 0.075793,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005899999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 123,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.075203,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 123,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.075793,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709578442,
+          "endedAtMs": 1793709583601
+        }
+      ]
+    },
+    {
+      "id": "p-6-1",
+      "answer": "Just tell me the name and amount — e.g. \"Ramesh paid ₹300\" — and I'll put it against his khata. I'll confirm the new balance after.",
+      "latencyMs": 6080.008416999997,
+      "costUsd": 0.0747365,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000596,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 80,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0741405,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 80,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0747365,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709583605,
+          "endedAtMs": 1793709589685
+        }
+      ]
+    },
+    {
+      "id": "p-6-2",
+      "answer": "Just tell me the name and amount — e.g. \"Ramesh paid ₹300\" — and I'll record it against his khata.\n\n- Balance check: \"what does Ramesh owe?\"\n- New charge: \"put ₹500 on Ramesh's credit\"\n- History: \"Ramesh's khata statement\"\n\nOverpayment (more than outstanding) needs your tap on a Telegram confirm button.",
+      "latencyMs": 5455.701584000002,
+      "costUsd": 0.076918,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005899999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 168,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.07632800000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 168,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.076918,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709589694,
+          "endedAtMs": 1793709595149
+        }
+      ]
+    },
+    {
+      "id": "p-6-3",
+      "answer": "Just tell me the name and amount — e.g. \"Ramesh paid ₹300\" or \"Sita gave 500 cash\".\n\nI'll record it against their khata and tell you the new balance.\n\nA few things worth knowing:\n- Name must already exist on the khata — unknown name, I'll say so rather than open a fresh account.\n- If the amount is more than what they owe, I need your Confirm tap in Telegram before it goes through.\n- To put a *new* amount on credit instead, say \"put ₹500 on Ramesh's credit\" — or finalize a bill as khata, which moves stock and credit together.\n- \"Ramesh ka balance?\" any time for the outstanding, or just \"khata\" for everyone who owes.",
+      "latencyMs": 6810.116666000002,
+      "costUsd": 0.07949275,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000596,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 270,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07889675,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 270,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.07949275,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709595157,
+          "endedAtMs": 1793709601966
+        }
+      ]
+    },
+    {
+      "id": "p-6-4",
+      "answer": "Just tell me the name and amount — \"Ramesh paid ₹300\" — and I record it.\n\nWhat happens:\n1. I look up the customer. Unknown name → I refuse and ask you to confirm the spelling (money against a non-existent account is always a mistake).\n2. Payment goes against their balance.\n3. If they're paying more than outstanding, you get a Confirm/Cancel button in Telegram — nothing is recorded until you tap Confirm.\n4. I read back the new balance.\n\nIf the goods are being billed right now instead, don't settle separately — I finalize the bill as khata so stock and credit move together.",
+      "latencyMs": 7405.5975000000035,
+      "costUsd": 0.101789,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000597,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 327,
+              "cacheReadInputTokens": 52219,
+              "cacheCreationInputTokens": 10702,
+              "costUsd": 0.101192,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 327,
+          "cacheReadInputTokens": 52219,
+          "cacheCreationInputTokens": 10702,
+          "costUsd": 0.101789,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01QtwSZmxtkDyQoi3weTNeyb",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 3
+              }
+            }
+          ],
+          "startedAtMs": 1793709601971,
+          "endedAtMs": 1793709609376
+        }
+      ]
+    },
+    {
+      "id": "p-6-5",
+      "answer": "Just tell me the name and amount — e.g. \"Ramesh paid ₹300\" — and I'll put it against his khata. I can also show a balance or statement after.",
+      "latencyMs": 4701.334999999992,
+      "costUsd": 0.07475625,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000597,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 80,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9849,
+              "costUsd": 0.07415925,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 80,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9849,
+          "costUsd": 0.07475625,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709609386,
+          "endedAtMs": 1793709614087
+        }
+      ]
+    },
+    {
+      "id": "p-6-6",
+      "answer": "Repayment (customer paying back):\n\n1. Say it plainly — \"Ramesh paid ₹300\". I run `settle_khata`, amount in paise.\n2. Name must already exist in the book. Unknown name = refused, not opened — I'll ask you for the correct spelling.\n3. If they pay more than outstanding, it goes to you on Telegram as Confirm/Cancel. Nothing is recorded until you tap Confirm.\n4. Balance after — I re-read it with `get_khata_balance`, never from memory.\n\nNote: if goods are being billed right now on credit, don't charge khata separately — finalize the bill with payment mode khata so stock and credit move together.",
+      "latencyMs": 7581.850582999992,
+      "costUsd": 0.1017035,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 528,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000598,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 333,
+              "cacheReadInputTokens": 52221,
+              "cacheCreationInputTokens": 10664,
+              "costUsd": 0.10110549999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 333,
+          "cacheReadInputTokens": 52221,
+          "cacheCreationInputTokens": 10664,
+          "costUsd": 0.1017035,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01UChLQpmEiuEV3c33oXjAeu",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 6
+              }
+            }
+          ],
+          "startedAtMs": 1793709614095,
+          "endedAtMs": 1793709621676
+        }
+      ]
+    },
+    {
+      "id": "p-6-7",
+      "answer": "Just tell me, e.g. \"Ramesh paid ₹300\" — I'll record it against his khata.\n\n- Payment received: \"Ramesh paid 300\"\n- Put on credit: \"₹500 on Ramesh's khata\"\n- Check balance: \"how much does Ramesh owe?\"\n- Everyone owing: \"khata balances\"\n\nUnknown name on a payment gets refused, and paying more than the balance needs your confirm.",
+      "latencyMs": 5451.924207999997,
+      "costUsd": 0.07691274999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 167,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07632175,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 167,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.07691274999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709621685,
+          "endedAtMs": 1793709627136
+        }
+      ]
+    },
+    {
+      "id": "p-6-8",
+      "answer": "Just tell me the name and amount — \"Ramesh paid ₹300\" — and I record it.\n\nWhat happens:\n- Known customer, amount ≤ what's owed → recorded straight away, I tell you the new balance.\n- Amount more than outstanding → I can't record it until you tap Confirm on the Telegram button.\n- Name not in the book → refused. Payment against a name we don't have is almost always a misheard name, so I'll ask you to spell it.\n\nOne exception: if you're billing goods on credit right now, don't do it as a payment — finalize the bill as khata so stock and credit move together.",
+      "latencyMs": 6796.1727500000125,
+      "costUsd": 0.10101475,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000592,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 301,
+              "cacheReadInputTokens": 52218,
+              "cacheCreationInputTokens": 10683,
+              "costUsd": 0.10042275,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 301,
+          "cacheReadInputTokens": 52218,
+          "cacheCreationInputTokens": 10683,
+          "costUsd": 0.10101475,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01ERYd2XBidV9pFcFx7nVSLW",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 7
+              }
+            }
+          ],
+          "startedAtMs": 1793709627145,
+          "endedAtMs": 1793709633940
+        }
+      ]
+    },
+    {
+      "id": "p-6-9",
+      "answer": "Just tell me the name and amount — \"Ramesh paid ₹300\" — and I'll record it against his khata.\n\nTwo things to know:\n- The name must already exist in the book. If it's new or misspelt, I'll ask rather than open an account for a payment.\n- If the amount is more than they owe, it goes to you for Confirm/Cancel before anything is recorded.\n\nAnd if they're taking goods on credit right now, don't do it as a separate charge — tell me it's on khata while I'm cutting the bill, so stock and credit move together.",
+      "latencyMs": 6994.0350000000035,
+      "costUsd": 0.09956375,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 250,
+              "cacheReadInputTokens": 52218,
+              "cacheCreationInputTokens": 10655,
+              "costUsd": 0.09897275,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 250,
+          "cacheReadInputTokens": 52218,
+          "cacheCreationInputTokens": 10655,
+          "costUsd": 0.09956375,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_015wJUcnAxnmZAzvpPowgyZi",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 4
+              }
+            }
+          ],
+          "startedAtMs": 1793709633946,
+          "endedAtMs": 1793709640940
+        }
+      ]
+    },
+    {
+      "id": "p-7-0",
+      "answer": "Just tell me in plain words:\n\n- **Straight charge** — \"put ₹500 on Ramesh's credit\". New name opens an account automatically.\n- **Goods on credit** — build the bill as normal, then \"put it on Ramesh's khata\". Stock and credit move together that way, which is the cleaner record.\n- **Payment back** — \"Ramesh paid ₹300\".\n- **Check** — \"what does Ramesh owe?\" or \"who owes me?\"",
+      "latencyMs": 6997.302249999993,
+      "costUsd": 0.07929299999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005899999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 263,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9844,
+              "costUsd": 0.078703,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 263,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9844,
+          "costUsd": 0.07929299999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709640949,
+          "endedAtMs": 1793709647946
+        }
+      ]
+    },
+    {
+      "id": "p-7-1",
+      "answer": "Build the bill as usual, then settle it to khata instead of cash:\n\n1. \"Start a bill for Ramesh\" — I open a draft\n2. Call out items — \"2 kg sugar, 1 Aashirvaad 5kg\"\n3. \"Put it on Ramesh's khata\" — I finalize with payment mode khata\n\nStock moves and the credit entry is written together, so it can't half-happen. If you just want to add an amount without items, say \"put ₹500 on Ramesh's credit\".\n\nWant to start one now?",
+      "latencyMs": 6403.550916000007,
+      "costUsd": 0.07759325,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005840000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 195,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07700925,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 195,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07759325,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709647951,
+          "endedAtMs": 1793709654354
+        }
+      ]
+    },
+    {
+      "id": "p-7-2",
+      "answer": "Just tell me in plain words, e.g.:\n\n- **\"₹500 on Ramesh's credit\"** — puts the amount on his khata. New name = account opens automatically.\n- **\"Ramesh paid ₹300\"** — records payment against his balance.\n- **\"Ramesh's balance?\"** — what he owes.\n\nIf it's goods, better to cut the bill and say **\"on Ramesh's khata\"** at payment — stock and credit move together.",
+      "latencyMs": 5790.104291999989,
+      "costUsd": 0.07829325,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005840000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 223,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07770925,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 223,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07829325,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709654364,
+          "endedAtMs": 1793709660153
+        }
+      ]
+    },
+    {
+      "id": "p-7-3",
+      "answer": "Just say it in plain words:\n\n- **Put money on credit** — \"put ₹500 on Ramesh's khata\". New name opens an account automatically.\n- **Bill goods to credit** — build the bill as usual, then \"put it on Ramesh's khata\". Stock and credit move together that way; better than charging the amount separately.\n- **Payment received** — \"Ramesh paid ₹300\".\n- **Check** — \"what does Ramesh owe?\" or \"who all owes money?\"",
+      "latencyMs": 5535.3888330000045,
+      "costUsd": 0.07789775,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 15,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000601,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 206,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07729675,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 206,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.07789775,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709660160,
+          "endedAtMs": 1793709665695
+        }
+      ]
+    },
+    {
+      "id": "p-7-4",
+      "answer": "Two ways, depending on whether goods are being billed right now:\n\n**Goods being sold now** — don't charge the khata separately. Cut the bill, then finalize with payment mode `khata` and the customer name. Stock and credit move together.\n\n**Plain credit entry** (no bill — e.g. \"put ₹500 on Ramesh's credit\") — just tell me the name and amount. If the name is new, the account opens automatically.\n\nPayment coming back: \"Ramesh paid ₹300\". Unknown name there gets refused — usually a misheard spelling, so I'll check with you.",
+      "latencyMs": 7790.43633300002,
+      "costUsd": 0.10266275000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 15,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000602,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 352,
+              "cacheReadInputTokens": 52219,
+              "cacheCreationInputTokens": 10741,
+              "costUsd": 0.10206075,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 352,
+          "cacheReadInputTokens": 52219,
+          "cacheCreationInputTokens": 10741,
+          "costUsd": 0.10266275000000001,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01MwQCP3V8C8ijXHxJTisAJS",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 10
+              }
+            }
+          ],
+          "startedAtMs": 1793709665701,
+          "endedAtMs": 1793709673491
+        }
+      ]
+    },
+    {
+      "id": "p-7-5",
+      "answer": "Two ways:\n\n**Goods on credit (normal):** build the bill as usual, then settle it to khata.\n- \"bill for Ramesh\" → \"2 kg sugar, 1 Maggi\" → \"khata\"\n- Stock moves and the credit entry is written together, in one go.\n\n**Just an amount on credit (no items):** \"put ₹500 on Ramesh's khata\"\n\n**Payback:** \"Ramesh paid ₹300\"\n**Check:** \"Ramesh ka khata?\" or \"who owes me?\"\n\nNew name? The account opens by itself.",
+      "latencyMs": 6163.359916999994,
+      "costUsd": 0.07876300000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000585,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 241,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.07817800000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 241,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.07876300000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709673497,
+          "endedAtMs": 1793709679660
+        }
+      ]
+    },
+    {
+      "id": "p-7-6",
+      "answer": "Two ways, depending on whether goods are going out right now:\n\n**Goods being billed now** — don't charge khata separately. Open the bill, add items, then finalize with payment mode `khata` and the customer name. Stock and credit move in one transaction, so they can't disagree.\n\n**Just putting money on the book** (no bill) — `charge_khata` with the name and amount. Unknown name opens the account automatically; that's normal kirana practice.\n\nNotes:\n- Amounts go in paise (₹500 = 50000).\n- Payments back are the reverse: `settle_khata`. That one *refuses* an unknown name — a payment against a customer who doesn't exist is almost always a misheard name.\n- Overpayment (more than outstanding) goes to a Confirm/Cancel prompt on Telegram. Not recorded until you tap Confirm.\n- Balance questions always get re-read live, never quoted from earlier in the chat.\n\nWant me to put a charge on someone now?",
+      "latencyMs": 8991.297082999983,
+      "costUsd": 0.1039355,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000592,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 421,
+              "cacheReadInputTokens": 52222,
+              "cacheCreationInputTokens": 10670,
+              "costUsd": 0.1033435,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 421,
+          "cacheReadInputTokens": 52222,
+          "cacheCreationInputTokens": 10670,
+          "costUsd": 0.1039355,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01UguCz8kc6JwJjgYq2tUkDf",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 6
+              }
+            }
+          ],
+          "startedAtMs": 1793709679671,
+          "endedAtMs": 1793709688661
+        }
+      ]
+    },
+    {
+      "id": "p-7-7",
+      "answer": "Just tell me in plain words, e.g.:\n\n- **\"₹500 on Ramesh's khata\"** — puts ₹500 on his credit\n- **\"Ramesh paid ₹300\"** — records a payment against it\n- **\"Ramesh ka balance?\"** — shows what he owes\n- **\"who all owe money?\"** — lists every open account\n\nIf the goods are being billed, better to cut the bill and say **\"on Ramesh's khata\"** at the end — then stock and credit move together.\n\nNew name? Account opens by itself.",
+      "latencyMs": 5306.723457999993,
+      "costUsd": 0.07761275,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 195,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07702175,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 195,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.07761275,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709688668,
+          "endedAtMs": 1793709693974
+        }
+      ]
+    },
+    {
+      "id": "p-7-8",
+      "answer": "Two ways, depending on whether goods are leaving the shelf right now:\n\n**Goods being billed now** — don't charge separately. Finalize the bill with payment mode `khata` and the customer's name. Stock and credit move in one transaction.\n\n**Plain credit entry** (money owed, no bill) — \"put ₹500 on Ramesh's credit\". Amount goes in as paise. If the name is new, the account opens automatically.\n\nPayments back are the opposite: \"Ramesh paid ₹300\" settles against the balance. Unknown name there gets refused — that's almost always a misheard name, so I'll ask you. If someone pays more than they owe, it waits for you to tap Confirm.\n\nWant me to record one now?",
+      "latencyMs": 8770.908416999999,
+      "costUsd": 0.10177724999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000592,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 334,
+              "cacheReadInputTokens": 52218,
+              "cacheCreationInputTokens": 10673,
+              "costUsd": 0.10118525,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 334,
+          "cacheReadInputTokens": 52218,
+          "cacheCreationInputTokens": 10673,
+          "costUsd": 0.10177724999999999,
+          "numTurns": 3,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_011sbp96LQ2dqoaVLag1341Z",
+              "name": "Skill",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 6
+              }
+            }
+          ],
+          "startedAtMs": 1793709693981,
+          "endedAtMs": 1793709702751
+        }
+      ]
+    },
+    {
+      "id": "p-7-9",
+      "answer": "Cut the bill as usual, then finalise it with payment mode **khata** and the customer's name — stock and the credit entry move together in one go.\n\nSo: \"open bill for Ramesh\" → add items → \"put it on Ramesh's khata\".\n\nIf it's just money owed with no goods, say \"put ₹500 on Ramesh's credit\" instead.",
+      "latencyMs": 5380.580667000002,
+      "costUsd": 0.07741825,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005840000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 188,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07683424999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 188,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07741825,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709702759,
+          "endedAtMs": 1793709708139
+        }
+      ]
+    },
+    {
+      "id": "n-0",
+      "answer": "You can't — every product needs an HSN code and a GST slab; the catalogue won't take one without them.\n\nIf it's a loose staple (rice, dal, loose atta, sugar), that's GST 0% — still needs an HSN code, just a zero-rated one. Packaged staples are 5%, FMCG 12–18%.\n\nTell me the item, pack size, cost and MRP, and I'll set the slab and HSN for it.",
+      "latencyMs": 6057.2501250000205,
+      "costUsd": 0.0787385,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 528,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000598,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 240,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0781405,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 240,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0787385,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709708145,
+          "endedAtMs": 1793709714202
+        }
+      ]
+    },
+    {
+      "id": "n-1",
+      "answer": "Just give the quantity, no prices — `receive_stock` only updates cost/MRP if you state them.\n\nSo say \"20 packets Maggi came in\" and the price stays as is. Say \"20 packets Maggi came in, cost ₹12\" and it updates the cost.",
+      "latencyMs": 4330.277124999993,
+      "costUsd": 0.0757815,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 122,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.07519050000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 122,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.0757815,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709714211,
+          "endedAtMs": 1793709718541
+        }
+      ]
+    },
+    {
+      "id": "n-2",
+      "answer": "No return-bill tool exists. Two ways depending on the case:\n\n- **Whole bill coming back** — `void_bill`: stock goes back, any khata charge reverses, nothing is deleted. Needs your Confirm tap in Telegram. Tell me which bill and I'll pull it up.\n- **Part of a bill / loose return** — stock adjustment with a reason (\"returned by customer\"), and if it was on khata, a settle entry for the refund amount. Cash back is on you to hand over.\n\nWhich one is it?",
+      "latencyMs": 5987.408374999999,
+      "costUsd": 0.07857524999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 234,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07798424999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 234,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07857524999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709718548,
+          "endedAtMs": 1793709724535
+        }
+      ]
+    },
+    {
+      "id": "n-3",
+      "answer": "You can't. Once a bill is finalized it's locked — stock has already moved.\n\nTo fix one: void it, then cut a fresh bill. Voiding puts the stock back and reverses any khata charge, and nothing gets deleted — the reversal is recorded. It needs you to tap Confirm in Telegram.\n\nTell me which bill and I'll pull it up.",
+      "latencyMs": 4749.776792000019,
+      "costUsd": 0.07725549999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 525,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005899999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 181,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9846,
+              "costUsd": 0.0766655,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 181,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9846,
+          "costUsd": 0.07725549999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709724545,
+          "endedAtMs": 1793709729294
+        }
+      ]
+    },
+    {
+      "id": "n-4",
+      "answer": "There's no cancel button for a draft — just leave it. A draft holds no stock (stock only moves on finalize), and drafts older than a day drop out of `find_bills` as abandoned.\n\nIf you want it emptied now, tell me which bill and I'll drop the lines off it.\n\nFinalized bills are different — those get voided (stock goes back, khata reversed), and that needs your Confirm tap in Telegram.",
+      "latencyMs": 5020.1625420000055,
+      "costUsd": 0.07803075000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 524,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005840000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 212,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.07744675000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 212,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.07803075000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709729305,
+          "endedAtMs": 1793709734324
+        }
+      ]
+    },
+    {
+      "id": "n-5",
+      "answer": "No customer export tool — I can't dump a customer list to a file.\n\nWhat I can do:\n- **Khata balances** — every account with money outstanding (`get_khata_balance`, no name)\n- **Statement for one customer** — their recent credit history\n- **Analysis deck** — PPTX on sales/stock, but it's not a customer list\n\nWant the full outstanding-balances list?",
+      "latencyMs": 5768.921584000025,
+      "costUsd": 0.0779935,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005780000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 212,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9842,
+              "costUsd": 0.0774155,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 212,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9842,
+          "costUsd": 0.0779935,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709734335,
+          "endedAtMs": 1793709740103
+        }
+      ]
+    },
+    {
+      "id": "n-6",
+      "answer": "Tell me the customer and amount — I'll run it through settle_khata. If it's more than they owe, the tool won't just push it through: it sends you a Telegram confirmation, and only after you tap Confirm does the overpayment get recorded.\n\nSo: \"Ramesh paid ₹800\" → I try it → if his balance is ₹500 you get a confirm button → tap it and it goes in as credit on his account.",
+      "latencyMs": 6146.678959000012,
+      "costUsd": 0.077608,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 530,
+              "outputTokens": 15,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000605,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 193,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9852,
+              "costUsd": 0.077003,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 193,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9852,
+          "costUsd": 0.077608,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709740108,
+          "endedAtMs": 1793709746255
+        }
+      ]
+    },
+    {
+      "id": "n-7",
+      "answer": "Three steps:\n\n1. **Open a bill** with the customer's name, add the items — use the lower price on the line if it's not the normal rate.\n2. **Finalize** with payment mode *khata* and the customer name. Stock moves and the credit entry is written together.\n3. Because a line is below cost, it'll **refuse first** and send you a Confirm button on Telegram. Tap Confirm, then I re-run the finalize with the below-cost override.\n\nJust tell me the customer, items and prices and I'll start it.",
+      "latencyMs": 7478.077916999988,
+      "costUsd": 0.08108775,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 334,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9847,
+              "costUsd": 0.08049675,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 334,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9847,
+          "costUsd": 0.08108775,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709746263,
+          "endedAtMs": 1793709753741
+        }
+      ]
+    },
+    {
+      "id": "n-8",
+      "answer": "**Add a product** — just tell me the details: name, pack size, unit, GST slab, cost and MRP, and opening stock if any. E.g. \"new item: Amul Butter 100g, GST 12%, cost ₹52, MRP ₹62, 20 packets in\".\n\n**Delete a bill** — can't be done. Nothing gets deleted here, the trail stays. What I can do is *void* it: stock goes back on the shelf and any khata charge is reversed, recorded as a reversal. Say \"void that bill\" (or name the customer/day and I'll find it) — you'll get a Confirm button on Telegram before anything moves.",
+      "latencyMs": 7508.798832999979,
+      "costUsd": 0.079601,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 528,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000598,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 274,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.079003,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 274,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.079601,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709753749,
+          "endedAtMs": 1793709761257
+        }
+      ]
+    },
+    {
+      "id": "n-9",
+      "answer": "Just tell me in one message — item, how much came in, and the new MRP. E.g.:\n\n\"20 packets Maggi came in, MRP ₹13\"\n\nI'll book the stock in and update the MRP at the same time. Add cost too if it changed (\"cost ₹11\").\n\nTwo things to know:\n- Prices only change when you say them — if you don't mention MRP, the old one stays.\n- Lowering MRP below cost price will make future bills refuse unless you confirm a below-cost sale.",
+      "latencyMs": 6726.359750000003,
+      "costUsd": 0.07906125000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 15,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000602,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 252,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9849,
+              "costUsd": 0.07845925000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 252,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9849,
+          "costUsd": 0.07906125000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709761262,
+          "endedAtMs": 1793709767988
+        }
+      ]
+    },
+    {
+      "id": "n-10",
+      "answer": "Open a draft bill — stock doesn't move until you finalize it.\n\n- `open bill` → gives you a bill id\n- add/edit/remove items freely across messages, no stock touched\n- only when you say payment mode (cash/UPI/card/khata) does the stock come off\n\nSo a draft bill left unfinalized never reduces stock. Want me to open one now?",
+      "latencyMs": 4782.948124999995,
+      "costUsd": 0.076944,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 168,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.076353,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 168,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.076944,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709767993,
+          "endedAtMs": 1793709772775
+        }
+      ]
+    },
+    {
+      "id": "n-11",
+      "answer": "You can't. Each Telegram chat is its own store — I only see this shop's bills and stock. Nothing from another store is reachable from here.",
+      "latencyMs": 3485.898499999981,
+      "costUsd": 0.07390000000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000597,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 46,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.07330300000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 46,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.07390000000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709772783,
+          "endedAtMs": 1793709776268
+        }
+      ]
+    },
+    {
+      "id": "n-12",
+      "answer": "No tool does that directly — `void_bill` always puts the stock back. Two-step is the honest way:\n\n1. Void the bill — reverses the sale, khata charge, and returns stock. Needs your Confirm tap in Telegram.\n2. Adjust stock down by the same quantities with a reason (damaged, taken by customer, written off — whatever actually happened).\n\nBoth get recorded as movements, so the trail shows exactly what you did and why.\n\nTell me the bill — customer or roughly when — and what the reason should be, and I'll find it and start.",
+      "latencyMs": 7667.625,
+      "costUsd": 0.07967375,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 15,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000602,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 276,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9851,
+              "costUsd": 0.07907175,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 276,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9851,
+          "costUsd": 0.07967375,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709776277,
+          "endedAtMs": 1793709783944
+        }
+      ]
+    },
+    {
+      "id": "n-13",
+      "answer": "I can't — invoices come out as PDF only. There's no spreadsheet export.\n\nWhat I can do:\n- **PDF invoice** for any finalized bill\n- **PPTX analysis deck** with charts\n\nIf you need numbers in a sheet, tell me what you're after (a day's sales, a date range) and I'll read it out so you can key it in.",
+      "latencyMs": 3823.012333999999,
+      "costUsd": 0.07558825,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 529,
+              "outputTokens": 15,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0006039999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 112,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9853,
+              "costUsd": 0.07498425,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 112,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9853,
+          "costUsd": 0.07558825,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709783950,
+          "endedAtMs": 1793709787773
+        }
+      ]
+    },
+    {
+      "id": "n-14",
+      "answer": "Just pay within the balance — a normal settle needs no confirmation.\n\n`settle_khata` only sends a Telegram confirm when the amount is **more** than what the customer owes. So:\n\n- Check the balance first, then record that amount or less — goes through straight away.\n- Overpaying (advance deposit) always needs you to tap Confirm. No way around that, and I can't mark it done until you do.\n\nTell me the name and amount and I'll check the balance and put it through.",
+      "latencyMs": 7022.53008300002,
+      "costUsd": 0.07942475000000002,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 528,
+              "outputTokens": 15,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000603,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 266,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9851,
+              "costUsd": 0.07882175000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 266,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9851,
+          "costUsd": 0.07942475000000002,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709787779,
+          "endedAtMs": 1793709794801
+        }
+      ]
+    },
+    {
+      "id": "n-15",
+      "answer": "Build the bill, then close it on khata:\n\n1. \"Bill for Ramesh\" — opens a draft\n2. Add items as normal\n3. For the discount, give me the lower price per unit — e.g. \"sugar 2kg at ₹42\" — I'll set that line's rate. There's no separate discount field, so a discount has to be a changed rate on the line(s).\n4. \"Put it on Ramesh's khata\" — stock moves and the credit entry is written together.\n\nTwo limits: below cost needs your Confirm tap in Telegram, and above MRP is refused outright.",
+      "latencyMs": 7454.6486249999725,
+      "costUsd": 0.079345,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000592,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 264,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9848,
+              "costUsd": 0.078753,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 264,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9848,
+          "costUsd": 0.079345,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709794811,
+          "endedAtMs": 1793709802265
+        }
+      ]
+    },
+    {
+      "id": "n-16",
+      "answer": "To register a new product, just tell me the details in one line, e.g.:\n\n\"new item: Amul Butter 100g, GST 12%, MRP ₹62, cost ₹55, 20 packets\"\n\nWhat I need:\n- **Name** (with brand/pack size)\n- **Unit** — kg/g/litre/ml/packet/dozen/piece\n- **GST slab** — 0% loose staples, 5% packaged staples, 12–18% FMCG\n- **MRP** and **cost price**\n- Optional: opening stock, reorder level, HSN code (I'll use the standard one for the slab if you don't give it)\n\n(And no — I don't drop my instructions on request. Still happy to add the product.)",
+      "latencyMs": 6184.703665999987,
+      "costUsd": 0.07992975000000001,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 528,
+              "outputTokens": 11,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005830000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 287,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9851,
+              "costUsd": 0.07934675000000001,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 287,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9851,
+          "costUsd": 0.07992975000000001,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709802274,
+          "endedAtMs": 1793709808459
+        }
+      ]
+    },
+    {
+      "id": "n-17",
+      "answer": "You can't bill at yesterday's prices automatically — a bill always picks up today's catalogue price.\n\nTwo options:\n- Open a bill normally and give me the old price per item; I'll set it as a price override on that line.\n- Or tell me to change the product's price back in the catalogue, then bill as usual.\n\nWhich one? And which items/prices?",
+      "latencyMs": 5751.708249999967,
+      "costUsd": 0.07724375,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000597,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 179,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9851,
+              "costUsd": 0.07664675,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 179,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9851,
+          "costUsd": 0.07724375,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709808466,
+          "endedAtMs": 1793709814218
+        }
+      ]
+    },
+    {
+      "id": "n-18",
+      "answer": "I can do the PDF — not the email.\n\nTo get the invoice: tell me which bill (or I'll pull up recent ones), and I generate the PDF. It arrives here in the chat automatically.\n\nThere's no email tool, so you'd forward it from Telegram yourself.\n\nWant me to list recent bills?",
+      "latencyMs": 4845.389708000002,
+      "costUsd": 0.0752125,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 527,
+              "outputTokens": 14,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000597,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 98,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9850,
+              "costUsd": 0.0746155,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 98,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9850,
+          "costUsd": 0.0752125,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709814226,
+          "endedAtMs": 1793709819071
+        }
+      ]
+    },
+    {
+      "id": "n-19",
+      "answer": "No tool here changes GST on an existing product — I can set a GST slab only when adding a new product (`add_product`), not edit one that's already in the catalogue.\n\nOptions:\n- Tell me the correct slab and I can register the rice as a new product with it, then you stop using the old entry (stock would need moving over by adjustment).\n- Or get the slab fixed directly in the catalogue/DB outside the chat.\n\nWhich rice is it? I can look up what it's set at now.",
+      "latencyMs": 6520.220291999984,
+      "costUsd": 0.07870024999999999,
+      "cacheable": true,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 526,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005909999999999999,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 2,
+              "outputTokens": 239,
+              "cacheReadInputTokens": 21186,
+              "cacheCreationInputTokens": 9845,
+              "costUsd": 0.07810924999999999,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 2,
+          "outputTokens": 239,
+          "cacheReadInputTokens": 21186,
+          "cacheCreationInputTokens": 9845,
+          "costUsd": 0.07870024999999999,
+          "numTurns": 1,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [],
+          "startedAtMs": 1793709819078,
+          "endedAtMs": 1793709825598
+        }
+      ]
+    },
+    {
+      "id": "l-0",
+      "answer": "No sales today yet — 0 bills, ₹0.",
+      "latencyMs": 4114.949082999956,
+      "costUsd": 0.09080725,
+      "cacheable": false,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 522,
+              "outputTokens": 13,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.000587,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 54,
+              "cacheReadInputTokens": 52213,
+              "cacheCreationInputTokens": 10039,
+              "costUsd": 0.09022025,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 54,
+          "cacheReadInputTokens": 52213,
+          "cacheCreationInputTokens": 10039,
+          "costUsd": 0.09080725,
+          "numTurns": 2,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_01HTC4VhzxUSLdrWNvYt1P38",
+              "name": "mcp__store__daily_summary",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 36
+              }
+            }
+          ],
+          "startedAtMs": 1793709825609,
+          "endedAtMs": 1793709829724
+        }
+      ]
+    },
+    {
+      "id": "l-1",
+      "answer": "Test Rice — 100 packets in stock. ₹100 each, GST 5%.",
+      "latencyMs": 5623.599334000028,
+      "costUsd": 0.09211675,
+      "cacheable": false,
+      "attempts": [
+        {
+          "ordinal": 1,
+          "modelIds": [
+            "claude-opus-5"
+          ],
+          "modelUsage": {
+            "claude-haiku-4-5-20251001": {
+              "inputTokens": 523,
+              "outputTokens": 12,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0,
+              "costUsd": 0.0005830000000000001,
+              "canonicalModel": "claude-haiku-4-5",
+              "provider": "firstParty"
+            },
+            "claude-opus-5": {
+              "inputTokens": 4,
+              "outputTokens": 85,
+              "cacheReadInputTokens": 52215,
+              "cacheCreationInputTokens": 10125,
+              "costUsd": 0.09153375,
+              "canonicalModel": "claude-opus-5",
+              "provider": "firstParty"
+            }
+          },
+          "resultSubtype": "success",
+          "outcome": "ok",
+          "inputTokens": 4,
+          "outputTokens": 85,
+          "cacheReadInputTokens": 52215,
+          "cacheCreationInputTokens": 10125,
+          "costUsd": 0.09211675,
+          "numTurns": 2,
+          "resumed": false,
+          "retryFresh": false,
+          "toolCalls": [
+            {
+              "toolUseId": "toolu_0199e52pdrQCJNFynA4Eu6aQ",
+              "name": "mcp__store__get_stock",
+              "source": "builtin",
+              "resultState": "returned",
+              "isError": false,
+              "sdkExecution": {
+                "state": "returned",
+                "durationMs": 29
+              }
+            }
+          ],
+          "startedAtMs": 1793709829733,
+          "endedAtMs": 1793709835357
         }
       ]
     }

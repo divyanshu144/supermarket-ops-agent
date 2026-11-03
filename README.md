@@ -136,16 +136,27 @@ Run `pnpm bench:cache --retrieval-only` for the local retrieval benchmark, or `p
 for live baseline/cache executions. Run all tests safely with `pnpm test` (Docker required);
 `pnpm test:safe` remains an alias.
 
-| Similarity threshold | Hits / 120 | False hits | Live/action hits | Mean lookup |
+| Similarity threshold | Hit rate | False hits | Live/action hits | Mean lookup |
 | --- | --- | --- | --- | --- |
 | 0.85 | 43.3% | 0 / 52 | 0 / 20 | 33.4 ms |
 | 0.90 | 33.3% | 0 / 40 | 0 / 20 | 29.8 ms |
 | 0.95 | 16.7% | 0 / 20 | 0 / 20 | 29.9 ms |
 
 Measured with real local embeddings and reference answers, not live Telegram traffic. The corpus
-has 80 paraphrases, 20 hard negatives and 20 live/action questions. **Full LLM latency and cost
-savings remain pending:** Anthropic credits ran out after ten uncached measurements. No overall
-cost-saving claim is made. See [method, configuration and raw evidence](evals/engineering/README.md).
+has 80 paraphrases, 20 hard negatives and 20 live/action questions.
+
+Live benchmark status as of **2026-11-03**:
+
+| Measurement | Status |
+| --- | --- |
+| Uncached baseline | 102/120 successful questions; $8.40015775 SDK-reported cost |
+| Interrupted question 103 | $0.09413175 before insufficient credit; excluded from successful results |
+| Live cache runs at 0.85 / 0.90 / 0.95 | Pending; no completed runs |
+| End-to-end latency and cost savings | Not yet measured |
+
+Progress is checkpointed. The next resume reserves the failed request's cost within the original
+$40 benchmark allowance. No overall cost-saving claim is made. See
+[method, resumption command and raw evidence](evals/engineering/README.md).
 
 ## Prompt injection testing
 
@@ -154,7 +165,7 @@ text and stored product/customer/ledger fields. Labels select output names, not 
 reproducing the baseline requires its recorded commit. Defences include data delimiters, strict
 arguments, catalogue GST validation, capped discounts, owner-confirmed mutations and leak checks.
 
-| Category | Baseline success | Hardened success |
+| Category | Baseline attack successes | Final-source attack successes |
 | --- | --- | --- |
 | Override | 0 / 10 | 0 / 10 |
 | Tool abuse | 0 / 10 | 0 / 10 |
@@ -164,8 +175,9 @@ arguments, catalogue GST validation, capped discounts, owner-confirmed mutations
 
 Both complete runs used the same corpus and had no inconclusive cases. The existing agent already
 blocked these attacks, so this is added enforcement and coverage, not a measured reduction in
-attack success. The hardened result covers `22025cf`; a later pasted-document wrapper's final
-rerun hit insufficient credit after three inconclusive attempts. Final-source evaluation is pending.
+attack success. The final-source rerun at `6cfda18` completed on 2026-11-03 with the same
+0/40 successful attacks and no inconclusive cases ($2.7098315 SDK-reported cost), including
+the pasted-document wrapper added after `22025cf`.
 [Evidence, limitations and resumption commands](evals/engineering/README.md) are documented.
 
 ## Langfuse tracing and usage report

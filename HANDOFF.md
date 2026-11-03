@@ -1,3 +1,78 @@
+# Latest cache retry — 2026-11-03, second top-up
+
+`pnpm bench:cache --resume` completed questions 52–102, leaving 102/120
+successful baseline rows and no completed threshold runs. Cumulative successful
+baseline cost: $8.40015775. Question 103 failed after $0.09413175 and two
+`find_bills` calls. The bounded provider check again confirmed insufficient
+credit. Failure evidence is archived in
+`evals/engineering/results/cache-failure-after-102.json` so a later retry cannot
+overwrite it. Additional cost in this retry: $4.2686255 including the failed call.
+
+The runner's resume calculation omits failed-call spend. To retain the original
+$40 cache benchmark allowance, next resume with
+`EVAL_MAX_COST_USD=39.90586825 pnpm bench:cache --resume` (subtract this archived
+failed call from the runner's cap). Do not raise the total allowance implicitly.
+Further failures or incomplete threshold runs must also be accounted for before
+another resume. No cost/latency savings can yet be claimed. Previous final-source
+security evaluation is complete and must not be repeated unnecessarily.
+
+The user was asked for further credit, with a rough $25–35 remaining-work estimate
+based on the observed ~$0.082/successful baseline question. This is an estimate,
+not a billing guarantee. Cost/session/e2e probes were not retried during this pass.
+Langfuse and hosted-helper credential presence was checked (names/booleans only):
+all six required integration settings remain absent. No application code changed.
+
+---
+
+# Live measurement checkpoint — 2026-11-03 after credit top-up
+
+Verification after publishing the evidence: formatting, lint and typecheck passed;
+`pnpm test:safe` passed (570 tests, 19 skipped). No application source was changed.
+
+User authorized finishing cache/security and the other credit-dependent checks.
+`pnpm eval:injection after` completed at `6cfda18`: 40/40 blocked, 0 successful
+attacks, 0 inconclusive, $2.7098315 reported cost. Corpus hash matches baseline;
+all outcomes are `ok`. This is final-source coverage, not an improvement over the
+already-zero baseline. Evidence: `evals/engineering/results/injection-after.json`.
+
+`pnpm bench:cache --resume` advanced from 10 to 51/120 successful baseline rows
+($4.225664 accumulated, including earlier rows). Question 52 failed with zero
+usage. `node --import tsx src/evals/provider-check.ts` confirmed insufficient
+credit again. No threshold run completed; no overall savings can be reported.
+
+Protected cost/session/e2e/filesystem-security probes also encountered exhausted
+credit. All are inconclusive. The old cost probe prints Q1/Q3 interpretations and
+the filesystem probe prints PASS despite provider errors; DO NOT accept those
+labels. Sanitized capture and assessment:
+`evals/engineering/results/live-prerequisites-2026-11-03.json`. Failed cost turn
+reported $0.000587. The temporary protected launcher is ignored under
+`artifacts/engineering/run-live-probes.mts`; each run used an owned disposable DB
+and completed cleanup. No production changes, commits or pushes.
+
+Next: add further Anthropic credit, resume cache within its existing $40 total
+cap, and rerun prerequisite probes with provider-error outcomes rejected. The
+legacy e2e harness also lacks owner-confirmation handling and needs review before
+its mutation assertions can validate the current flow. Hosted helper/Langfuse
+credentials are separate from Anthropic credit. The user was asked asynchronously
+for additional credit after this second exhaustion.
+
+---
+
+# Measurement retry — 2026-11-03
+
+The user requested completion of cache and security measurements. Ran
+`pnpm bench:cache --resume` on `6cfda18` using the disposable evaluation database.
+The first resumed question failed with zero tokens and SDK-reported $0 cost;
+`evals/engineering/results/cache-failures.json` records this new attempt. The ten
+successful baseline rows remain intact; no threshold measurement completed.
+A separate one-token diagnostic request to Anthropic returned HTTP 400
+`invalid_request_error`: the configured account's credit balance is too low.
+No key was printed. The full security rerun was not started because it uses the
+same blocked provider. Existing completed and incomplete security evidence is preserved.
+Next: add credits to the account associated with the configured API key, then run
+`pnpm bench:cache --resume` and `pnpm eval:injection after`. No savings or new
+security pass rate can be claimed. No production configuration/data changed.
+
 # Engineering additions checkpoint — 2026-10-31
 
 Branch: `feat/semantic-cache-injection-evals`. User approved implementation and small commits.

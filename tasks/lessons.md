@@ -397,3 +397,14 @@ Fresh final review caught an intentionally over-limit trace being reported as a 
 because the grader treated its expected violation as success. Keep safety outcome reports green only
 for traces with no violations. Test violation detection by mutating an otherwise safe fixture in a
 unit test, and state clearly that the test-only tool-call bound does not constrain production spend.
+
+### 2026-11-03 — Legacy live probes can mislabel provider errors
+
+After a credit top-up, the final-source injection suite completed, but credit was
+exhausted during the cache baseline. Protected prerequisite probes then exposed
+misleading diagnostics: `cost.probe.ts` interpreted error-result costs as Q1/Q3
+evidence, and `security.probe.ts` printed PASS when every reply was a provider-error
+fallback. Their exit codes alone do not establish valid measurements. Require a
+successful provider outcome before interpreting cost semantics or security results;
+record these attempts as inconclusive. The legacy e2e script also needs owner and
+confirmation-flow support before its mutation assertions can validate current behavior.

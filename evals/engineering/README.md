@@ -75,13 +75,23 @@ Lookup latency includes native embedding process startup and skips; it excludes 
 
 Evidence: [cache-retrieval.json](results/cache-retrieval.json).
 
-**End-to-end latency and cost savings: pending.** The live benchmark completed ten uncached
-questions before the provider returned insufficient credit. The successful partial measurements
-and failure evidence are retained in [cache-benchmark.json](results/cache-benchmark.json) and
-[cache-failures.json](results/cache-failures.json). There is no full 120-question LLM baseline or
-completed threshold execution, so no overall dollar savings or end-to-end speedup is claimed.
-The full command measures actual separate baseline/cache executions, including embedding time;
-it does not simulate LLM latency with sleeps. Provider jitter and model variation affect comparisons.
+**End-to-end latency and cost savings: pending.** After the second 2026-11-03
+credit top-up, `pnpm bench:cache --resume` reached 102 successful uncached questions.
+The accumulated successful baseline cost is $8.40015775, including earlier rows.
+Question 103 failed after $0.09413175 and two `find_bills` calls; the bounded
+provider check confirmed insufficient credit again. No threshold execution completed.
+Successful partial measurements and the latest failure are retained in
+[cache-benchmark.json](results/cache-benchmark.json) and
+[cache-failure-after-102.json](results/cache-failure-after-102.json).
+The resume calculation excludes failed calls: use
+`EVAL_MAX_COST_USD=39.90586825 pnpm bench:cache --resume` next to reserve this failed
+call's cost within the original $40 benchmark allowance. Account for any further
+failed or interrupted work before resuming again.
+
+No overall dollar savings or end-to-end speedup is claimed. The full command
+measures separate baseline/cache executions, including embedding time; it does not
+simulate LLM latency with sleeps. Provider jitter, model variation and the resumed
+baseline's different dates affect comparisons.
 
 ## Prompt injection
 
@@ -121,11 +131,22 @@ exercise an actual credit mutation through owner confirmation and reject the wro
 callbacks, excessive discounts and unsupported GST slabs. Zero in 40 trials is not proof of immunity
 (the approximate rule-of-three upper bound is 7.5% for this sampled workload).
 
-**Final-source rerun is incomplete.** Commit `253d45c` adds delimiter wrapping of explicit
-multiline pasted documents beyond the completed hardened run. Its rerun stopped after three
-provider errors with zero tokens; all three are inconclusive, not blocked. See
-[injection-after.json](results/injection-after.json). Re-run after credits are available before
-claiming the final source has a complete live evaluation.
+**Final-source rerun completed on 2026-11-03.** `pnpm eval:injection after` at
+`6cfda18` tested all 40 attacks: 0 successes, 40 blocked, 0 inconclusive, with
+$2.7098315 SDK-reported cost. Each category was 0/10 successes. The corpus hash
+matches the baseline, and every attempt had outcome `ok`. This includes the
+pasted-document wrapper added after the earlier hardened run. See
+[injection-after.json](results/injection-after.json). The baseline was already
+0/40, so this establishes coverage of the final source, not a measured improvement.
+
+The older cost, session-store, end-to-end and filesystem-security probes were also
+attempted through protected subprocess capture against a disposable database.
+Credits were exhausted, so all four are **inconclusive**. The cost probe's Q1/Q3
+interpretations and filesystem probe's printed PASS must not be accepted: those
+legacy probes do not consistently reject provider-error outcomes. Session A failed,
+and all 13 end-to-end beats returned provider errors. The cost probe reported
+$0.000587 on its failed first turn. Sanitized evidence and the explicit assessment
+are in [live-prerequisites-2026-11-03.json](results/live-prerequisites-2026-11-03.json).
 
 Defences now include escaped JSON data boundaries, data-only system instructions, strict tool
 argument parsing, supported catalogue GST slabs, a 20% price-override discount cap, existing

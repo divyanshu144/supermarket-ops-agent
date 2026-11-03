@@ -7,8 +7,16 @@
 - [x] Run 40 live baseline and 40 live hardened injection attacks; preserve raw evidence.
 - [x] Add tool argument/confirmation/data-boundary/output defences and tests.
 - [ ] Complete live cache baseline and threshold runs after Anthropic credit top-up.
-- [ ] Complete final-source injection rerun after credit top-up.
+- [x] Complete final-source injection rerun after credit top-up (2026-11-03, `6cfda18`: 0/40 successful attacks, no inconclusive attempts, $2.7098315).
 - [ ] Publish full end-to-end latency and cost savings only after valid runs.
+
+After the second 2026-11-03 credit top-up, `pnpm bench:cache --resume` reached
+102/120 baseline questions ($8.40015775 cumulative successful-call cost).
+Question 103 failed after $0.09413175; provider check confirmed insufficient credit
+again. No threshold run has completed. Archive: `cache-failure-after-102.json`.
+Next run must subtract the failed call from the $40 allowance (see `HANDOFF.md`).
+The four older live prerequisites remain inconclusive from the earlier attempt;
+ignore the legacy cost/security probes' misleading success wording in that capture.
 
 ## Langfuse and hosted open-model helper — 2026-11-01
 
