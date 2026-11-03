@@ -6,6 +6,7 @@ import { runMigrations } from './db/migrate.js';
 import { expireInFlightClaims } from './repositories/updates.js';
 import { beginDrain } from './telegram/drain.js';
 import { startRetentionScheduler } from './retention/worker.js';
+import { flushLangfuse } from './observability/langfuse.js';
 
 // Fail fast before opening any connection or long-poll.
 const env = loadEnv();
@@ -30,7 +31,9 @@ await acquireInstanceLock({
     console.error(
       JSON.stringify({ scope: 'instance-lock', warning: 'lock lost; draining and exiting' }),
     );
-    void beginDrain(env.SHUTDOWN_GRACE_MS).then(() => process.exit(1));
+    void beginDrain(env.SHUTDOWN_GRACE_MS)
+      .then(() => flushLangfuse(2500))
+      .then(() => process.exit(1));
   },
 });
 
@@ -49,6 +52,7 @@ async function shutdown(signal: string): Promise<void> {
   shuttingDown = true;
   console.log(`\n${signal} received, finishing the turn in flight…`);
   const outcome = await beginDrain(env.SHUTDOWN_GRACE_MS);
+  await flushLangfuse(2500);
   console.log(
     outcome === 'drained'
       ? 'Idle, exiting.'

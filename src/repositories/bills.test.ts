@@ -6,6 +6,7 @@ import {
   bills,
   khataAccounts,
   khataEntries,
+  idempotencyKeys,
   products,
   stockMovements,
   stores,
@@ -128,6 +129,12 @@ describe('openBill / getBill', () => {
     const second = await openBill(STORE, { customerName: 'Ramesh', idempotencyKey: key });
 
     expect(second.billId).toBe(first.billId);
+    const replayRows = await db
+      .select({ replayCount: idempotencyKeys.replayCount })
+      .from(idempotencyKeys)
+      .where(eq(idempotencyKeys.storeId, STORE));
+    expect(replayRows).toHaveLength(1);
+    expect(replayRows[0]!.replayCount).toBe(1);
 
     // Assert the total count, not a filter on a unique primary key — filtering by id can only
     // ever be 0 or 1 regardless of whether a second draft was created, so it proves nothing.

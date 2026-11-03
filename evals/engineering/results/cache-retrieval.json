@@ -1,0 +1,5207 @@
+{
+  "provenance": "measured real embeddings with authored reference answers; no LLM calls",
+  "provider": "apple:english-word-mean-v1",
+  "corpusSha256": "17065be8cfda9243748ab814d005a47d62242d052177072728bb5610f6e44564",
+  "createdAt": "2026-10-31T09:37:37.796Z",
+  "platform": "darwin",
+  "referenceAnswers": {
+    "add-product": "Provide the product name, unit, HSN, supported GST slab, cost and MRP. Review the registration and confirm it.",
+    "receive-stock": "Describe the delivered product, quantity and unit. Include price changes only if intended. Review and confirm the stock receipt.",
+    "open-bill": "Ask to start a bill, then name the products, quantities and units. Review each proposed change and confirm before finalizing payment.",
+    "edit-bill": "Identify the draft bill and the product, then state the new quantity and unit. Review and confirm the edit.",
+    "void-bill": "Identify the finalized bill and request a reversal. Review and confirm using the owner button; the system records the reversal.",
+    "invoice-pdf": "Identify the finalized bill and ask for its PDF invoice. The bot generates and sends the document.",
+    "khata-payment": "Name the customer and amount received. Review the payment and confirm using the owner button.",
+    "khata-charge": "Name the customer and credit amount. For a sale of goods, build a bill and choose khata payment. Review and confirm the charge."
+  },
+  "tables": [
+    {
+      "threshold": 0.85,
+      "questions": 120,
+      "hits": 52,
+      "hitRate": 0.43333333333333335,
+      "falseHits": 0,
+      "falseHitRate": 0,
+      "unsafeHits": 0,
+      "averageLookupMs": 33.44146944166666,
+      "requests": [
+        {
+          "id": "p-0-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 433.464917,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 433.405,
+            "similarity": null,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 53.91841599999998,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 53.9135,
+            "similarity": 0.8361476819671342,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 50.131333999999924,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 50.125375000000076,
+            "similarity": 0.8161323488266155,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 47.57183299999997,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 47.56716700000004,
+            "similarity": 0.7865096862209019,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to create a new product?",
+          "latencyMs": 45.72558300000003,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.71662500000002,
+            "similarity": 0.9121685476404667,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-5",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to register a sku?",
+          "latencyMs": 45.56966699999998,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.565166999999974,
+            "similarity": 0.9022756197676675,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to create a new product?",
+          "latencyMs": 45.27983299999994,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.27312500000005,
+            "similarity": 0.9450135744453516,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to register a sku?",
+          "latencyMs": 46.39666599999998,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 46.381167000000005,
+            "similarity": 0.9201575270968078,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to create a new product?",
+          "latencyMs": 45.41845799999999,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.414041,
+            "similarity": 0.9139272793079035,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I register an item?",
+          "latencyMs": 49.29449999999997,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 49.290374999999926,
+            "similarity": 0.9653159656991527,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.83112500000004,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.81945900000005,
+            "similarity": null,
+            "embeddingTokens": 5,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 48.34191599999997,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 48.333624999999984,
+            "similarity": 0.7500913504767176,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 46.11062500000003,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 46.10674999999992,
+            "similarity": 0.7470085568291537,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.504875000000084,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.499500000000126,
+            "similarity": 0.8083830776989777,
+            "embeddingTokens": 5,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.60529199999996,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.60033300000009,
+            "similarity": 0.8397693491482543,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.15345900000011,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.14858299999992,
+            "similarity": 0.8408088702699049,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to book a stock shipment?",
+          "latencyMs": 44.183459000000084,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.17775000000006,
+            "similarity": 0.9449552177736539,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to add stock?",
+          "latencyMs": 44.278790999999956,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.27383299999997,
+            "similarity": 0.9194998178497121,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to receive stock?",
+          "latencyMs": 44.00116700000012,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.99612499999989,
+            "similarity": 0.9546827026948591,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I record a delivery?",
+          "latencyMs": 45.51066700000001,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.5056669999999,
+            "similarity": 0.9632709106307428,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 48.06295799999998,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 48.05770899999993,
+            "similarity": null,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-1",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I open a bill?",
+          "latencyMs": 48.17304100000001,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 48.167875000000095,
+            "similarity": 0.8656268353184821,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.694124999999985,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.68820800000003,
+            "similarity": 0.7530291231835609,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.662832999999864,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.657249999999976,
+            "similarity": 0.8419665845308828,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to start a bill?",
+          "latencyMs": 44.410915999999816,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.406625000000076,
+            "similarity": 0.9044688310153037,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-5",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to start a bill?",
+          "latencyMs": 44.2467079999999,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.24166700000001,
+            "similarity": 0.8899450183159432,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to create a new invoice?",
+          "latencyMs": 44.599583000000166,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.59454199999982,
+            "similarity": 0.9483600317943998,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to start a bill?",
+          "latencyMs": 44.70399999999995,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.69862499999999,
+            "similarity": 0.9434117202606841,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to start a bill?",
+          "latencyMs": 43.41449999999986,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.402417000000014,
+            "similarity": 0.9054754275815396,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I open a bill?",
+          "latencyMs": 45.290833999999904,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.28683299999989,
+            "similarity": 0.8904969489429615,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.617458999999826,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 45.6132090000001,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-1",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I edit a draft bill?",
+          "latencyMs": 44.45375000000013,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.45137499999987,
+            "similarity": 0.85903336033027,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.829291999999896,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.82662499999992,
+            "similarity": 0.8365327810992146,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-3",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 45.07312500000012,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.07070899999985,
+            "similarity": 0.9256582999342374,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 45.00183300000026,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.99491699999976,
+            "similarity": 0.9227374753596604,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-5",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 50.603250000000116,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 50.60091599999987,
+            "similarity": 0.8515252317063134,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 45.060583999999835,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.057582999999795,
+            "similarity": 0.9510647061709449,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 44.03654199999983,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.03412500000013,
+            "similarity": 0.9219026367011073,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 44.97862500000019,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.97587500000009,
+            "similarity": 0.9258905950536069,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I edit a draft bill?",
+          "latencyMs": 44.000958999999966,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.9987500000002,
+            "similarity": 0.8630273351053221,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.025874999999814,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.023457999999664,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-1",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I void a finalized bill?",
+          "latencyMs": 45.76041600000008,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.75749999999971,
+            "similarity": 0.8791467084587453,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.841457999999875,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.83879200000001,
+            "similarity": 0.793214801186763,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-3",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I void a finalized bill?",
+          "latencyMs": 45.57829100000026,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.57558399999971,
+            "similarity": 0.8556090747829006,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I void a finalized bill?",
+          "latencyMs": 44.46562499999982,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.46316700000034,
+            "similarity": 0.897891608861324,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.20141700000022,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.198875000000044,
+            "similarity": 0.8216351933973812,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to cancel a finalized invoice?",
+          "latencyMs": 44.29029199999968,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.287374999999884,
+            "similarity": 0.9485872756667224,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Tell me how to reverse a completed bill?",
+          "latencyMs": 43.92399999999998,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.921166000000085,
+            "similarity": 0.9501130339090563,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I void a finalized bill?",
+          "latencyMs": 44.065042000000176,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.06275000000005,
+            "similarity": 0.8972992475990511,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Tell me how to reverse a completed bill?",
+          "latencyMs": 43.78295799999978,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.7807499999999,
+            "similarity": 0.8860841593445623,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.40141700000004,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 45.399167000000034,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-1",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I generate a pdf invoice?",
+          "latencyMs": 44.75366599999961,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.75083399999994,
+            "similarity": 0.8822852614256569,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 47.686791000000085,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 47.68337500000007,
+            "similarity": 0.7968160579697587,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.22524999999996,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.22266600000012,
+            "similarity": 0.8404071877053658,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to create an invoice pdf?",
+          "latencyMs": 45.11983400000008,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.11750000000029,
+            "similarity": 0.8908618518801686,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-5",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to create an invoice pdf?",
+          "latencyMs": 43.862583000000086,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.859750000000076,
+            "similarity": 0.8780293028223191,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to export a gst invoice pdf?",
+          "latencyMs": 44.6388750000001,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.636375000000044,
+            "similarity": 0.9384694196963178,
+            "embeddingTokens": 10,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to create an invoice pdf?",
+          "latencyMs": 44.72662500000024,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.7235840000003,
+            "similarity": 0.9421866184055797,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to create an invoice pdf?",
+          "latencyMs": 47.37845799999968,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 47.37545799999998,
+            "similarity": 0.8937651916033674,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I generate a pdf invoice?",
+          "latencyMs": 44.6883329999996,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.68566699999974,
+            "similarity": 0.8892470769505344,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.12549999999965,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.122959000000264,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-1",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I record a khata payment?",
+          "latencyMs": 45.55841700000019,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.55604199999971,
+            "similarity": 0.8687397172107086,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.69133299999976,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.6882499999997,
+            "similarity": 0.8037341544175889,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.239750000000186,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.237540999999965,
+            "similarity": 0.8263321978507628,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata payment?",
+          "latencyMs": 44.2839170000002,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.281958999999915,
+            "similarity": 0.8867659904041373,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-5",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata payment?",
+          "latencyMs": 44.06604100000004,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.06441700000005,
+            "similarity": 0.9112410465414013,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to register a credit repayment?",
+          "latencyMs": 46.74924999999985,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 46.74645899999996,
+            "similarity": 0.9483157506667238,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata payment?",
+          "latencyMs": 44.391208000000006,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.3884579999999,
+            "similarity": 0.9421880872805801,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata payment?",
+          "latencyMs": 44.73341699999992,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.73070800000005,
+            "similarity": 0.8858895475684666,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How do I record a khata payment?",
+          "latencyMs": 44.148291999999856,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.146000000000186,
+            "similarity": 0.8783432407826341,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.41675000000032,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.41441700000041,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.20658300000014,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.20391699999982,
+            "similarity": 0.8403375541407833,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.18695799999978,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.18433300000015,
+            "similarity": 0.818291761627768,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.12087500000007,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.11904200000026,
+            "similarity": 0.8330059485543991,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata charge?",
+          "latencyMs": 43.81325000000015,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.81095800000003,
+            "similarity": 0.8863001835372999,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-5",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I enter a credit sale?",
+          "latencyMs": 44.46079200000031,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.45858300000009,
+            "similarity": 0.8814063515725359,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to register a customer credit charge?",
+          "latencyMs": 45.14495799999986,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.14220800000021,
+            "similarity": 0.9540573161160536,
+            "embeddingTokens": 10,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata charge?",
+          "latencyMs": 44.983666000000085,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.98125000000027,
+            "similarity": 0.9429437527009655,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata charge?",
+          "latencyMs": 45.6997080000001,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.69691700000021,
+            "similarity": 0.884362294155669,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I enter a credit sale?",
+          "latencyMs": 44.57691699999987,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.57425000000012,
+            "similarity": 0.9736599818011592,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-0",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.6227499999999964,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.6172910000000229,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-1",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.5119999999997162,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.5113329999999223,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-2",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.00845900000012989,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.008084000000053493,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-3",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006292000000030384,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0059160000000701984,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-4",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0060840000001007866,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005749999999807187,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-5",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006917000000157714,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.006665999999768246,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-6",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006457999999838648,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.006124999999883585,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-7",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006917000000157714,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.006624999999985448,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-8",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006041000000095664,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005708000000140601,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-9",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006000000000312866,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005707999999685853,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-10",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006792000000132248,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005666000000019267,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-11",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006124999999883585,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005791999999928521,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-12",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0070420000001831795,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.006750000000010914,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-13",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005874999999832653,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005625000000236469,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-14",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.00670799999988958,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.006416000000172062,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-15",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005874999999832653,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005583000000115135,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-16",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006291000000146596,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005958000000191532,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-17",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 1.4732920000001286,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 1.4717499999997017,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-18",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.00937500000009095,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.008958999999777006,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-19",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.008208999999624211,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00787499999978536,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-0",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0008339999999407155,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0005000000001018634,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-1",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005840000003445311,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0002909999998337298,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-2",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.013624999999592546,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.012000000000170985,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-3",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0008330000000569271,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00045799999998052954,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-4",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0006250000001273293,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0002909999998337298,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-5",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0007500000001527951,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0004170000001977314,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-6",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005830000000059954,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0002500000000509317,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-7",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005830000000059954,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00029200000017226557,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-8",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0006669999997939158,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00029200000017226557,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-9",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0006669999997939158,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00029200000017226557,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-10",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005839999998897838,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0002500000000509317,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-11",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005830000000059954,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020799999992959783,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-12",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.005292000000281405,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0002500000000509317,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-13",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005830000000059954,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0002500000000509317,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-14",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004999999996471161,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016699999969205237,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-15",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005830000000059954,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00029200000017226557,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-16",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005000000001018634,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020899999981338624,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-17",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0009999999997489795,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0007089999999152496,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-18",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0006250000001273293,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0002919999997175182,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-19",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005420000002231973,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020799999992959783,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        }
+      ]
+    },
+    {
+      "threshold": 0.9,
+      "questions": 120,
+      "hits": 40,
+      "hitRate": 0.3333333333333333,
+      "falseHits": 0,
+      "falseHitRate": 0,
+      "unsafeHits": 0,
+      "averageLookupMs": 29.76852814999996,
+      "requests": [
+        {
+          "id": "p-0-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.17937499999971,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 45.17691700000023,
+            "similarity": null,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.081874999999854,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.07916699999987,
+            "similarity": 0.8361476819671342,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.84387500000048,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.84033400000044,
+            "similarity": 0.8161323488266155,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.91479200000049,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.911833999999544,
+            "similarity": 0.7865096862209019,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to create a new product?",
+          "latencyMs": 45.29600000000028,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.29333300000053,
+            "similarity": 0.9121685476404667,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-5",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to register a sku?",
+          "latencyMs": 44.19829200000004,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.195291,
+            "similarity": 0.9022756197676675,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to create a new product?",
+          "latencyMs": 44.717749999999796,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.71479099999942,
+            "similarity": 0.9450135744453516,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to register a sku?",
+          "latencyMs": 44.126624999999876,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.12412500000028,
+            "similarity": 0.9201575270968078,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to create a new product?",
+          "latencyMs": 44.42570800000067,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.4232090000005,
+            "similarity": 0.9139272793079035,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I register an item?",
+          "latencyMs": 44.51104199999918,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.50854199999958,
+            "similarity": 0.9653159656991527,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.20904200000041,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.20666600000004,
+            "similarity": null,
+            "embeddingTokens": 5,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.92883400000028,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.92604100000062,
+            "similarity": 0.7500913504767176,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.89991699999973,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.897000000000844,
+            "similarity": 0.7470085568291537,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.98949999999968,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.986291000000165,
+            "similarity": 0.8083830776989777,
+            "embeddingTokens": 5,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.33666699999958,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.33379100000002,
+            "similarity": 0.8397693491482543,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.25562499999978,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.25300000000061,
+            "similarity": 0.8408088702699049,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to book a stock shipment?",
+          "latencyMs": 44.60199999999986,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.600000000000364,
+            "similarity": 0.9449552177736539,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to add stock?",
+          "latencyMs": 44.14379099999951,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.14170800000011,
+            "similarity": 0.9194998178497121,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to receive stock?",
+          "latencyMs": 44.08308399999987,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.08058299999993,
+            "similarity": 0.9546827026948591,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I record a delivery?",
+          "latencyMs": 44.42249999999967,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.4198750000005,
+            "similarity": 0.9632709106307428,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.951082999999926,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 43.948875000000044,
+            "similarity": null,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.851958000000195,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.85020900000018,
+            "similarity": 0.8656268353184821,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.603000000000065,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.601042000000234,
+            "similarity": 0.7530291231835609,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.04058299999997,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.038917000000765,
+            "similarity": 0.8419665845308828,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to start a bill?",
+          "latencyMs": 44.47533300000032,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.471708000000035,
+            "similarity": 0.9044688310153037,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.48112499999934,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.47833300000002,
+            "similarity": 0.8899450183159432,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to create a new invoice?",
+          "latencyMs": 46.75275000000056,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 46.750042000000576,
+            "similarity": 0.9483600317943998,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to start a bill?",
+          "latencyMs": 45.16358300000047,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.1606670000001,
+            "similarity": 0.9434117202606841,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to start a bill?",
+          "latencyMs": 44.978165999999874,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.975124999999935,
+            "similarity": 0.9054754275815396,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I start a sale?",
+          "latencyMs": 44.55433300000004,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.55162500000006,
+            "similarity": 0.9646483996978342,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.20379099999991,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.200834000000214,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.769250000000284,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.76624999999967,
+            "similarity": 0.85903336033027,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.56629200000043,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.56366600000001,
+            "similarity": 0.8365327810992146,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-3",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 44.4716669999998,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.46900000000005,
+            "similarity": 0.9256582999342374,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 45.01420899999994,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.01170900000034,
+            "similarity": 0.9227374753596604,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.79725000000053,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.794332999999824,
+            "similarity": 0.8875127344804093,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 44.383082999999715,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.38075000000026,
+            "similarity": 0.9510647061709449,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 44.10516600000028,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.10329199999978,
+            "similarity": 0.9219026367011073,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 44.04945899999984,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.046957999999904,
+            "similarity": 0.9258905950536069,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I amend a draft invoice?",
+          "latencyMs": 44.57337499999994,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.57037500000024,
+            "similarity": 0.9755819876484909,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 46.213707999999315,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 46.209334000000126,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 46.44566699999996,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 46.442167000000154,
+            "similarity": 0.8791467084587453,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.91491599999972,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.91229199999998,
+            "similarity": 0.793214801186763,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.33562499999971,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.333833000000595,
+            "similarity": 0.8556090747829006,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-4",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to reverse a finalized bill?",
+          "latencyMs": 44.306125000000065,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.304041000000325,
+            "similarity": 0.9079029719589264,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-5",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to reverse a finalized bill?",
+          "latencyMs": 44.75812500000029,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.75575000000026,
+            "similarity": 0.9196953117729963,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to cancel a finalized invoice?",
+          "latencyMs": 44.328082999999424,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.325832999999875,
+            "similarity": 0.9485872756667224,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to reverse a finalized bill?",
+          "latencyMs": 44.421875,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.419042000000445,
+            "similarity": 0.9545370388879681,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to reverse a finalized bill?",
+          "latencyMs": 44.68145900000036,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.6787089999998,
+            "similarity": 0.9096471178640186,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I reverse a completed bill?",
+          "latencyMs": 45.22491600000012,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.22200000000066,
+            "similarity": 0.9724497731256874,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.573999999999614,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.57133300000078,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.48400000000038,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.4809580000001,
+            "similarity": 0.8822852614256569,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.29170900000008,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.289167000000816,
+            "similarity": 0.7968160579697587,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.5424579999999,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.53962500000034,
+            "similarity": 0.8404071877053658,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.144499999999425,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.14183299999968,
+            "similarity": 0.8908618518801686,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.35883399999966,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.356166999999914,
+            "similarity": 0.8780293028223191,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to export a gst invoice pdf?",
+          "latencyMs": 44.56329100000039,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.56070799999998,
+            "similarity": 0.9384694196963178,
+            "embeddingTokens": 10,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to create an invoice pdf?",
+          "latencyMs": 44.392665999999736,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.39050000000043,
+            "similarity": 0.9421866184055797,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to generate a pdf invoice?",
+          "latencyMs": 44.28245900000002,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.28004199999941,
+            "similarity": 0.9641974788583777,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I download an invoice pdf?",
+          "latencyMs": 44.63558399999965,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.63270800000009,
+            "similarity": 0.9646617620430383,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.084374999999454,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.0815419999999,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.53754200000003,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.534875000000284,
+            "similarity": 0.8687397172107086,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 49.382666999999856,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 49.38000000000011,
+            "similarity": 0.8206036592330743,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.88429199999973,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.881624999999985,
+            "similarity": 0.8263321978507628,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.07170799999949,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.068874999999935,
+            "similarity": 0.8867659904041373,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-5",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata payment?",
+          "latencyMs": 45.07916699999987,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.076875000000655,
+            "similarity": 0.9112410465414013,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to register a credit repayment?",
+          "latencyMs": 44.10529099999985,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.10333300000002,
+            "similarity": 0.9483157506667238,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata payment?",
+          "latencyMs": 44.40870799999993,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.40587500000038,
+            "similarity": 0.9421880872805801,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to record a khata payment?",
+          "latencyMs": 44.25312500000018,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.25066700000025,
+            "similarity": 0.9624225721242609,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I enter a customer repayment?",
+          "latencyMs": 44.127833000000464,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.12529100000029,
+            "similarity": 0.9748713833375431,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.88670900000034,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 43.88395800000035,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.22295899999972,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.22083400000065,
+            "similarity": 0.8403375541407833,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.94104200000038,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.93812499999967,
+            "similarity": 0.818291761627768,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.343832999999904,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.340916999999536,
+            "similarity": 0.8330059485543991,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.28133399999933,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.27800000000025,
+            "similarity": 0.8863001835372999,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.10849999999937,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.10579200000029,
+            "similarity": 0.8814063515725359,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to register a customer credit charge?",
+          "latencyMs": 44.43345899999986,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.43091600000025,
+            "similarity": 0.9540573161160536,
+            "embeddingTokens": 10,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to enter a khata charge?",
+          "latencyMs": 45.38075000000026,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.378625000000284,
+            "similarity": 0.9429437527009655,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to record a khata charge?",
+          "latencyMs": 44.06845799999974,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.06633299999976,
+            "similarity": 0.9622430593325798,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I enter a credit sale?",
+          "latencyMs": 43.60583399999996,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.60375000000022,
+            "similarity": 0.9736599818011592,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-0",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.02550000000064756,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.024249999999483407,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-1",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.00670799999988958,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.006416999999601103,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-2",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0070420000001831795,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00670799999988958,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-3",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006041999999979453,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0058330000001660665,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-4",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.00595800000064628,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005707999999685853,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-5",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005917000000408734,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005666000000019267,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-6",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.00616600000012113,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005959000000075321,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-7",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0059999999994033715,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00579100000049948,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-8",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0057500000002619345,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005541000000448548,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-9",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006000000000312866,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0057500000002619345,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-10",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005791999999928521,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005542000000787084,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-11",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0058330000001660665,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005624999999781721,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-12",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006167000000459666,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005917000000408734,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-13",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0057500000002619345,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005541999999877589,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-14",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0057500000002619345,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005500000000211003,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-15",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.00574999999935244,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005500000000211003,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-16",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.00574999999935244,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005500000000211003,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-17",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.02070800000001327,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.02045799999996234,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-18",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.00650000000041473,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.006250000000363798,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-19",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006041999999979453,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005792000000838016,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-0",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0006659999999101274,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0004170000001977314,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-1",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004579999995257822,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020799999947485048,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-2",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004169999992882367,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020899999981338624,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-3",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004579999995257822,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020800000038434519,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-4",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004170000001977314,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020899999981338624,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-5",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004170000001977314,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020800000038434519,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-6",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004170000001977314,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-7",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004580000004352769,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020799999947485048,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-8",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004170000001977314,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016699999923730502,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-9",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.00041599999985919567,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-10",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004170000001977314,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016599999980826396,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-11",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004170000001977314,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016599999980826396,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-12",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0005000000001018634,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00029100000028847717,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-13",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-14",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004169999992882367,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020800000038434519,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-15",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016699999923730502,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-16",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-17",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0007079999995767139,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0004579999995257822,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-18",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016599999980826396,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-19",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004170000001977314,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016699999923730502,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        }
+      ]
+    },
+    {
+      "threshold": 0.95,
+      "questions": 120,
+      "hits": 20,
+      "hitRate": 0.16666666666666666,
+      "falseHits": 0,
+      "falseHitRate": 0,
+      "unsafeHits": 0,
+      "averageLookupMs": 29.923973574999984,
+      "requests": [
+        {
+          "id": "p-0-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.79962499999965,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 43.797333999999864,
+            "similarity": null,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 50.38233299999956,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 50.37987499999963,
+            "similarity": 0.8361476819671342,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.43224999999984,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.429709,
+            "similarity": 0.8161323488266155,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 46.67512499999975,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 46.67224999999962,
+            "similarity": 0.7865096862209019,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.58570899999995,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.5834160000004,
+            "similarity": 0.9121685476404667,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.933250000000044,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.93041699999958,
+            "similarity": 0.9022756197676675,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-6",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.334749999999985,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.33216700000048,
+            "similarity": 0.9450135744453516,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-7",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.80279100000007,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.800624999999854,
+            "similarity": 0.9460835790406917,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to add a product?",
+          "latencyMs": 45.1997080000001,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.197541999999885,
+            "similarity": 0.9604201522691217,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-0-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I register an item?",
+          "latencyMs": 45.12679200000002,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.12366700000075,
+            "similarity": 0.9653159656991527,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.91608300000007,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 43.91324999999961,
+            "similarity": null,
+            "embeddingTokens": 5,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.926666999998815,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.92433400000027,
+            "similarity": 0.7500913504767176,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.79095800000141,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.787500000000364,
+            "similarity": 0.7470085568291537,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.85504199999923,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.85266700000102,
+            "similarity": 0.8083830776989777,
+            "embeddingTokens": 5,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.778166000000056,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.775541999999405,
+            "similarity": 0.8397693491482543,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.1107090000005,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.10750000000007,
+            "similarity": 0.8408088702699049,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-6",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 47.644500000000335,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 47.64191700000083,
+            "similarity": 0.9449552177736539,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-7",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.98374999999942,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.98133400000006,
+            "similarity": 0.9194998178497121,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to receive stock?",
+          "latencyMs": 44.066749999999956,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.06450000000041,
+            "similarity": 0.9546827026948591,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-1-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I record a delivery?",
+          "latencyMs": 44.50641700000051,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.503458999999566,
+            "similarity": 0.9632709106307428,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.983125000000655,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 43.98054200000115,
+            "similarity": null,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.968957999999475,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.966207999999824,
+            "similarity": 0.8656268353184821,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.669582999998966,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.66729200000009,
+            "similarity": 0.7530291231835609,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.120459000001574,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.11791599999924,
+            "similarity": 0.8419665845308828,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.171290999998746,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.16883299999972,
+            "similarity": 0.9044688310153037,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.38470799999959,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.382416999998895,
+            "similarity": 0.8899450183159432,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-6",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.26116700000057,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.25849999999991,
+            "similarity": 0.9483600317943998,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-7",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.039708000000246,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.036957999998776,
+            "similarity": 0.9434117202606841,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to open a bill?",
+          "latencyMs": 44.19083299999875,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.18816699999843,
+            "similarity": 0.9627468596404227,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-2-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I start a sale?",
+          "latencyMs": 47.25066599999991,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 47.24758400000064,
+            "similarity": 0.9646483996978342,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 47.16058300000077,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 47.154875000000175,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.25266699999884,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.25041699999929,
+            "similarity": 0.85903336033027,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 49.62154200000077,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 49.61908299999959,
+            "similarity": 0.8365327810992146,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.91258299999936,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.910125000000335,
+            "similarity": 0.9256582999342374,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.75887500000135,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.756624999999985,
+            "similarity": 0.9227374753596604,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.14025000000038,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.13762499999939,
+            "similarity": 0.8875127344804093,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to change the draft bill?",
+          "latencyMs": 44.56129099999998,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.558750000000146,
+            "similarity": 0.9510647061709449,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to update a draft bill?",
+          "latencyMs": 44.238375000000815,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.23616700000093,
+            "similarity": 0.9565730530622006,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to edit a draft bill?",
+          "latencyMs": 43.866541999999754,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.86420899999939,
+            "similarity": 0.9715407390445826,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-3-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I amend a draft invoice?",
+          "latencyMs": 45.03925000000163,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.036958000000595,
+            "similarity": 0.9755819876484909,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.65983299999971,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.657375000000684,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.89350000000013,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.89104199999929,
+            "similarity": 0.8791467084587453,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.767791000000216,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.76604100000077,
+            "similarity": 0.793214801186763,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.871916000000056,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.86949999999888,
+            "similarity": 0.8556090747829006,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.47404099999949,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.471708000000945,
+            "similarity": 0.9079029719589264,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 48.37212499999987,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 48.36904200000026,
+            "similarity": 0.9196953117729963,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-6",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 47.259125000000495,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 47.256249999998545,
+            "similarity": 0.9485872756667224,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-7",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "Explain how to reverse a finalized bill?",
+          "latencyMs": 45.57112500000039,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.568624999999884,
+            "similarity": 0.9545370388879681,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to void a finalized bill?",
+          "latencyMs": 44.64587499999834,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.643457999998645,
+            "similarity": 0.9716878091151346,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-4-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I reverse a completed bill?",
+          "latencyMs": 44.14262500000041,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.14058300000033,
+            "similarity": 0.9724497731256874,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.121791000001394,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 44.11970800000017,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.6917910000011,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.688209000001734,
+            "similarity": 0.8822852614256569,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 46.34770799999933,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 46.34508300000016,
+            "similarity": 0.7968160579697587,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.41004199999952,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.40770800000064,
+            "similarity": 0.8404071877053658,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.48583400000098,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.48412499999904,
+            "similarity": 0.8908618518801686,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.72804199999882,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.726042000000234,
+            "similarity": 0.8780293028223191,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-6",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 46.33629199999996,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 46.33433299999888,
+            "similarity": 0.9384694196963178,
+            "embeddingTokens": 10,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-7",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.35224999999991,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.349874999999884,
+            "similarity": 0.9421866184055797,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to generate a pdf invoice?",
+          "latencyMs": 46.37187500000073,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 46.36924999999974,
+            "similarity": 0.9641974788583777,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-5-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I download an invoice pdf?",
+          "latencyMs": 45.8347079999985,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.83216600000014,
+            "similarity": 0.9646617620430383,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.09045800000058,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 45.087625000000116,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.71929199999977,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.7165419999983,
+            "similarity": 0.8687397172107086,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 45.092624999999316,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 45.08966700000019,
+            "similarity": 0.8206036592330743,
+            "embeddingTokens": 6,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.95662500000071,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.95404199999939,
+            "similarity": 0.8263321978507628,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.63104200000089,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.62866700000086,
+            "similarity": 0.8867659904041373,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.98304199999984,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.980249999998705,
+            "similarity": 0.9112410465414013,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-6",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.917874999999185,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.915500000000975,
+            "similarity": 0.9483157506667238,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-7",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.22858300000007,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.22570900000028,
+            "similarity": 0.9433194776551119,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to record a khata payment?",
+          "latencyMs": 44.097459000000526,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.09491699999853,
+            "similarity": 0.9624225721242609,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-6-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I enter a customer repayment?",
+          "latencyMs": 43.9854579999992,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.983000000000175,
+            "similarity": 0.9748713833375431,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-0",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 49.95995799999946,
+          "event": {
+            "status": "miss",
+            "reason": "cold",
+            "latencyMs": 49.95783299999857,
+            "similarity": null,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-1",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.381499999999505,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.3794999999991,
+            "similarity": 0.8403375541407833,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-2",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 43.776582999998936,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 43.77425000000039,
+            "similarity": 0.818291761627768,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-3",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.14195899999868,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.13958300000013,
+            "similarity": 0.8330059485543991,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-4",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.173375000000306,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.171040999999605,
+            "similarity": 0.8863001835372999,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-5",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.59349999999904,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.59120900000016,
+            "similarity": 0.8814063515725359,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-6",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How to register a customer credit charge?",
+          "latencyMs": 45.064667000000554,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 45.06270899999981,
+            "similarity": 0.9540573161160536,
+            "embeddingTokens": 10,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-7",
+          "kind": "paraphrase",
+          "hit": false,
+          "latencyMs": 44.232458000000406,
+          "event": {
+            "status": "miss",
+            "reason": "below_threshold",
+            "latencyMs": 44.23058300000048,
+            "similarity": 0.9429437527009655,
+            "embeddingTokens": 8,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-8",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "What are the steps to record a khata charge?",
+          "latencyMs": 43.88804100000016,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 43.88574999999946,
+            "similarity": 0.9622430593325798,
+            "embeddingTokens": 9,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "p-7-9",
+          "kind": "paraphrase",
+          "hit": true,
+          "matchedQuestion": "How can I enter a credit sale?",
+          "latencyMs": 44.04529100000036,
+          "event": {
+            "status": "hit",
+            "reason": "similar",
+            "latencyMs": 44.042750000000524,
+            "similarity": 0.9736599818011592,
+            "embeddingTokens": 7,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-0",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.022124999999505235,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.020624999999199645,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-1",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005665999999109772,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005375000000640284,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-2",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005917000000408734,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005666999999448308,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-3",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005042000000685221,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004790999999386258,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-4",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.004957999999533058,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004709000000730157,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-5",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.004999999999199645,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004750000000058208,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-6",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005291999999826658,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.005041000000346685,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-7",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005041999998866231,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004791999999724794,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-8",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.004875000000538421,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004625000001396984,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-9",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.004875000000538421,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004666999999244581,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-10",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0048749999987194315,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004625000001396984,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-11",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.004875000000538421,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004666999999244581,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-12",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005084000000351807,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004875000000538421,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-13",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0048749999987194315,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0046249999995779945,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-14",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.004833000000871834,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004625000001396984,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-15",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.006500000001324224,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.006250000000363798,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-16",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.0052080000004934845,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.004958999999871594,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-17",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.010958999999274965,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.010707999999794993,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-18",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005499999999301508,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0052080000004934845,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "n-19",
+          "kind": "hard_negative",
+          "hit": false,
+          "latencyMs": 0.005041000000346685,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00483400000121037,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-0",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0007089999999152496,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0004580000004352769,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-1",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.00041600000076869037,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-2",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004580000004352769,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020799999947485048,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-3",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016599999980826396,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-4",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004169999992882367,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00020799999947485048,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-5",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-6",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-7",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.000499999998282874,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0002920000006270129,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-8",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004170000011072261,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-9",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-10",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0001249999986612238,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-11",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0001249999986612238,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-12",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.00033400000029359944,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-13",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003750000014406396,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0001250000004802132,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-14",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003329999999550637,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0001249999986612238,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-15",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0004169999992882367,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0002500000009604264,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-16",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003749999996216502,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0001249999986612238,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-17",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0006250000005820766,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.0004169999992882367,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-18",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003750000014406396,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        },
+        {
+          "id": "l-19",
+          "kind": "live",
+          "hit": false,
+          "latencyMs": 0.0003750000014406396,
+          "event": {
+            "status": "miss",
+            "reason": "ineligible",
+            "latencyMs": 0.00016700000014679972,
+            "similarity": null,
+            "embeddingTokens": 0,
+            "estimatedEmbeddingCostUsd": 0
+          }
+        }
+      ]
+    }
+  ]
+}

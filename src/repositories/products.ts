@@ -145,6 +145,8 @@ export async function addProduct(
     reorderLevelBase?: number;
   },
 ): Promise<AddProductResult> {
+  if (![0, 500, 1200, 1800].includes(input.gstRateBps))
+    throw new Error('Unsupported catalogue GST slab');
   const inserted = await db
     .insert(products)
     .values({
@@ -220,6 +222,11 @@ export async function adjustStock(
       newQuantity: formatQuantity(updated.quantityBase, updated.unit as Unit),
     };
   });
+}
+
+/** Every product in the store, by name. Callers present it; the raw rows include cost price. */
+export async function listProducts(storeId: bigint): Promise<(typeof products.$inferSelect)[]> {
+  return db.select().from(products).where(eq(products.storeId, storeId)).orderBy(products.name);
 }
 
 export interface LowStockItem {

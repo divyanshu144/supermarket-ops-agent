@@ -47,6 +47,8 @@ function call(
     input: {},
     startOrder: 1,
     endOrder: 2,
+    startedAtMs: 1,
+    endedAtMs: 2,
     durationMs: 1,
     outcome: 'returned',
     result,

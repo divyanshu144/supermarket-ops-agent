@@ -1,3 +1,4 @@
+import { DATA_POLICY, containsPromptLeak, wrapUserDocuments } from '../security/boundaries.js';
 import { query, type HookCallback } from '@anthropic-ai/claude-agent-sdk';
 import { loadEnv } from '../config/env.js';
 import {
@@ -32,7 +33,7 @@ rather than inventing one.
 /** Validated preferences are rendered as bounded data, not instructions. */
 function withPreferences(prefs: Record<string, unknown>): string {
   const rendered = renderPreferenceContext(prefs);
-  return rendered ? `${SYSTEM_PROMPT}\n\n${rendered}` : SYSTEM_PROMPT;
+  return `${SYSTEM_PROMPT}\n\n${DATA_POLICY}${rendered ? `\n\n${rendered}` : ''}`;
 }
 
 export interface AgentResult {
@@ -73,6 +74,8 @@ export interface ModelToolCallEvidence {
 
 export interface ModelAttemptEvidence {
   ordinal: number;
+  startedAtMs?: number;
+  endedAtMs?: number;
   /** Every raw model ID seen on assistant messages during this attempt. */
   modelIds: string[];
   /** Per-model usage reported by the SDK result, keyed by its declared modelUsage keys. */
@@ -145,6 +148,7 @@ async function runOnce(args: {
   const chunks: string[] = [];
   const toolsUsed: string[] = [];
   let sessionId = args.resume ?? '';
+  const attemptStartedAtMs = Date.now();
   let outcome: AgentOutcome | undefined;
   let totalCostUsd = prior;
   let numTurns = 0;
@@ -198,7 +202,7 @@ async function runOnce(args: {
 
   try {
     stream = query({
-      prompt: args.text,
+      prompt: wrapUserDocuments(args.text),
       options: {
         model: limits.model,
         fallbackModel: limits.fallbackModel,
@@ -349,6 +353,8 @@ async function runOnce(args: {
       throw new RunFailed(error, chunks.length > 0 || toolsUsed.length > 0);
     }
   } finally {
+    attempt.startedAtMs = attemptStartedAtMs;
+    attempt.endedAtMs = Date.now();
     args.attempts.push(attempt);
     clearTimeout(timer);
   }
@@ -376,7 +382,10 @@ async function runOnce(args: {
       }),
     );
   }
-  const reply = finalOutcome === 'ok' ? chunks.join('').trim() : OUTCOME_REPLY[finalOutcome];
+  const rawReply = finalOutcome === 'ok' ? chunks.join('').trim() : OUTCOME_REPLY[finalOutcome];
+  const reply = containsPromptLeak(rawReply, `${SYSTEM_PROMPT}\n${DATA_POLICY}`)
+    ? 'I cannot share private instructions or credentials. Please ask about store operations.'
+    : rawReply;
 
   return {
     reply,

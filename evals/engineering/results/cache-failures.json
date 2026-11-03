@@ -1,0 +1,73 @@
+[
+  {
+    "text": "What is the total of my current bill?",
+    "outcome": "error",
+    "attempts": [
+      {
+        "ordinal": 1,
+        "modelIds": [
+          "claude-opus-5",
+          "<synthetic>"
+        ],
+        "modelUsage": {
+          "claude-haiku-4-5-20251001": {
+            "inputTokens": 525,
+            "outputTokens": 12,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0,
+            "costUsd": 0.000585,
+            "canonicalModel": "claude-haiku-4-5",
+            "provider": "firstParty"
+          },
+          "claude-opus-5": {
+            "inputTokens": 4,
+            "outputTokens": 190,
+            "cacheReadInputTokens": 52216,
+            "cacheCreationInputTokens": 10027,
+            "costUsd": 0.09354675000000001,
+            "canonicalModel": "claude-opus-5",
+            "provider": "firstParty"
+          }
+        },
+        "resultSubtype": "success",
+        "outcome": "error",
+        "inputTokens": 4,
+        "outputTokens": 190,
+        "cacheReadInputTokens": 52216,
+        "cacheCreationInputTokens": 10027,
+        "costUsd": 0.09413175000000001,
+        "numTurns": 3,
+        "resumed": false,
+        "retryFresh": false,
+        "toolCalls": [
+          {
+            "toolUseId": "toolu_01JcnZCGAvmNY3YHmB6vkgKq",
+            "name": "mcp__store__find_bills",
+            "source": "builtin",
+            "resultState": "returned",
+            "isError": false,
+            "sdkExecution": {
+              "state": "returned",
+              "durationMs": 14
+            }
+          },
+          {
+            "toolUseId": "toolu_01C97HryPESAWqQe2uumJywb",
+            "name": "mcp__store__find_bills",
+            "source": "builtin",
+            "resultState": "returned",
+            "isError": false,
+            "sdkExecution": {
+              "state": "returned",
+              "durationMs": 10
+            }
+          }
+        ],
+        "startedAtMs": 1793709835364,
+        "endedAtMs": 1793709841510
+      }
+    ],
+    "costUsd": 0.09413175000000001,
+    "latencyMs": 6146.148625000031
+  }
+]

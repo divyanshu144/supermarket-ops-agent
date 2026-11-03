@@ -155,6 +155,15 @@ export async function settleAccount(
         .onConflictDoNothing()
         .returning({ key: idempotencyKeys.key });
       if (claimed.length === 0) {
+        await tx
+          .update(idempotencyKeys)
+          .set({ replayCount: sql`${idempotencyKeys.replayCount} + 1` })
+          .where(
+            and(
+              eq(idempotencyKeys.storeId, storeId),
+              eq(idempotencyKeys.key, input.idempotencyKey),
+            ),
+          );
         const [existing] = await tx
           .select({ result: idempotencyKeys.result })
           .from(idempotencyKeys)

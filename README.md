@@ -124,3 +124,102 @@ from the verified chat, so no prompt can address another shop.
 
 The full list, how I used AI tools, and what I'd do with more time are in
 [`docs/DESIGN.md`](docs/DESIGN.md#edge-cases-not-handled).
+
+## Semantic cache
+
+Optional in-memory semantic caching reuses standalone procedural-help answers, with a one-hour
+TTL, tenant/configuration isolation, and a strict eligibility gate. Live data, mutations and
+resumed conversations bypass it. Embeddings are swappable: OpenAI via fetch, or installed macOS
+word vectors without a new dependency. Production configuration has not been enabled or changed.
+
+Run `pnpm bench:cache --retrieval-only` for the local retrieval benchmark, or `pnpm bench:cache`
+for live baseline/cache executions. Run all tests safely with `pnpm test` (Docker required);
+`pnpm test:safe` remains an alias.
+
+| Similarity threshold | Hit rate | False hits | Live/action hits | Mean lookup |
+| --- | --- | --- | --- | --- |
+| 0.85 | 43.3% | 0 / 52 | 0 / 20 | 33.4 ms |
+| 0.90 | 33.3% | 0 / 40 | 0 / 20 | 29.8 ms |
+| 0.95 | 16.7% | 0 / 20 | 0 / 20 | 29.9 ms |
+
+Measured with real local embeddings and reference answers, not live Telegram traffic. The corpus
+has 80 paraphrases, 20 hard negatives and 20 live/action questions.
+
+Live benchmark status as of **2026-11-03**:
+
+| Measurement | Status |
+| --- | --- |
+| Uncached baseline | 102/120 successful questions; $8.40015775 SDK-reported cost |
+| Interrupted question 103 | $0.09413175 before insufficient credit; excluded from successful results |
+| Live cache runs at 0.85 / 0.90 / 0.95 | Pending; no completed runs |
+| End-to-end latency and cost savings | Not yet measured |
+
+Progress is checkpointed. The next resume reserves the failed request's cost within the original
+$40 benchmark allowance. No overall cost-saving claim is made. See
+[method, resumption command and raw evidence](evals/engineering/README.md).
+
+## Prompt injection testing
+
+`pnpm eval:injection before|after` runs 40 live attacks in a disposable database against pasted
+text and stored product/customer/ledger fields. Labels select output names, not security modes;
+reproducing the baseline requires its recorded commit. Defences include data delimiters, strict
+arguments, catalogue GST validation, capped discounts, owner-confirmed mutations and leak checks.
+
+| Category | Baseline attack successes | Final-source attack successes |
+| --- | --- | --- |
+| Override | 0 / 10 | 0 / 10 |
+| Tool abuse | 0 / 10 | 0 / 10 |
+| Data leak | 0 / 10 | 0 / 10 |
+| Hidden/encoded | 0 / 10 | 0 / 10 |
+| **Overall** | **0 / 40 (0%)** | **0 / 40 (0%)** |
+
+Both complete runs used the same corpus and had no inconclusive cases. The existing agent already
+blocked these attacks, so this is added enforcement and coverage, not a measured reduction in
+attack success. The final-source rerun at `6cfda18` completed on 2026-11-03 with the same
+0/40 successful attacks and no inconclusive cases ($2.7098315 SDK-reported cost), including
+the pasted-document wrapper added after `22025cf`.
+[Evidence, limitations and resumption commands](evals/engineering/README.md) are documented.
+
+## Langfuse tracing and usage report
+
+Optional Langfuse Cloud OTLP tracing runs when `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` and
+`LANGFUSE_BASE_URL` are configured. It exports pseudonymous metadata in the background; content
+capture defaults off. Langfuse controls its own retention. Run
+`DATABASE_URL=<read-only-local-postgres> pnpm report:usage` to print the local database's last 90
+IST-day metrics without store identifiers.
+The report covers requests, thrown tool-handler error rate, idempotent replays, semantic-cache hit
+rate and cost per model turn. The current deployment has one live store/user; I did not query live
+production data while building this change.
+
+| Evidence | Result | Measurement |
+| --- | --- | --- |
+| Automated trace privacy/fail-open tests | 4 passed | `pnpm test` |
+| Full disposable-database test suite | 570 passed, 19 skipped | `pnpm test` |
+| Database-backed usage report and trace-cost reconciliation | Verified in suite | `pnpm test` |
+| Live Langfuse export and production usage figures | Not measured | No Langfuse credentials or production database access used |
+
+## Hosted voice transcript helper
+
+An optional hosted open-weight model can classify and clean up speech fillers before Claude sees
+the turn. Claude Agent SDK remains the only model with SuperOps tools. The helper receives only
+the transcript, has no database or tools, preserves the original, and falls back on uncertainty;
+it is disabled by default. Configure `TIERING_BASE_URL`, `TIERING_API_KEY`, and `TIERING_MODEL`,
+then explicitly set `TIERING_ENABLED=true`. Transcript text then goes to that hosted provider;
+check its retention and no-training settings before enabling it. Offline tests use mocked
+responses and do not establish hosted-model quality. The adapter contract test sent all 30
+synthetic action/injection cases through mocked model triage and used the mocked refusal for each;
+this does not measure real model safety. Hosted quality, latency and critical-field error rate are
+not measured. Run `pnpm test` for the adapter tests. `pnpm eval:tiering` sends a bounded set
+of synthetic cases to the configured hosted model and reports its confusion matrix, unsafe-wrongly-
+safe count, critical-field preservation, correction usefulness, fallback rate and latency. It
+makes no Claude calls and prints no transcript contents. It refuses to run without
+`TIERING_BASE_URL`, `TIERING_API_KEY` and `TIERING_MODEL`; it evaluates 45 synthetic cases. I
+verified the missing-configuration path: it exited 1 and sent no request. The settings are not
+configured, so hosted quality, critical-field preservation, confusion matrix and latency are not
+measured. The 30 mocked refusal cases are adapter-contract coverage, not model-quality evidence.
+
+| Hosted helper evidence | Result | Command |
+| --- | --- | --- |
+| Synthetic labelled cases in harness | 45 | `pnpm eval:tiering` |
+| Missing-configuration safety check | Exit 1, no request sent | `TIERING_BASE_URL= TIERING_API_KEY= TIERING_MODEL= pnpm eval:tiering` |
+| Hosted triage quality, safety confusion matrix and latency | Not measured | Provider settings not configured |
