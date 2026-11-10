@@ -63,8 +63,12 @@ requires `FAIRNESS_BUDGET_USD`; add `--run-live` only after reviewing the estima
 the local disposable eval Postgres variables. The live model suite is not part of CI. The current
 report is NOT RUN, and translated prompts are not yet native-reviewed. Names are imperfect proxies;
 these synthetic checks do not establish real-world behavior. See the [fairness measurement plan](docs/safety/fairness-plan.md).
-This adds maintenance machinery beyond what a one-store app strictly needs; a full live run can
-cost up to $202.50 at the default per-attempt ceiling, and is only incurred when explicitly run.
+For a capped exploratory run, `pnpm eval:fairness --pilot-english --run-live` uses three synthetic
+names, English prompts only, and three repeats. With its $0.075 per-run ceiling this plans at most
+$4.50 of model spend; set `FAIRNESS_BUDGET_USD` no higher than the amount approved. It writes a
+separate report and cannot pass the release gate. The Agent SDK manages prompt caching automatically;
+reports record cache-read and cache-write tokens to measure whether it helps this workload. A full
+live run still has a $202.50 default ceiling and requires native review of all prompts.
 
 CI runs keyless replay checks and synthetic safety cases against its Postgres service. The safety
 cases invoke registered tools and assert their results and database state; they do not exercise

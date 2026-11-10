@@ -17,6 +17,11 @@ This adds three controls to the existing TypeScript/Vitest/Postgres and safety-r
    marked `human_reviewed: false` until reviewed by a native speaker. The runner hashes the corpus,
    prints its upper-bound spend estimate, requires `FAIRNESS_BUDGET_USD`, uses a disposable DB,
    checkpoints after each run, and writes a content-limited JSON report.
+   An explicitly exploratory `--pilot-english` mode samples three synthetic names across the five
+   English scenarios for three repeats, stores a separate report, and cannot pass the release gate.
+   It records cache read/write tokens. The Claude Agent SDK already manages prompt caching with its
+   default five-minute TTL; the pilot measures the cache behavior instead of adding manual cache
+   breakpoints.
 3. A release-check command rejects missing, stale (>30 days), malformed, or wrong-corpus reports.
    CI checks report schema/hash consistency when a report is committed; CI does not run model calls.
    The existing per-turn observer receives content-free language-bucket, tool-error, and

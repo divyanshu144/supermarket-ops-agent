@@ -156,29 +156,28 @@ export function summarizeLanguage(observations: FairnessObservation[]) {
     (['en', 'hi', 'hinglish'] as const).map((lang) => {
       const rows = observations.filter((row) => row.language === lang);
       const passed = rows.filter((row) => row.pass).length;
+      const interval = rows.length
+        ? wilsonInterval(passed, rows.length)
+        : { estimate: 0, lower: 0, upper: 1, successes: 0, total: 0 };
       return [
         lang,
         {
-          ...wilsonInterval(passed, rows.length),
+          ...interval,
           scenarios: [...new Set(rows.map((row) => row.scenarioId))].length,
         },
       ];
     }),
   ) as Record<FairnessLanguage, ReturnType<typeof wilsonInterval> & { scenarios: number }>;
-  const intervals = {
-    hiVsEn: newcombeDifference(
-      rates.hi.successes,
-      rates.hi.total,
-      rates.en.successes,
-      rates.en.total,
-    ),
-    hinglishVsEn: newcombeDifference(
-      rates.hinglish.successes,
-      rates.hinglish.total,
-      rates.en.successes,
-      rates.en.total,
-    ),
-  };
+  const intervals: Record<string, ReturnType<typeof newcombeDifference>> = {};
+  for (const lang of ['hi', 'hinglish'] as const) {
+    if (rates.en.total > 0 && rates[lang].total > 0)
+      intervals[`${lang}VsEn`] = newcombeDifference(
+        rates[lang].successes,
+        rates[lang].total,
+        rates.en.successes,
+        rates.en.total,
+      );
+  }
   return { rates, intervals };
 }
 
@@ -200,7 +199,15 @@ export const FairnessReportSchema = z
     reason: z.string().optional(),
     createdAt: z.string().datetime(),
     corpusSha256: z.string().regex(/^[a-f0-9]{64}$/),
+    evaluationKind: z.enum(['full', 'english-only-pilot']),
     allPromptsReviewed: z.boolean(),
+    sampleNameIds: z.array(z.string()),
+    cacheUsage: z
+      .object({
+        cacheReadInputTokens: z.number().int().nonnegative(),
+        cacheCreationInputTokens: z.number().int().nonnegative(),
+      })
+      .strict(),
     observations: z.array(
       z
         .object({
@@ -286,6 +293,7 @@ export function checkFairnessRelease(
   const report = FairnessReportSchema.parse(input);
   const failures: string[] = [];
   if (report.status !== 'complete') failures.push('result-not-complete');
+  if (report.evaluationKind !== 'full') failures.push('not-full-evaluation');
   if (!report.allPromptsReviewed || corpus.scenarios.some((scenario) => !scenario.human_reviewed))
     failures.push('prompts-unreviewed');
   if (report.corpusSha256 !== currentCorpusHash) failures.push('corpus-hash-mismatch');
@@ -429,6 +437,8 @@ export interface FairnessRunner {
     outcome: OutcomeSignature;
     taskSuccess: boolean;
     costMicroUsd: number;
+    cacheReadInputTokens?: number;
+    cacheCreationInputTokens?: number;
   }>;
 }
 
@@ -447,6 +457,8 @@ export interface FairnessCheckpoint {
     taskSuccess: boolean;
     toolSequence: string[];
     costMicroUsd: number;
+    cacheReadInputTokens: number;
+    cacheCreationInputTokens: number;
   }>;
 }
 
@@ -475,6 +487,8 @@ export const FairnessCheckpointSchema = z
           taskSuccess: z.boolean(),
           toolSequence: z.array(z.string()),
           costMicroUsd: z.number().int().nonnegative(),
+          cacheReadInputTokens: z.number().int().nonnegative(),
+          cacheCreationInputTokens: z.number().int().nonnegative(),
         })
         .strict(),
     ),
@@ -487,6 +501,8 @@ export async function runFairnessEvaluation(args: {
   runner: FairnessRunner;
   capMicroUsd: number;
   estimatedRunMicroUsd: number;
+  evaluationKind?: 'full' | 'english-only-pilot';
+  languages?: FairnessLanguage[];
   checkpoint?: FairnessCheckpoint;
   saveCheckpoint?: (checkpoint: FairnessCheckpoint) => Promise<void>;
 }) {
@@ -504,7 +520,7 @@ export async function runFairnessEvaluation(args: {
     ),
   );
   const languageWork = args.corpus.scenarios.flatMap((scenario) =>
-    (['en', 'hi', 'hinglish'] as const).flatMap((lang) =>
+    (args.languages ?? ['en', 'hi', 'hinglish']).flatMap((lang) =>
       Array.from({ length: args.corpus.repeats }, (_, repetition) => ({
         id: `language:${scenario.id}:${lang}:${repetition + 1}`,
         scenario,
@@ -581,6 +597,8 @@ export async function runFairnessEvaluation(args: {
         taskSuccess: result.taskSuccess,
         toolSequence: [...result.outcome.tools],
         costMicroUsd: result.costMicroUsd,
+        cacheReadInputTokens: result.cacheReadInputTokens ?? 0,
+        cacheCreationInputTokens: result.cacheCreationInputTokens ?? 0,
       });
       checkpoint.inProgressRunId = null;
       await args.saveCheckpoint?.(checkpoint);
@@ -663,7 +681,19 @@ export async function runFairnessEvaluation(args: {
     status: 'complete' as const,
     createdAt: new Date().toISOString(),
     corpusSha256: args.corpusHash,
+    evaluationKind: args.evaluationKind ?? 'full',
     allPromptsReviewed: args.corpus.scenarios.every((scenario) => scenario.human_reviewed),
+    sampleNameIds: args.corpus.names.map((name) => name.id),
+    cacheUsage: {
+      cacheReadInputTokens: checkpoint.completed.reduce(
+        (sum, row) => sum + row.cacheReadInputTokens,
+        0,
+      ),
+      cacheCreationInputTokens: checkpoint.completed.reduce(
+        (sum, row) => sum + row.cacheCreationInputTokens,
+        0,
+      ),
+    },
     observations: redactFairnessObservations(observations),
     nameInvariant: {
       successes: nameComparisons.filter((row) => row.pass).length,

@@ -111,11 +111,21 @@ export function createFairnessAgentRunner(modules: FairnessAgentModules): Fairne
         );
         let success = false;
         let costMicroUsd = 0;
+        let cacheReadInputTokens = 0;
+        let cacheCreationInputTokens = 0;
         try {
           const result = await modules.toolContext.run(context, () =>
             modules.runAgent({ text: input.prompt }),
           );
           costMicroUsd = Math.max(0, Math.round(result.turnCostUsd * 1_000_000));
+          cacheReadInputTokens = result.attempts.reduce(
+            (sum, attempt) => sum + (attempt.cacheReadInputTokens ?? 0),
+            0,
+          );
+          cacheCreationInputTokens = result.attempts.reduce(
+            (sum, attempt) => sum + (attempt.cacheCreationInputTokens ?? 0),
+            0,
+          );
           if (input.scenarioId === 'below-cost-sale') {
             const call = events.find((event) => event.toolName === input.expectedTool);
             const result = resultObject(call?.result);
@@ -167,9 +177,17 @@ export function createFairnessAgentRunner(modules: FairnessAgentModules): Fairne
               String(args?.customer_name ?? args?.customer) === input.name;
           }
         } catch (error) {
-          if (error instanceof modules.AgentRunFailure)
+          if (error instanceof modules.AgentRunFailure) {
             costMicroUsd = Math.round(error.conservativelyChargedTurnCostUsd * 1_000_000);
-          else costMicroUsd = modules.maxRunCostMicroUsd;
+            cacheReadInputTokens = error.attempts.reduce(
+              (sum, attempt) => sum + (attempt.cacheReadInputTokens ?? 0),
+              0,
+            );
+            cacheCreationInputTokens = error.attempts.reduce(
+              (sum, attempt) => sum + (attempt.cacheCreationInputTokens ?? 0),
+              0,
+            );
+          } else costMicroUsd = modules.maxRunCostMicroUsd;
         }
 
         const [stock] = await modules.db
@@ -232,7 +250,13 @@ export function createFairnessAgentRunner(modules: FairnessAgentModules): Fairne
             hasSeededProduct: product !== undefined,
           },
         };
-        return { outcome, taskSuccess: success, costMicroUsd };
+        return {
+          outcome,
+          taskSuccess: success,
+          costMicroUsd,
+          cacheReadInputTokens,
+          cacheCreationInputTokens,
+        };
       } finally {
         await modules.db.delete(stores).where(modules.eq(stores.id, storeId));
       }

@@ -14,13 +14,6 @@ import { createFairnessAgentRunner } from './fairness-agent-runner.js';
 
 const corpusPath = resolve('evals/fairness/corpus.json');
 const hashPath = resolve('evals/fairness/corpus.sha256');
-const reportPath = resolve(
-  process.env.FAIRNESS_RESULT_PATH ?? 'evals/results/fairness-latest.json',
-);
-const checkpointPath = resolve(
-  process.env.FAIRNESS_CHECKPOINT_PATH ?? 'evals/results/fairness-checkpoint.json',
-);
-
 function usd(microUsd: number) {
   return `$${(microUsd / 1_000_000).toFixed(2)}`;
 }
@@ -46,29 +39,47 @@ async function loadCorpus() {
 async function fairnessCli() {
   const args = process.argv.slice(2);
   if (
-    args.some((arg) => !['--run-live'].includes(arg)) ||
-    args.filter((arg) => arg === '--run-live').length > 1
+    args.some((arg) => !['--run-live', '--pilot-english'].includes(arg)) ||
+    args.filter((arg) => arg === '--run-live').length > 1 ||
+    args.filter((arg) => arg === '--pilot-english').length > 1
   ) {
-    throw new Error('Usage: pnpm eval:fairness [--run-live]');
+    throw new Error('Usage: pnpm eval:fairness [--pilot-english] [--run-live]');
   }
   const live = args.includes('--run-live');
+  const pilot = args.includes('--pilot-english');
   const { corpus, hash } = await loadCorpus();
-  const perRunCap = Number(process.env.AGENT_MAX_BUDGET_USD ?? '0.5');
+  const sampleNames = pilot
+    ? [
+        corpus.names[0]!,
+        corpus.names[Math.floor((corpus.names.length - 1) / 2)]!,
+        corpus.names.at(-1)!,
+      ]
+    : corpus.names;
+  const evaluationCorpus = pilot ? { ...corpus, names: sampleNames } : corpus;
+  const languages = pilot ? (['en'] as const) : (['en', 'hi', 'hinglish'] as const);
+  const configuredPerRunCap = Number(process.env.AGENT_MAX_BUDGET_USD ?? (pilot ? '0.075' : '0.5'));
+  const perRunCap = pilot ? Math.min(configuredPerRunCap, 0.075) : configuredPerRunCap;
   if (
     !Number.isFinite(perRunCap) ||
     perRunCap <= 0 ||
     perRunCap * 1_000_000 > Number.MAX_SAFE_INTEGER
   )
     throw new Error('AGENT_MAX_BUDGET_USD must be a finite, positive per-run cap.');
-  const nameRuns = corpus.names.length * corpus.scenarios.length * corpus.repeats;
-  const languageRuns = 3 * corpus.scenarios.length * corpus.repeats;
+  const nameRuns =
+    evaluationCorpus.names.length * evaluationCorpus.scenarios.length * evaluationCorpus.repeats;
+  const languageRuns =
+    languages.length * evaluationCorpus.scenarios.length * evaluationCorpus.repeats;
   const estimateMicroUsd = Math.ceil(perRunCap * 1_000_000) * (nameRuns + languageRuns);
   process.stdout.write(`Fairness corpus ${hash}\n`);
+  if (pilot)
+    process.stdout.write(
+      `Mode: exploratory English-only pilot; names: ${sampleNames.map((name) => name.id).join(', ')}; three repeats; no Hindi/Hinglish prompts.\n`,
+    );
   process.stdout.write(
     `Planned runs: ${nameRuns + languageRuns} (${nameRuns} name-swap, ${languageRuns} language-parity)\n`,
   );
   process.stdout.write(
-    `Per-run budget ceiling: ${usd(Math.ceil(perRunCap * 1_000_000))}; maximum spend estimate: ${usd(estimateMicroUsd)}\n`,
+    `Per-run budget ceiling: $${perRunCap.toFixed(3)}; maximum spend estimate: ${usd(estimateMicroUsd)}\n`,
   );
   const capUsd = Number(process.env.FAIRNESS_BUDGET_USD ?? '');
   if (!Number.isFinite(capUsd) || capUsd <= 0)
@@ -87,10 +98,21 @@ async function fairnessCli() {
     );
     return;
   }
-  if (corpus.scenarios.some((scenario) => !scenario.human_reviewed))
+  if (!pilot && corpus.scenarios.some((scenario) => !scenario.human_reviewed))
     throw new Error(
       'Live fairness evaluation requires native-speaker review of every corpus prompt.',
     );
+
+  const reportPath = resolve(
+    process.env.FAIRNESS_RESULT_PATH ??
+      (pilot ? 'evals/results/fairness-english-pilot.json' : 'evals/results/fairness-latest.json'),
+  );
+  const checkpointPath = resolve(
+    process.env.FAIRNESS_CHECKPOINT_PATH ??
+      (pilot
+        ? 'evals/results/fairness-english-pilot-checkpoint.json'
+        : 'evals/results/fairness-checkpoint.json'),
+  );
 
   const adminUrl = process.env.EVAL_ADMIN_DATABASE_URL;
   const normalUrl = process.env.EVAL_NORMAL_DATABASE_URL;
@@ -130,9 +152,10 @@ async function fairnessCli() {
   let pool: { end(): Promise<void> } | undefined;
   try {
     process.env.DATABASE_URL = sandbox.workerUrl;
-    process.env.TELEGRAM_BOT_TOKEN ??= 'fairness-eval-placeholder-never-used-to-connect';
+    process.env.TELEGRAM_BOT_TOKEN = 'fairness-eval-placeholder-never-used-to-connect';
     process.env.LOG_MESSAGE_TEXT = 'false';
     process.env.NODE_ENV = 'test';
+    process.env.AGENT_MAX_BUDGET_USD = String(perRunCap);
     const [dbModule, schema, drizzle, runtime, context, bills, khata] = await Promise.all([
       import('../db/client.js'),
       import('../db/schema.js'),
@@ -157,24 +180,32 @@ async function fairnessCli() {
       AgentRunFailure: runtime.AgentRunFailure,
     });
     const report = await runFairnessEvaluation({
-      corpus,
+      corpus: evaluationCorpus,
       corpusHash: hash,
       runner,
       capMicroUsd,
       estimatedRunMicroUsd: Math.ceil(perRunCap * 1_000_000),
+      evaluationKind: pilot ? 'english-only-pilot' : 'full',
+      languages: [...languages],
       checkpoint,
       saveCheckpoint: (value) => atomicJson(checkpointPath, value),
     });
     const parsed = FairnessReportSchema.parse(report);
     await atomicJson(reportPath, parsed);
-    const release = checkFairnessRelease(parsed, hash, Date.now(), corpus);
+    const release = pilot
+      ? { pass: false, failures: ['not-full-evaluation'] }
+      : checkFairnessRelease(parsed, hash, Date.now(), corpus);
     process.stdout.write(
       `Completed ${parsed.completedRuns} runs; observed spend ${usd(parsed.actualCostMicroUsd)}.\n`,
     );
-    process.stdout.write(
-      `Release check: ${release.pass ? 'PASS' : `FAIL (${release.failures.join(', ')})`}\n`,
-    );
-    if (!release.pass) process.exitCode = 1;
+    if (pilot)
+      process.stdout.write('Release check: not eligible (exploratory English-only pilot).\n');
+    else {
+      process.stdout.write(
+        `Release check: ${release.pass ? 'PASS' : `FAIL (${release.failures.join(', ')})`}\n`,
+      );
+      if (!release.pass) process.exitCode = 1;
+    }
   } finally {
     await pool?.end();
     await sandbox.cleanup();

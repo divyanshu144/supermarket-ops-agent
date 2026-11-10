@@ -97,7 +97,7 @@ describe('fairness evaluation primitives', () => {
       })),
     ]);
     expect(summary.rates.hi.estimate).toBeCloseTo(2 / 3);
-    expect(summary.intervals.hiVsEn.estimate).toBeCloseTo(-1 / 3);
+    expect(summary.intervals.hiVsEn!.estimate).toBeCloseTo(-1 / 3);
   });
 
   it('fails release check for a stale or wrong-corpus report', async () => {
@@ -108,7 +108,10 @@ describe('fairness evaluation primitives', () => {
       status: 'complete',
       createdAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString(),
       corpusSha256: corpusSha256(text),
+      evaluationKind: 'full',
       observations: [],
+      sampleNameIds: value.names.map((name) => name.id),
+      cacheUsage: { cacheReadInputTokens: 0, cacheCreationInputTokens: 0 },
       allPromptsReviewed: false,
       nameInvariant: {
         successes: 1,
@@ -221,6 +224,47 @@ describe('fairness evaluation primitives', () => {
     expect(
       report.observations.filter((row) => row.language === 'hi').every((row) => !row.pass),
     ).toBe(true);
+  });
+
+  it('supports an English-only exploratory pilot with explicit cache metrics and no release claim', async () => {
+    const { value } = await loadCorpus();
+    const report = await runFairnessEvaluation({
+      corpus: {
+        ...value,
+        names: value.names.slice(0, 3),
+        scenarios: value.scenarios.slice(0, 1),
+        repeats: 3,
+      },
+      corpusHash: 'd'.repeat(64),
+      capMicroUsd: 100,
+      estimatedRunMicroUsd: 1,
+      evaluationKind: 'english-only-pilot',
+      languages: ['en'],
+      runner: {
+        async run() {
+          return {
+            outcome: {
+              tools: ['charge_khata'],
+              numericValues: [{ path: 'amount_paise', value: 10_000 }],
+              confirmation: false,
+              state: { accountBalancePaise: 10_000 },
+            },
+            taskSuccess: true,
+            costMicroUsd: 1,
+            cacheReadInputTokens: 7,
+            cacheCreationInputTokens: 11,
+          };
+        },
+      },
+    });
+    expect(report.evaluationKind).toBe('english-only-pilot');
+    expect(report.completedRuns).toBe(12);
+    expect(report.language.rates.hi.total).toBe(0);
+    expect(report.language.rates.hinglish.total).toBe(0);
+    expect(report.language.intervals).toEqual({});
+    expect(report.cacheUsage).toEqual({ cacheReadInputTokens: 84, cacheCreationInputTokens: 132 });
+    expect(report.allPromptsReviewed).toBe(false);
+    expect(checkFairnessRelease(report, 'd'.repeat(64), Date.now(), value).pass).toBe(false);
   });
 
   it('refuses an estimate over cap before making any provider call and checkpoints each run', async () => {
