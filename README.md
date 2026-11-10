@@ -58,17 +58,33 @@ call is worse than a slow one.
 
 The safety replay is offline and deterministic. The fairness-check branch adds a separate frozen
 synthetic corpus (`evals/fairness/corpus.json`): 24 name swaps and English, Hindi, and Hinglish
-versions of five intents, with three repeats. `pnpm eval:fairness` prints the spend ceiling and
+versions of five intents, with three repeats. `pnpm eval:fairness` prints the spend estimate and
 requires `FAIRNESS_BUDGET_USD`; add `--run-live` only after reviewing the estimate and setting up
 the local disposable eval Postgres variables. The live model suite is not part of CI. The current
 report is NOT RUN, and translated prompts are not yet native-reviewed. Names are imperfect proxies;
 these synthetic checks do not establish real-world behavior. See the [fairness measurement plan](docs/safety/fairness-plan.md).
-For a capped exploratory run, `pnpm eval:fairness --pilot-english --run-live` uses three synthetic
-names, English prompts only, and three repeats. With its $0.075 per-run ceiling this plans at most
-$4.50 of model spend; set `FAIRNESS_BUDGET_USD` no higher than the amount approved. It writes a
+For an exploratory run, `pnpm eval:fairness --pilot-english --run-live` uses three synthetic
+names, English prompts only, and three repeats. With its $0.075 per-run SDK budget setting, the
+planned spend estimate is $4.50; set `FAIRNESS_BUDGET_USD` to the amount approved. This is not a
+hard cap: the SDK can return a call whose actual cost exceeds its configured setting. The ledger
+records actual charges and stops admitting later calls, but cannot prevent an in-flight call from
+overshooting the remaining total budget. It writes a
 separate report and cannot pass the release gate. The Agent SDK manages prompt caching automatically;
 reports record cache-read and cache-write tokens to measure whether it helps this workload. A full
-live run still has a $202.50 default ceiling and requires native review of all prompts.
+live run still has a $202.50 default spend estimate and requires native review of all prompts.
+
+The 2026-11-10 retry completed 60 runs at $4.135834 reported SDK cost. Its $0.075 SDK budget
+setting was exceeded in 29/60 calls; the highest reported call cost was $0.187723. The exact cost
+of an earlier interrupted attempt was not captured, so the combined spend is unknown and cannot be
+verified against a hard $6 total cap. The retry recorded 3,930,941 cache-read tokens and 170,175
+cache-write tokens; 59 runs had cache reads and 58 had cache writes. At Anthropic's
+published Opus 5 rates, those tokens imply about $17.48 lower input-token charges than processing
+the same tokens uncached. This is a price-based estimate, not an uncached A/B measurement or a
+provider invoice comparison. Prompt caching is already active through the Agent SDK, so no extra
+cache-control code was needed. See the [pilot report](evals/results/fairness-english-pilot.json).
+The run is exploratory only: name invariance passed 21/30 comparisons and English task success was
+12/15; it does not establish parity across languages or release readiness. The earlier interrupted
+paid attempt is left out of the report because its exact spend was not captured.
 
 CI runs keyless replay checks and synthetic safety cases against its Postgres service. The safety
 cases invoke registered tools and assert their results and database state; they do not exercise

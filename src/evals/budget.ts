@@ -20,10 +20,12 @@ export class EvalBudget {
     return (actualMicroUsd?: number) => {
       if (settled) throw new Error('Budget reservation already settled');
       const charged = actualMicroUsd === undefined ? maxMicroUsd : actualMicroUsd;
-      if (!Number.isSafeInteger(charged) || charged < 0 || charged > maxMicroUsd)
+      if (!Number.isSafeInteger(charged) || charged < 0)
         throw new Error('Invalid reservation settlement');
       settled = true;
       this.reservedMicroUsd -= maxMicroUsd;
+      // Reservations are admission estimates. Actual provider usage may exceed an estimate;
+      // record it so the next reservation enforces the true remaining global cap.
       this.spentMicroUsd += charged;
     };
   }

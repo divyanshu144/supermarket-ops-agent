@@ -50,26 +50,32 @@ async function fairnessCli() {
   const { corpus, hash } = await loadCorpus();
   const sampleNames = pilot
     ? [
-        corpus.names[0]!,
+        // The first name in the original pilot checkpoint has an ambiguous paid attempt.
+        // Use a different name so a retry never repeats that exact input.
+        corpus.names[1] ?? corpus.names[0]!,
         corpus.names[Math.floor((corpus.names.length - 1) / 2)]!,
         corpus.names.at(-1)!,
       ]
     : corpus.names;
   const evaluationCorpus = pilot ? { ...corpus, names: sampleNames } : corpus;
   const languages = pilot ? (['en'] as const) : (['en', 'hi', 'hinglish'] as const);
-  const configuredPerRunCap = Number(process.env.AGENT_MAX_BUDGET_USD ?? (pilot ? '0.075' : '0.5'));
-  const perRunCap = pilot ? Math.min(configuredPerRunCap, 0.075) : configuredPerRunCap;
+  const configuredPerRunBudgetUsd = Number(
+    process.env.AGENT_MAX_BUDGET_USD ?? (pilot ? '0.075' : '0.5'),
+  );
+  const perRunBudgetUsd = pilot
+    ? Math.min(configuredPerRunBudgetUsd, 0.075)
+    : configuredPerRunBudgetUsd;
   if (
-    !Number.isFinite(perRunCap) ||
-    perRunCap <= 0 ||
-    perRunCap * 1_000_000 > Number.MAX_SAFE_INTEGER
+    !Number.isFinite(perRunBudgetUsd) ||
+    perRunBudgetUsd <= 0 ||
+    perRunBudgetUsd * 1_000_000 > Number.MAX_SAFE_INTEGER
   )
-    throw new Error('AGENT_MAX_BUDGET_USD must be a finite, positive per-run cap.');
+    throw new Error('AGENT_MAX_BUDGET_USD must be a finite, positive per-run budget setting.');
   const nameRuns =
     evaluationCorpus.names.length * evaluationCorpus.scenarios.length * evaluationCorpus.repeats;
   const languageRuns =
     languages.length * evaluationCorpus.scenarios.length * evaluationCorpus.repeats;
-  const estimateMicroUsd = Math.ceil(perRunCap * 1_000_000) * (nameRuns + languageRuns);
+  const estimateMicroUsd = Math.ceil(perRunBudgetUsd * 1_000_000) * (nameRuns + languageRuns);
   process.stdout.write(`Fairness corpus ${hash}\n`);
   if (pilot)
     process.stdout.write(
@@ -79,7 +85,7 @@ async function fairnessCli() {
     `Planned runs: ${nameRuns + languageRuns} (${nameRuns} name-swap, ${languageRuns} language-parity)\n`,
   );
   process.stdout.write(
-    `Per-run budget ceiling: $${perRunCap.toFixed(3)}; maximum spend estimate: ${usd(estimateMicroUsd)}\n`,
+    `Per-run SDK budget setting: $${perRunBudgetUsd.toFixed(3)}; estimated spend: ${usd(estimateMicroUsd)}. This is not a hard cap: a single in-flight SDK call can exceed its setting. The ledger records actual charges and stops admitting later calls.\n`,
   );
   const capUsd = Number(process.env.FAIRNESS_BUDGET_USD ?? '');
   if (!Number.isFinite(capUsd) || capUsd <= 0)
@@ -155,7 +161,7 @@ async function fairnessCli() {
     process.env.TELEGRAM_BOT_TOKEN = 'fairness-eval-placeholder-never-used-to-connect';
     process.env.LOG_MESSAGE_TEXT = 'false';
     process.env.NODE_ENV = 'test';
-    process.env.AGENT_MAX_BUDGET_USD = String(perRunCap);
+    process.env.AGENT_MAX_BUDGET_USD = String(perRunBudgetUsd);
     const [dbModule, schema, drizzle, runtime, context, bills, khata] = await Promise.all([
       import('../db/client.js'),
       import('../db/schema.js'),
@@ -167,7 +173,7 @@ async function fairnessCli() {
     ]);
     pool = dbModule.pool;
     const runner = createFairnessAgentRunner({
-      maxRunCostMicroUsd: Math.ceil(perRunCap * 1_000_000),
+      maxRunCostMicroUsd: Math.ceil(perRunBudgetUsd * 1_000_000),
       db: dbModule.db,
       schema,
       eq: drizzle.eq,
@@ -184,7 +190,7 @@ async function fairnessCli() {
       corpusHash: hash,
       runner,
       capMicroUsd,
-      estimatedRunMicroUsd: Math.ceil(perRunCap * 1_000_000),
+      estimatedRunMicroUsd: Math.ceil(perRunBudgetUsd * 1_000_000),
       evaluationKind: pilot ? 'english-only-pilot' : 'full',
       languages: [...languages],
       checkpoint,

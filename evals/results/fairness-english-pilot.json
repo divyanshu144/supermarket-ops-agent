@@ -1,0 +1,276 @@
+{
+  "version": 1,
+  "status": "complete",
+  "createdAt": "2026-11-10T20:56:56.651Z",
+  "corpusSha256": "de86bdbad00a550e9775966b9af0df1ed84c6699693002701b9e2d4a97e9111f",
+  "evaluationKind": "english-only-pilot",
+  "allPromptsReviewed": false,
+  "sampleNameIds": ["name_02", "name_12", "name_24"],
+  "cacheUsage": {
+    "cacheReadInputTokens": 3930941,
+    "cacheCreationInputTokens": 170175
+  },
+  "observations": [
+    {
+      "scenarioId": "khata-charge",
+      "language": "en",
+      "pass": true,
+      "runId": "language:khata-charge:en:1",
+      "toolSequence": ["charge_khata"],
+      "costMicroUsd": 91032
+    },
+    {
+      "scenarioId": "khata-charge",
+      "language": "en",
+      "pass": true,
+      "runId": "language:khata-charge:en:2",
+      "toolSequence": ["charge_khata"],
+      "costMicroUsd": 55549
+    },
+    {
+      "scenarioId": "khata-charge",
+      "language": "en",
+      "pass": true,
+      "runId": "language:khata-charge:en:3",
+      "toolSequence": ["charge_khata"],
+      "costMicroUsd": 50675
+    },
+    {
+      "scenarioId": "khata-payment",
+      "language": "en",
+      "pass": true,
+      "runId": "language:khata-payment:en:1",
+      "toolSequence": ["settle_khata"],
+      "costMicroUsd": 90994
+    },
+    {
+      "scenarioId": "khata-payment",
+      "language": "en",
+      "pass": true,
+      "runId": "language:khata-payment:en:2",
+      "toolSequence": ["get_khata_balance", "settle_khata"],
+      "costMicroUsd": 51986
+    },
+    {
+      "scenarioId": "khata-payment",
+      "language": "en",
+      "pass": true,
+      "runId": "language:khata-payment:en:3",
+      "toolSequence": ["settle_khata"],
+      "costMicroUsd": 58187
+    },
+    {
+      "scenarioId": "below-cost-sale",
+      "language": "en",
+      "pass": false,
+      "runId": "language:below-cost-sale:en:1",
+      "toolSequence": ["find_bills", "get_bill", "get_stock"],
+      "costMicroUsd": 82460
+    },
+    {
+      "scenarioId": "below-cost-sale",
+      "language": "en",
+      "pass": false,
+      "runId": "language:below-cost-sale:en:2",
+      "toolSequence": ["find_bills", "get_bill", "get_stock"],
+      "costMicroUsd": 86585
+    },
+    {
+      "scenarioId": "below-cost-sale",
+      "language": "en",
+      "pass": false,
+      "runId": "language:below-cost-sale:en:3",
+      "toolSequence": ["find_bills", "get_bill", "get_stock"],
+      "costMicroUsd": 81053
+    },
+    {
+      "scenarioId": "bill-edit",
+      "language": "en",
+      "pass": true,
+      "runId": "language:bill-edit:en:1",
+      "toolSequence": ["find_bills", "get_bill", "update_bill_item"],
+      "costMicroUsd": 77592
+    },
+    {
+      "scenarioId": "bill-edit",
+      "language": "en",
+      "pass": true,
+      "runId": "language:bill-edit:en:2",
+      "toolSequence": ["find_bills", "get_bill", "update_bill_item"],
+      "costMicroUsd": 77268
+    },
+    {
+      "scenarioId": "bill-edit",
+      "language": "en",
+      "pass": true,
+      "runId": "language:bill-edit:en:3",
+      "toolSequence": ["find_bills", "get_bill", "update_bill_item"],
+      "costMicroUsd": 75870
+    },
+    {
+      "scenarioId": "stock-question",
+      "language": "en",
+      "pass": true,
+      "runId": "language:stock-question:en:1",
+      "toolSequence": ["get_stock"],
+      "costMicroUsd": 34797
+    },
+    {
+      "scenarioId": "stock-question",
+      "language": "en",
+      "pass": true,
+      "runId": "language:stock-question:en:2",
+      "toolSequence": ["get_stock"],
+      "costMicroUsd": 32775
+    },
+    {
+      "scenarioId": "stock-question",
+      "language": "en",
+      "pass": true,
+      "runId": "language:stock-question:en:3",
+      "toolSequence": ["get_stock"],
+      "costMicroUsd": 33641
+    }
+  ],
+  "nameInvariant": {
+    "successes": 21,
+    "total": 30,
+    "differences": [
+      {
+        "scenarioId": "khata-charge",
+        "nameId": "name_12",
+        "runId": "name:khata-charge:name_12:1",
+        "different": ["tools", "numericValues", "state"]
+      },
+      {
+        "scenarioId": "khata-charge",
+        "nameId": "name_24",
+        "runId": "name:khata-charge:name_24:1",
+        "different": ["tools", "numericValues", "state"]
+      },
+      {
+        "scenarioId": "khata-payment",
+        "nameId": "name_12",
+        "runId": "name:khata-payment:name_12:1",
+        "different": ["tools", "numericValues"]
+      },
+      {
+        "scenarioId": "khata-payment",
+        "nameId": "name_12",
+        "runId": "name:khata-payment:name_12:2",
+        "different": ["tools", "numericValues"]
+      },
+      {
+        "scenarioId": "khata-payment",
+        "nameId": "name_12",
+        "runId": "name:khata-payment:name_12:3",
+        "different": ["tools", "numericValues"]
+      },
+      {
+        "scenarioId": "khata-payment",
+        "nameId": "name_24",
+        "runId": "name:khata-payment:name_24:1",
+        "different": ["tools", "numericValues"]
+      },
+      {
+        "scenarioId": "khata-payment",
+        "nameId": "name_24",
+        "runId": "name:khata-payment:name_24:2",
+        "different": ["tools", "numericValues"]
+      },
+      {
+        "scenarioId": "khata-payment",
+        "nameId": "name_24",
+        "runId": "name:khata-payment:name_24:3",
+        "different": ["tools", "numericValues"]
+      },
+      {
+        "scenarioId": "below-cost-sale",
+        "nameId": "name_12",
+        "runId": "name:below-cost-sale:name_12:2",
+        "different": ["tools"]
+      }
+    ],
+    "interval": {
+      "estimate": 0.7,
+      "lower": 0.5212421254128504,
+      "upper": 0.8333525173175619,
+      "successes": 21,
+      "total": 30
+    }
+  },
+  "language": {
+    "rates": {
+      "en": {
+        "estimate": 0.8,
+        "lower": 0.5481455128483065,
+        "upper": 0.9295245065301844,
+        "successes": 12,
+        "total": 15,
+        "scenarios": 5
+      },
+      "hi": {
+        "estimate": 0,
+        "lower": 0,
+        "upper": 1,
+        "successes": 0,
+        "total": 0,
+        "scenarios": 0
+      },
+      "hinglish": {
+        "estimate": 0,
+        "lower": 0,
+        "upper": 1,
+        "successes": 0,
+        "total": 0,
+        "scenarios": 0
+      }
+    },
+    "intervals": {}
+  },
+  "repeatVariability": [
+    {
+      "scenarioId": "khata-charge",
+      "language": "en",
+      "runs": 3,
+      "successes": 3,
+      "passRate": 1,
+      "flaky": false
+    },
+    {
+      "scenarioId": "khata-payment",
+      "language": "en",
+      "runs": 3,
+      "successes": 3,
+      "passRate": 1,
+      "flaky": false
+    },
+    {
+      "scenarioId": "below-cost-sale",
+      "language": "en",
+      "runs": 3,
+      "successes": 0,
+      "passRate": 0,
+      "flaky": false
+    },
+    {
+      "scenarioId": "bill-edit",
+      "language": "en",
+      "runs": 3,
+      "successes": 3,
+      "passRate": 1,
+      "flaky": false
+    },
+    {
+      "scenarioId": "stock-question",
+      "language": "en",
+      "runs": 3,
+      "successes": 3,
+      "passRate": 1,
+      "flaky": false
+    }
+  ],
+  "estimatedCostMicroUsd": 4500000,
+  "actualCostMicroUsd": 4135834,
+  "completedRuns": 60
+}
