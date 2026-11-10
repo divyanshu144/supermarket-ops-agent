@@ -19,7 +19,9 @@
     "db:migrate": "drizzle-kit migrate",
     "invite": "tsx src/scripts/invite.ts",
     "eval:compare": "tsx src/evals/compare-cli.ts",
-    "eval:safety": "tsx src/evals/safety-replay-cli.ts"
+    "eval:safety": "tsx src/evals/safety-replay-cli.ts",
+    "eval:fairness": "tsx src/evals/fairness-cli.ts",
+    "fairness:release-check": "tsx src/evals/fairness-release-cli.ts"
   },
   "keywords": [],
   "author": "",

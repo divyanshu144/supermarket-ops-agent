@@ -1,5 +1,19 @@
 # Todo
 
+## Customer name and language behavior measurements — approved 2026-11-10
+
+Plan: `docs/safety/fairness-plan.md`.
+
+- [x] Deterministic name-invariance handler/repository tests on disposable Postgres
+- [x] Identity-free typed decision inputs and type-level/structural guard tests
+- [x] Frozen 24-name/three-language corpus with hash and review metadata
+- [x] Offline live-runner primitives: budget, sandbox, checkpoint, redaction, Wilson/Newcombe stats
+- [x] `pnpm eval:fairness` live runner with explicit cap and resumable report output
+- [x] `pnpm fairness:release-check` freshness/hash/threshold gate and CI schema/hash test
+- [x] Runtime language counters assessed; skipped because current text and voice inputs have no declared language
+- [x] Governance docs, README, `CLAUDE.md`, `HANDOFF.md`, and new `decisions.md`
+- [ ] Mutation-ledger evidence, full gate, review, push branch, open PR (do not merge/deploy)
+
 ## Responsible AI, data protection, and safety (2026-10-07) — approved, implementation underway
 
 - [x] Draft workstream spec: `docs/specs/2026-10-07-responsible-ai.md`

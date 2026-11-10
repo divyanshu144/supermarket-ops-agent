@@ -16,6 +16,7 @@ Statuses describe repository evidence at this checkpoint, not legal compliance.
 | Telegram may interpret outgoing text if a parse mode is enabled | partial | Project maintainer | Keep parse mode unset for untrusted text; add broad tests if a send path starts using formatting. |
 | Provider retention and deletion are outside app controls | not done | Operator | Check the provider account settings and contractual terms; do not claim deletion until verified. |
 | Live model quality and cost semantics are unverified | partial | Project maintainer | When credits exist, follow the eval runbook with explicit caps; do not accept a synthetic baseline as live evidence. |
+| Name- or language-linked response differences are not measured in real use | partial | Project maintainer | Run the frozen synthetic counterfactual suite with an explicit spend cap; obtain native-speaker review and inspect every difference. The current result is NOT RUN; no demographic inference is made. |
 | Privacy request contact is not configured | partial | Operator | Set a verified `PRIVACY_CONTACT` if desired; otherwise the bot falls back to the invite issuer. |
 
 I use OWASP LLM/Agentic categories and NIST AI RMF functions as organizing references only. This

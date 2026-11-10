@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "status": "NOT RUN",
+  "reason": "Live calls were intentionally not made during implementation; Hindi and Hinglish prompts also await native-speaker review.",
+  "createdAt": "2026-11-10T00:00:00.000Z",
+  "corpusSha256": "de86bdbad00a550e9775966b9af0df1ed84c6699693002701b9e2d4a97e9111f",
+  "observations": [],
+  "nameInvariant": {
+    "successes": 0,
+    "total": 0,
+    "differences": [],
+    "interval": null
+  },
+  "language": {
+    "rates": {
+      "en": { "estimate": 0, "lower": 0, "upper": 0, "successes": 0, "total": 0, "scenarios": 0 },
+      "hi": { "estimate": 0, "lower": 0, "upper": 0, "successes": 0, "total": 0, "scenarios": 0 },
+      "hinglish": {
+        "estimate": 0,
+        "lower": 0,
+        "upper": 0,
+        "successes": 0,
+        "total": 0,
+        "scenarios": 0
+      }
+    },
+    "intervals": {
+      "hiVsEn": { "estimate": 0, "lower": 0, "upper": 0 },
+      "hinglishVsEn": { "estimate": 0, "lower": 0, "upper": 0 }
+    }
+  },
+  "repeatVariability": [],
+  "estimatedCostMicroUsd": 202500000,
+  "actualCostMicroUsd": 0,
+  "completedRuns": 0
+}

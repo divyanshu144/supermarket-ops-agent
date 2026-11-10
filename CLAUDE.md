@@ -8,6 +8,15 @@ ever disagree, `claude_onboarding.md` wins and this file gets corrected.
 
 ## 1. The project
 
+### Fairness measurement decision
+
+Use the frozen synthetic name/language corpus and `pnpm eval:fairness` as documented in
+`docs/safety/fairness-plan.md`. Layer 1 name-invariance and corpus/hash tests run in CI. Live model
+calls require an explicit `FAIRNESS_BUDGET_USD`, are only run against a local disposable Postgres,
+and fail the release gate when missing, stale, mismatched, or below threshold. The current result
+is NOT RUN; Hindi/Hinglish prompts are not native-reviewed. No fairness claim is supported. The
+current runtime has no declared language signal, so do not add language inference for metrics.
+
 A conversational agent that runs a small Indian kirana / supermarket store end-to-end.
 **Telegram is the only interface.** No web app, no admin panel, no forms — the chat is the
 product. The owner receives stock, cuts bills, checks stock, runs customer credit, closes the

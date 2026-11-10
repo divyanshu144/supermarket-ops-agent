@@ -40,6 +40,15 @@ The replay evaluation is synthetic and checks deterministic behavior. There is n
 baseline and no live model call was run for this work. Model responses can still be wrong, ambiguous
 or inconsistent. Owners should verify consequential records in the shop's source documents.
 
+The fairness-check work adds a Postgres-backed synthetic name-swap test and a budget-gated live
+counterfactual runner. Its committed report is **NOT RUN**: the live runner was not invoked, and the
+Hindi and Hinglish prompts remain `human_reviewed: false`. Twenty-four synthetic names and five
+scenario templates cannot establish behavior for real customers; names are only an imperfect
+proxy, model output varies across repeats, and the app has one live user. The corpus intentionally
+has no demographic labels. Names were selected from a public combined given-name list, not sampled
+as a representative population ([source and limits](fairness-plan.md#limits)). Current text and Whisper paths do not expose a declared language bucket,
+so no language detector or runtime language counters were added.
+
 ## Data and oversight
 
 See the [data inventory](../privacy/data-inventory.md) for storage, retention and processor paths,

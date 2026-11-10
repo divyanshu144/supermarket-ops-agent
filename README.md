@@ -56,6 +56,16 @@ call is worse than a slow one.
 
 ## How agent quality is measured
 
+The safety replay is offline and deterministic. The fairness-check branch adds a separate frozen
+synthetic corpus (`evals/fairness/corpus.json`): 24 name swaps and English, Hindi, and Hinglish
+versions of five intents, with three repeats. `pnpm eval:fairness` prints the spend ceiling and
+requires `FAIRNESS_BUDGET_USD`; add `--run-live` only after reviewing the estimate and setting up
+the local disposable eval Postgres variables. The live model suite is not part of CI. The current
+report is NOT RUN, and translated prompts are not yet native-reviewed. Names are imperfect proxies;
+these synthetic checks do not establish real-world behavior. See the [fairness measurement plan](docs/safety/fairness-plan.md).
+This adds maintenance machinery beyond what a one-store app strictly needs; a full live run can
+cost up to $202.50 at the default per-attempt ceiling, and is only incurred when explicitly run.
+
 CI runs keyless replay checks and synthetic safety cases against its Postgres service. The safety
 cases invoke registered tools and assert their results and database state; they do not exercise
 model tool choice, replies, or live agent behavior. SDK cost semantics remain unverified, so

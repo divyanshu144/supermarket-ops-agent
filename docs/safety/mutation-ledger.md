@@ -1,5 +1,24 @@
 # Mutation ledger
 
+## Customer name and language measurement
+
+This branch adds mutation guards for the name-free khata payment decision and frozen corpus. The
+integration test compares normal settlement outcomes and overpayment confirmation across two
+synthetic customer names against disposable Postgres. A deliberate name-specific rule
+(`customerName === 'Sara Fixture'` forces confirmation) made
+`src/tools/confirmed-actions.test.ts -t 'settles identical synthetic accounts'` fail: the second
+account returned `awaiting_confirmation` instead of `settled`; the mutation was removed. Adding
+`customerName?: string` to the decision input made `pnpm typecheck` fail with TS2344 at the exact
+type assertion; the field was removed. The eval harness test plants a numeric/state outcome
+difference for one synthetic name and detects it; identical mocked outcomes produce no differences.
+Changing the pinned digest to 64 zeroes made the corpus checksum test fail; the original digest was
+restored. A stale-result assertion checks that 31 days is rejected. The final test run on the
+disposable `fairness_test` database passed 552 tests, with 13 existing skips.
+
+Live calls were not made. The model-driven name rule, native-reviewed language translations, and
+release thresholds have not been empirically verified against Anthropic output. The current
+committed `fairness-latest.json` is explicitly NOT RUN and therefore cannot pass the release gate.
+
 This ledger records source mutations run locally against the disposable test database. A mutation
 is recorded as killed only when its targeted test failed for the expected guard and the source was
 then restored. It does not claim production or legal compliance.

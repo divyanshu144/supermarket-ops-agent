@@ -79,3 +79,6 @@ jobs:
 
       - name: Offline safety replay
         run: pnpm eval:safety
+
+      - name: Fairness corpus and decision guards
+        run: pnpm exec vitest run src/evals/fairness.test.ts src/domain/khata-payment-decision.test.ts

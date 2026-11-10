@@ -1,5 +1,24 @@
 # HANDOFF
 
+## Fairness checks branch checkpoint (2026-11-10)
+
+Implementation is in isolated worktree `/private/tmp/supermarket-ops-agent-fairness`, branch
+`feat/fairness-checks` from `main` at `d99b71f`. It is separate from the original checkout and
+the in-progress Neo4j worktree. The design and rollout are in `docs/safety/fairness-plan.md`.
+
+Implemented so far: a 24-name/five-intent/three-language synthetic corpus with pinned SHA-256;
+name-free khata payment decision helper and real PostgreSQL handler invariance test; offline
+mocked evaluator with cost admission, fingerprints, checkpoints, Wilson/Newcombe intervals and a
+fail-closed 30-day release check; live agent adapter restricted to a local disposable PostgreSQL
+cluster; governance docs and a committed NOT RUN report. Runtime language counters are skipped
+because neither the text path nor current Whisper transcript path provides a declared language.
+Hindi/Hinglish prompts remain `human_reviewed: false`.
+
+Live evaluation was not run; no Anthropic credit was used. Before running it, review the CLI's
+maximum estimate (default: 405 planned attempts × $0.50 per-run ceiling = $202.50), obtain a native
+speaker review, and set an explicit `FAIRNESS_BUDGET_USD`. No main branch, production data, Railway
+project, or live Telegram bot has been touched.
+
 Written so a cold-start session can resume. Update at every checkpoint.
 
 **Last updated:** 2026-10-09 (live cost probe run, `SDK_COST_IS_CUMULATIVE=false`); previously 2026-10-07, W3 correction committed as `8d34362`; W6 verified and ready for local commit
