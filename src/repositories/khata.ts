@@ -2,6 +2,7 @@ import { and, desc, eq, ilike, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { idempotencyKeys, khataAccounts, khataEntries } from '../db/schema.js';
 import { formatPaise } from '../domain/money.js';
+import { paymentDecision } from '../domain/khata-payment-decision.js';
 
 /**
  * Khata is the kirana's informal credit book, and its two directions are deliberately not
@@ -175,7 +176,13 @@ export async function settleAccount(
       .for('update')
       .limit(1);
 
-    if (!input.allowOverpay && input.amountPaise > locked!.balancePaise) {
+    if (
+      paymentDecision({
+        balancePaise: locked!.balancePaise,
+        amountPaise: input.amountPaise,
+        allowOverpay: input.allowOverpay ?? false,
+      }) === 'confirm_overpayment'
+    ) {
       return {
         status: 'exceeds_balance' as const,
         customerName: locked!.customerName,
