@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
-import { khataAccounts, stores } from '../db/schema.js';
+import { graphOutbox, khataAccounts, stores } from '../db/schema.js';
 import {
   accountStatement,
   chargeAccount,
@@ -62,14 +62,17 @@ describe('charging', () => {
   });
 
   it('records every charge as a ledger entry', async () => {
-    await chargeAccount(STORE, { customerName: 'Ramesh', amountPaise: 5_000, note: 'chai' });
-    const statement = await accountStatement(STORE, { customerQuery: 'Ramesh' });
+    await chargeAccount(STORE, { customerName: 'Priya', amountPaise: 5_000, note: 'chai' });
+    const statement = await accountStatement(STORE, { customerQuery: 'Priya' });
 
     expect(statement.status).toBe('found');
     if (statement.status === 'found') {
       expect(statement.entries[0]!.kind).toBe('charge');
       expect(statement.entries[0]!.note).toBe('chai');
     }
+    const events = await db.select().from(graphOutbox).where(eq(graphOutbox.storeId, STORE));
+    expect(events.map((event) => event.eventType).sort()).toEqual(['khata_account', 'khata_entry']);
+    expect(JSON.stringify(events.map((event) => event.payload))).not.toContain('chai');
   });
 });
 

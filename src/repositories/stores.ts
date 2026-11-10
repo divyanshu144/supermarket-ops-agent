@@ -1,6 +1,7 @@
 import { db } from '../db/client.js';
 import { stores } from '../db/schema.js';
 import { seedStore } from '../seed/index.js';
+import { appendGraphEvent } from './graph-outbox.js';
 
 const DEFAULT_NAME = 'Sharma Kirana Store';
 const DEFAULT_GSTIN = '27AAAAA0000A1Z5';
@@ -17,16 +18,31 @@ export async function provisionStore(
   chatId: bigint,
   ownerUserId?: bigint,
 ): Promise<{ id: bigint; created: boolean }> {
-  const inserted = await db
-    .insert(stores)
-    .values({
-      id: chatId,
-      ownerUserId: ownerUserId ?? null,
-      name: DEFAULT_NAME,
-      gstin: DEFAULT_GSTIN,
-    })
-    .onConflictDoNothing()
-    .returning({ id: stores.id });
+  const inserted = await db.transaction(async (tx) => {
+    const rows = await tx
+      .insert(stores)
+      .values({
+        id: chatId,
+        ownerUserId: ownerUserId ?? null,
+        name: DEFAULT_NAME,
+        gstin: DEFAULT_GSTIN,
+      })
+      .onConflictDoNothing()
+      .returning();
+    if (rows[0]) {
+      const row = rows[0];
+      await appendGraphEvent(tx, {
+        type: 'store',
+        storeId: String(row.id),
+        id: String(row.id),
+        name: row.name,
+        gstin: row.gstin,
+        stateCode: row.stateCode,
+        createdAt: row.createdAt.toISOString(),
+      });
+    }
+    return rows;
+  });
 
   if (inserted.length === 0) return { id: chatId, created: false };
 

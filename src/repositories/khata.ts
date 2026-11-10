@@ -2,6 +2,7 @@ import { and, desc, eq, ilike, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { idempotencyKeys, khataAccounts, khataEntries } from '../db/schema.js';
 import { formatPaise } from '../domain/money.js';
+import { appendGraphEvent } from './graph-outbox.js';
 
 /**
  * Khata is the kirana's informal credit book, and its two directions are deliberately not
@@ -83,6 +84,7 @@ export async function chargeAccount(
       .limit(1);
 
     let accountId: string;
+    let accountCreated: typeof khataAccounts.$inferSelect | undefined;
     let opened = false;
 
     if (existing.length === 0) {
@@ -91,16 +93,38 @@ export async function chargeAccount(
         .values({ storeId, customerName: input.customerName, balancePaise: 0 })
         .returning();
       accountId = created!.id;
+      accountCreated = created;
       opened = true;
     } else {
       accountId = existing[0]!.id;
     }
 
-    await tx.insert(khataEntries).values({
+    if (accountCreated) {
+      await appendGraphEvent(tx, {
+        type: 'khata_account',
+        storeId: String(storeId),
+        id: accountCreated.id,
+        createdAt: accountCreated.createdAt.toISOString(),
+      });
+    }
+    const [entry] = await tx
+      .insert(khataEntries)
+      .values({
+        accountId,
+        kind: 'charge',
+        amountPaise: input.amountPaise,
+        note: input.note ?? null,
+      })
+      .returning();
+    await appendGraphEvent(tx, {
+      type: 'khata_entry',
+      storeId: String(storeId),
+      id: entry!.id,
       accountId,
-      kind: 'charge',
-      amountPaise: input.amountPaise,
-      note: input.note ?? null,
+      kind: entry!.kind,
+      amountPaise: entry!.amountPaise,
+      billId: entry!.billId,
+      createdAt: entry!.createdAt.toISOString(),
     });
 
     const [updated] = await tx
@@ -184,11 +208,24 @@ export async function settleAccount(
       };
     }
 
-    await tx.insert(khataEntries).values({
+    const [entry] = await tx
+      .insert(khataEntries)
+      .values({
+        accountId: locked!.id,
+        kind: 'payment',
+        amountPaise: input.amountPaise,
+        note: input.note ?? null,
+      })
+      .returning();
+    await appendGraphEvent(tx, {
+      type: 'khata_entry',
+      storeId: String(storeId),
+      id: entry!.id,
       accountId: locked!.id,
-      kind: 'payment',
-      amountPaise: input.amountPaise,
-      note: input.note ?? null,
+      kind: entry!.kind,
+      amountPaise: entry!.amountPaise,
+      billId: entry!.billId,
+      createdAt: entry!.createdAt.toISOString(),
     });
 
     const [updated] = await tx

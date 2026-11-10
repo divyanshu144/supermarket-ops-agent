@@ -20,7 +20,6 @@ export type GraphEvent =
       hsnCode: string;
       gstRateBps: number;
       mrpPaise: number;
-      createdAt: string;
     }
   | {
       type: 'bill';
@@ -139,7 +138,6 @@ export function mapGraphEvent(event: GraphEvent): GraphMutation {
         hsnCode: event.hsnCode,
         gstRateBps: event.gstRateBps,
         mrpPaise: event.mrpPaise,
-        createdAt: event.createdAt,
       });
     case 'bill':
       return mutation(event, {

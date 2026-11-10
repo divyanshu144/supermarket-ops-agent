@@ -2,6 +2,7 @@ import { randomBytes, createHash } from 'node:crypto';
 import { and, eq, gt, lt, ne, or, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { auditLog, pendingActions } from '../db/schema.js';
+import { appendGraphEvent } from './graph-outbox.js';
 
 const CONFIRMATION_TTL_MS = 10 * 60 * 1000;
 const PROCESSING_LEASE_MS = 30 * 1000;
@@ -134,14 +135,41 @@ export async function completePendingAction(input: {
           eq(pendingActions.status, 'processing'),
         ),
       )
-      .returning({ id: pendingActions.id });
+      .returning({
+        id: pendingActions.id,
+        tool: pendingActions.tool,
+        createdAt: pendingActions.createdAt,
+      });
     if (!row) return false;
-    await tx.insert(auditLog).values({
-      storeId: input.storeId,
-      action: input.action,
-      tool: input.tool,
+    const [audit] = await tx
+      .insert(auditLog)
+      .values({
+        storeId: input.storeId,
+        action: input.action,
+        tool: input.tool,
+        outcome: input.outcome,
+        updateId: input.updateId,
+      })
+      .returning();
+    await appendGraphEvent(tx, {
+      type: 'pending_action',
+      storeId: String(input.storeId),
+      id: row.id,
+      tool: row.tool,
+      status: 'confirmed',
       outcome: input.outcome,
-      updateId: input.updateId,
+      createdAt: row.createdAt.toISOString(),
+    });
+    await appendGraphEvent(tx, {
+      type: 'audit_event',
+      storeId: String(input.storeId),
+      id: String(audit!.id),
+      action: audit!.action,
+      tool: audit!.tool,
+      outcome: audit!.outcome,
+      updateId: String(audit!.updateId),
+      createdAt: audit!.createdAt.toISOString(),
+      pendingActionId: row.id,
     });
     return true;
   });

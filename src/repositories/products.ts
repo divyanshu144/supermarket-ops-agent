@@ -2,6 +2,7 @@ import { and, eq, gte, ilike, lte, or, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { products, stockMovements } from '../db/schema.js';
 import { formatQuantity, toBaseUnits, type Unit } from '../domain/units.js';
+import { appendGraphEvent } from './graph-outbox.js';
 
 /** Which physical dimension a unit measures. Grams cannot be received as packets. */
 const DIMENSION: Record<Unit, 'mass' | 'volume' | 'count'> = {
@@ -109,12 +110,25 @@ export async function receiveStock(
       .where(and(eq(products.id, product.id), eq(products.storeId, storeId)))
       .returning();
 
-    await tx.insert(stockMovements).values({
-      storeId,
+    const [movement] = await tx
+      .insert(stockMovements)
+      .values({
+        storeId,
+        productId: product.id,
+        kind: 'receive',
+        qtyBaseDelta: qtyBase,
+        unitCostPaise: input.costPricePaise ?? null,
+      })
+      .returning();
+    await appendGraphEvent(tx, {
+      type: 'stock_movement',
+      storeId: String(storeId),
+      id: movement!.id,
       productId: product.id,
       kind: 'receive',
       qtyBaseDelta: qtyBase,
-      unitCostPaise: input.costPricePaise ?? null,
+      billId: null,
+      createdAt: movement!.createdAt.toISOString(),
     });
 
     return {
@@ -145,24 +159,65 @@ export async function addProduct(
     reorderLevelBase?: number;
   },
 ): Promise<AddProductResult> {
-  const inserted = await db
-    .insert(products)
-    .values({
-      storeId,
-      name: input.name,
-      brand: input.brand ?? null,
-      packSize: input.packSize ?? null,
-      unit: input.unit,
-      isLoose: input.isLoose ?? false,
-      hsnCode: input.hsnCode,
-      gstRateBps: input.gstRateBps,
-      costPricePaise: input.costPricePaise,
-      mrpPaise: input.mrpPaise,
-      quantityBase: input.openingQtyBase ?? 0,
-      reorderLevelBase: input.reorderLevelBase ?? 0,
-    })
-    .onConflictDoNothing()
-    .returning({ id: products.id, name: products.name });
+  const inserted = await db.transaction(async (tx) => {
+    const rows = await tx
+      .insert(products)
+      .values({
+        storeId,
+        name: input.name,
+        brand: input.brand ?? null,
+        packSize: input.packSize ?? null,
+        unit: input.unit,
+        isLoose: input.isLoose ?? false,
+        hsnCode: input.hsnCode,
+        gstRateBps: input.gstRateBps,
+        costPricePaise: input.costPricePaise,
+        mrpPaise: input.mrpPaise,
+        quantityBase: input.openingQtyBase ?? 0,
+        reorderLevelBase: input.reorderLevelBase ?? 0,
+      })
+      .onConflictDoNothing()
+      .returning();
+    if (rows[0]) {
+      const product = rows[0];
+      await appendGraphEvent(tx, {
+        type: 'product',
+        storeId: String(storeId),
+        id: product.id,
+        name: product.name,
+        brand: product.brand,
+        packSize: product.packSize,
+        unit: product.unit,
+        isLoose: product.isLoose,
+        hsnCode: product.hsnCode,
+        gstRateBps: product.gstRateBps,
+        mrpPaise: product.mrpPaise,
+      });
+      if (product.quantityBase > 0) {
+        const [movement] = await tx
+          .insert(stockMovements)
+          .values({
+            storeId,
+            productId: product.id,
+            kind: 'receive',
+            qtyBaseDelta: product.quantityBase,
+            unitCostPaise: product.costPricePaise,
+          })
+          .returning();
+        await appendGraphEvent(tx, {
+          type: 'stock_movement',
+          storeId: String(storeId),
+          id: movement!.id,
+          productId: product.id,
+          kind: movement!.kind,
+          qtyBaseDelta: movement!.qtyBaseDelta,
+          billId: null,
+          createdAt: movement!.createdAt.toISOString(),
+        });
+      }
+    }
+    return rows;
+  });
 
   if (inserted.length === 0) return { status: 'already_exists', name: input.name };
   return { status: 'created', name: inserted[0]!.name, id: inserted[0]!.id };
@@ -207,11 +262,24 @@ export async function adjustStock(
       };
     }
 
-    await tx.insert(stockMovements).values({
-      storeId,
+    const [movement] = await tx
+      .insert(stockMovements)
+      .values({
+        storeId,
+        productId: product.id,
+        kind: 'adjust',
+        qtyBaseDelta: input.deltaBase,
+      })
+      .returning();
+    await appendGraphEvent(tx, {
+      type: 'stock_movement',
+      storeId: String(storeId),
+      id: movement!.id,
       productId: product.id,
       kind: 'adjust',
       qtyBaseDelta: input.deltaBase,
+      billId: null,
+      createdAt: movement!.createdAt.toISOString(),
     });
 
     return {
