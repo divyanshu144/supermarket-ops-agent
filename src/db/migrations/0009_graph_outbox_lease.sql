@@ -1,0 +1,1 @@
+ALTER TABLE "graph_outbox" ADD COLUMN "locked_until" timestamp with time zone;

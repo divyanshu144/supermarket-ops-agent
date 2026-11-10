@@ -162,6 +162,13 @@ export function mapGraphEvent(event: GraphEvent): GraphMutation {
             type: 'CONTAINS',
             fromKind: 'Bill',
             fromId: event.billId,
+            toKind: 'bill_item',
+            toId: event.id,
+          },
+          {
+            type: 'OF',
+            fromKind: 'bill_item',
+            fromId: event.id,
             toKind: 'Product',
             toId: event.productId,
             properties: {

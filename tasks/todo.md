@@ -5,8 +5,8 @@
 Plan: `docs/neo4j-plan.md`; implementation breakdown: `docs/superpowers/plans/2026-11-10-neo4j-graph.md`.
 
 - [x] 1. Graph event mappings and transactional Postgres outbox
-- [ ] 2. Atomic event capture in business transactions (event coverage is implemented; final verification pending)
-- [ ] 3. Neo4j lifecycle, schema and resilient projector worker
+- [x] 2. Atomic event capture in business transactions
+- [x] 3. Neo4j lifecycle, schema and resilient projector worker
 - [ ] 4. Read-only, tenant-scoped graph tools and observability/health
 - [ ] 5. Idempotent backfill and Postgres/Neo4j reconciliation commands
 - [ ] 6. Neo4j container integration tests and failure-path coverage

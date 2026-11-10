@@ -362,6 +362,8 @@ export const graphOutbox = pgTable(
     payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     processedAt: timestamp('processed_at', { withTimezone: true }),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    claimToken: uuid('claim_token'),
     attempts: integer('attempts').notNull().default(0),
     nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }).notNull().defaultNow(),
     lastErrorCode: text('last_error_code'),

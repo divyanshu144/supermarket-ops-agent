@@ -2,7 +2,13 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
 import { graphOutbox, stores } from '../db/schema.js';
-import { appendGraphEvent } from './graph-outbox.js';
+import {
+  acknowledgeGraphEvent,
+  appendGraphEvent,
+  claimGraphEvents,
+  failGraphEvent,
+  graphOutboxLag,
+} from './graph-outbox.js';
 
 const STORE = 999000097n;
 const event = {
@@ -47,5 +53,33 @@ describe('appendGraphEvent', () => {
     expect(await db.select().from(graphOutbox).where(eq(graphOutbox.storeId, STORE))).toHaveLength(
       0,
     );
+  });
+
+  it('claims with a lease and token so an expired worker cannot acknowledge a reclaimed row', async () => {
+    const started = new Date('2030-11-10T10:00:00.000Z');
+    await db.transaction(async (tx) => appendGraphEvent(tx, event));
+    const [first] = await claimGraphEvents(25, started, 1000);
+    expect(first).toBeDefined();
+    expect(await claimGraphEvents(25, started, 1000)).toHaveLength(0);
+
+    const [reclaimed] = await claimGraphEvents(25, new Date(started.getTime() + 1001), 1000);
+    expect(reclaimed).toBeDefined();
+    expect(reclaimed!.claimToken).not.toBe(first!.claimToken);
+    expect(await acknowledgeGraphEvent(first!.id, first!.claimToken)).toBe(false);
+    expect(await acknowledgeGraphEvent(reclaimed!.id, reclaimed!.claimToken)).toBe(true);
+    expect(await graphOutboxLag()).toEqual({ pendingCount: 0, oldestPendingAt: null });
+  });
+
+  it('schedules a bounded retry and records no raw error details', async () => {
+    const started = new Date('2030-11-10T10:00:00.000Z');
+    await db.transaction(async (tx) => appendGraphEvent(tx, event));
+    const [claimed] = await claimGraphEvents(25, started);
+    expect(await failGraphEvent(claimed!.id, claimed!.claimToken, 'unavailable', started)).toBe(
+      true,
+    );
+    const [row] = await db.select().from(graphOutbox).where(eq(graphOutbox.storeId, STORE));
+    expect(row!.lastErrorCode).toBe('unavailable');
+    expect(row!.processedAt).toBeNull();
+    expect(row!.nextAttemptAt.getTime()).toBe(started.getTime() + 2000);
   });
 });

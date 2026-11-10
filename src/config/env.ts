@@ -6,6 +6,12 @@ const positiveNumber = (fallback: number) => z.coerce.number().positive().defaul
 const schema = z
   .object({
     DATABASE_URL: z.string().url(),
+    NEO4J_URI: z.string().url(),
+    NEO4J_USERNAME: z.string().min(1),
+    NEO4J_PASSWORD: z.string().min(1),
+    NEO4J_READER_USERNAME: z.string().optional(),
+    NEO4J_READER_PASSWORD: z.string().optional(),
+    NEO4J_DATABASE: z.string().min(1).default('neo4j'),
     TELEGRAM_BOT_TOKEN: z.string().min(1),
     ANTHROPIC_API_KEY: z.string().min(1),
     OPENAI_API_KEY: z.string().optional(),
@@ -39,6 +45,10 @@ const schema = z
   .refine((e) => !e.AGENT_FALLBACK_MODEL || e.AGENT_FALLBACK_MODEL !== e.AGENT_MODEL, {
     path: ['AGENT_FALLBACK_MODEL'],
     message: 'must differ from AGENT_MODEL (the SDK throws at startup otherwise)',
+  })
+  .refine((e) => Boolean(e.NEO4J_READER_USERNAME) === Boolean(e.NEO4J_READER_PASSWORD), {
+    path: ['NEO4J_READER_PASSWORD'],
+    message: 'NEO4J_READER_USERNAME and NEO4J_READER_PASSWORD must be set together',
   });
 
 export type Env = z.infer<typeof schema>;

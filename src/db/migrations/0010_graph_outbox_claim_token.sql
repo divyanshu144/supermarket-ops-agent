@@ -1,0 +1,1 @@
+ALTER TABLE "graph_outbox" ADD COLUMN "claim_token" uuid;

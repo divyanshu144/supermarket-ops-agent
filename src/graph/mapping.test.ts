@@ -49,6 +49,13 @@ describe('mapGraphEvent', () => {
           type: 'CONTAINS',
           fromKind: 'Bill',
           fromId: 'bill-1',
+          toKind: 'bill_item',
+          toId: 'item-1',
+        },
+        {
+          type: 'OF',
+          fromKind: 'bill_item',
+          fromId: 'item-1',
           toKind: 'Product',
           toId: 'product-1',
         },
