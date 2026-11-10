@@ -51,6 +51,7 @@ export type GraphEvent =
       kind: string;
       qtyBaseDelta: number;
       billId: string | null;
+      pendingActionId?: string;
       createdAt: string;
     }
   | {
@@ -67,6 +68,7 @@ export type GraphEvent =
       kind: string;
       amountPaise: number;
       billId: string | null;
+      pendingActionId?: string;
       createdAt: string;
     }
   | {
@@ -207,6 +209,17 @@ export function mapGraphEvent(event: GraphEvent): GraphMutation {
                 },
               ]
             : []),
+          ...(event.pendingActionId
+            ? [
+                {
+                  type: 'CAUSED_BY' as const,
+                  fromKind: 'StockMovement',
+                  fromId: event.id,
+                  toKind: 'PendingAction',
+                  toId: event.pendingActionId,
+                },
+              ]
+            : []),
         ],
       );
     case 'khata_account':
@@ -235,6 +248,17 @@ export function mapGraphEvent(event: GraphEvent): GraphMutation {
                   fromId: event.id,
                   toKind: 'Bill',
                   toId: event.billId,
+                },
+              ]
+            : []),
+          ...(event.pendingActionId
+            ? [
+                {
+                  type: 'CAUSED_BY' as const,
+                  fromKind: 'KhataEntry',
+                  fromId: event.id,
+                  toKind: 'PendingAction',
+                  toId: event.pendingActionId,
                 },
               ]
             : []),

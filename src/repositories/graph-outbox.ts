@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { and, asc, eq, isNull, lte, or, sql } from 'drizzle-orm';
 import { db } from '../db/client.js';
 import { graphOutbox } from '../db/schema.js';
+import { currentGraphActionId } from '../graph/action-context.js';
 import type { GraphEvent } from '../graph/mapping.js';
 
 export interface GraphOutboxExecutor {
@@ -10,9 +11,14 @@ export interface GraphOutboxExecutor {
 
 /** Append an immutable event using the caller's Postgres transaction. */
 export async function appendGraphEvent(tx: GraphOutboxExecutor, event: GraphEvent): Promise<void> {
+  const actionId = currentGraphActionId();
+  const payload =
+    actionId && (event.type === 'stock_movement' || event.type === 'khata_entry')
+      ? { ...event, pendingActionId: actionId }
+      : event;
   await tx.execute(sql`
     INSERT INTO graph_outbox (store_id, event_type, entity_id, payload)
-    VALUES (${event.storeId}::bigint, ${event.type}, ${event.id}, ${JSON.stringify(event)}::jsonb)
+    VALUES (${payload.storeId}::bigint, ${payload.type}, ${payload.id}, ${JSON.stringify(payload)}::jsonb)
   `);
 }
 

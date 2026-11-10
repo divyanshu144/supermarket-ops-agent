@@ -73,6 +73,7 @@ describe('mapGraphEvent', () => {
         kind: 'sale',
         qtyBaseDelta: -2000,
         billId: 'bill-1',
+        pendingActionId: 'action-1',
         createdAt: at.toISOString(),
       },
       {
@@ -126,6 +127,13 @@ describe('mapGraphEvent', () => {
         fromId: 'move-1',
         toKind: 'Bill',
         toId: 'bill-1',
+      },
+      {
+        type: 'CAUSED_BY',
+        fromKind: 'StockMovement',
+        fromId: 'move-1',
+        toKind: 'PendingAction',
+        toId: 'action-1',
       },
     ]);
     expect(entry.relationships).toContainEqual({

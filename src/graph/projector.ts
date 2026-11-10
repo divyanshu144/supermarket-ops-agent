@@ -19,20 +19,47 @@ import {
   recordGraphFailure,
 } from './driver.js';
 import { ensureGraphSchema } from './schema.js';
+import { graphToolMetrics } from './reader.js';
 
 const POLL_MS = 750;
-const NODE_LABELS: Record<GraphMutation['kind'], string> = {
-  store: 'Store',
-  product: 'Product',
-  bill: 'Bill',
-  bill_item: 'BillItem',
-  stock_movement: 'StockMovement',
-  khata_account: 'KhataAccount',
-  khata_entry: 'KhataEntry',
-  pending_action: 'PendingAction',
-  audit_event: 'AuditEvent',
+const NODE_UPSERTS: Record<GraphMutation['kind'], string> = {
+  store: 'MERGE (n:Store {storeId: $storeId, sourceId: $sourceId}) SET n += $properties',
+  product:
+    'MERGE (s:Store {storeId: $storeId, sourceId: $storeId}) MERGE (n:Product {storeId: $storeId, sourceId: $sourceId}) SET n += $properties MERGE (s)-[:OWNS]->(n)',
+  bill: 'MERGE (s:Store {storeId: $storeId, sourceId: $storeId}) MERGE (n:Bill {storeId: $storeId, sourceId: $sourceId}) SET n += $properties MERGE (s)-[:OWNS]->(n)',
+  bill_item:
+    'MERGE (s:Store {storeId: $storeId, sourceId: $storeId}) MERGE (n:BillItem {storeId: $storeId, sourceId: $sourceId}) SET n += $properties MERGE (s)-[:OWNS]->(n)',
+  stock_movement:
+    'MERGE (s:Store {storeId: $storeId, sourceId: $storeId}) MERGE (n:StockMovement {storeId: $storeId, sourceId: $sourceId}) SET n += $properties MERGE (s)-[:OWNS]->(n)',
+  khata_account:
+    'MERGE (s:Store {storeId: $storeId, sourceId: $storeId}) MERGE (n:KhataAccount {storeId: $storeId, sourceId: $sourceId}) SET n += $properties MERGE (s)-[:OWNS]->(n)',
+  khata_entry:
+    'MERGE (s:Store {storeId: $storeId, sourceId: $storeId}) MERGE (n:KhataEntry {storeId: $storeId, sourceId: $sourceId}) SET n += $properties MERGE (s)-[:OWNS]->(n)',
+  pending_action:
+    'MERGE (s:Store {storeId: $storeId, sourceId: $storeId}) MERGE (n:PendingAction {storeId: $storeId, sourceId: $sourceId}) SET n += $properties MERGE (s)-[:OWNS]->(n)',
+  audit_event:
+    'MERGE (s:Store {storeId: $storeId, sourceId: $storeId}) MERGE (n:AuditEvent {storeId: $storeId, sourceId: $sourceId}) SET n += $properties MERGE (s)-[:OWNS]->(n)',
 };
-const RELATIONSHIPS = new Set(['OWNS', 'CONTAINS', 'OF', 'CAUSED_BY', 'HAS_ENTRY', 'RECORDED_IN']);
+const RELATION_UPSERTS: Record<string, string> = {
+  'Bill:CONTAINS:BillItem':
+    'MERGE (a:Bill {storeId: $storeId, sourceId: $fromId}) MERGE (b:BillItem {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:CONTAINS]->(b) SET r += $properties',
+  'BillItem:OF:Product':
+    'MERGE (a:BillItem {storeId: $storeId, sourceId: $fromId}) MERGE (b:Product {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:OF]->(b) SET r += $properties',
+  'StockMovement:OF:Product':
+    'MERGE (a:StockMovement {storeId: $storeId, sourceId: $fromId}) MERGE (b:Product {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:OF]->(b) SET r += $properties',
+  'StockMovement:CAUSED_BY:Bill':
+    'MERGE (a:StockMovement {storeId: $storeId, sourceId: $fromId}) MERGE (b:Bill {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:CAUSED_BY]->(b) SET r += $properties',
+  'StockMovement:CAUSED_BY:PendingAction':
+    'MERGE (a:StockMovement {storeId: $storeId, sourceId: $fromId}) MERGE (b:PendingAction {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:CAUSED_BY]->(b) SET r += $properties',
+  'KhataAccount:HAS_ENTRY:KhataEntry':
+    'MERGE (a:KhataAccount {storeId: $storeId, sourceId: $fromId}) MERGE (b:KhataEntry {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:HAS_ENTRY]->(b) SET r += $properties',
+  'KhataEntry:CAUSED_BY:Bill':
+    'MERGE (a:KhataEntry {storeId: $storeId, sourceId: $fromId}) MERGE (b:Bill {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:CAUSED_BY]->(b) SET r += $properties',
+  'KhataEntry:CAUSED_BY:PendingAction':
+    'MERGE (a:KhataEntry {storeId: $storeId, sourceId: $fromId}) MERGE (b:PendingAction {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:CAUSED_BY]->(b) SET r += $properties',
+  'PendingAction:RECORDED_IN:AuditEvent':
+    'MERGE (a:PendingAction {storeId: $storeId, sourceId: $fromId}) MERGE (b:AuditEvent {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:RECORDED_IN]->(b) SET r += $properties',
+};
 
 let stopping = false;
 let running: Promise<void> | null = null;
@@ -43,39 +70,23 @@ function payloadOf(row: ClaimedGraphEvent): GraphEvent {
 }
 
 async function persistMutation(tx: ManagedTransaction, mutation: GraphMutation): Promise<void> {
-  const label = NODE_LABELS[mutation.kind];
-  if (mutation.kind === 'store') {
-    await tx.run('MERGE (n:Store {storeId: $storeId, sourceId: $sourceId}) SET n += $properties', {
-      storeId: mutation.storeId,
-      sourceId: mutation.sourceId,
-      properties: mutation.properties,
-    });
-  } else {
-    await tx.run(
-      `MERGE (s:Store {storeId: $storeId, sourceId: $storeId}) MERGE (n:${label} {storeId: $storeId, sourceId: $sourceId}) SET n += $properties MERGE (s)-[:OWNS]->(n)`,
-      { storeId: mutation.storeId, sourceId: mutation.sourceId, properties: mutation.properties },
-    );
-  }
+  await tx.run(NODE_UPSERTS[mutation.kind], {
+    storeId: mutation.storeId,
+    sourceId: mutation.sourceId,
+    properties: mutation.properties,
+  });
 
   for (const relation of mutation.relationships) {
-    if (!RELATIONSHIPS.has(relation.type)) throw new Error('Invalid graph relationship type');
-    const fromLabel = relation.fromKind === 'bill_item' ? 'BillItem' : relation.fromKind;
-    const toLabel = relation.toKind === 'bill_item' ? 'BillItem' : relation.toKind;
-    if (
-      ![...Object.values(NODE_LABELS)].includes(fromLabel) ||
-      ![...Object.values(NODE_LABELS)].includes(toLabel)
-    ) {
-      throw new Error('Invalid graph node label');
-    }
-    await tx.run(
-      `MERGE (a:${fromLabel} {storeId: $storeId, sourceId: $fromId}) MERGE (b:${toLabel} {storeId: $storeId, sourceId: $toId}) MERGE (a)-[r:${relation.type}]->(b) SET r += $properties`,
-      {
-        storeId: mutation.storeId,
-        fromId: relation.fromId,
-        toId: relation.toId,
-        properties: relation.properties ?? {},
-      },
-    );
+    const fromKind = relation.fromKind === 'bill_item' ? 'BillItem' : relation.fromKind;
+    const toKind = relation.toKind === 'bill_item' ? 'BillItem' : relation.toKind;
+    const statement = RELATION_UPSERTS[`${fromKind}:${relation.type}:${toKind}`];
+    if (!statement) throw new Error('Invalid graph relationship mapping');
+    await tx.run(statement, {
+      storeId: mutation.storeId,
+      fromId: relation.fromId,
+      toId: relation.toId,
+      properties: relation.properties ?? {},
+    });
   }
 }
 
@@ -118,6 +129,33 @@ async function sleep(ms: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export async function projectPendingGraphEvents(
+  options: {
+    limit?: number;
+    now?: Date;
+  } = {},
+): Promise<number> {
+  const batch = await claimGraphEvents(options.limit ?? 25, options.now ?? new Date());
+  let acknowledged = 0;
+  for (const row of batch) {
+    if (stopping) break;
+    try {
+      await projectGraphEvent(row);
+      if (await acknowledgeGraphEvent(row.id, row.claimToken)) {
+        markGraphAvailable();
+        acknowledged += 1;
+      }
+    } catch (error) {
+      const category = recordGraphFailure(error);
+      await failGraphEvent(row.id, row.claimToken, category).catch(() => false);
+      console.error(
+        JSON.stringify({ scope: 'graph-projector', event: 'projection_failed', category }),
+      );
+    }
+  }
+  return acknowledged;
+}
+
 async function runProjector(): Promise<void> {
   let schemaReady = false;
   while (!stopping) {
@@ -128,21 +166,7 @@ async function runProjector(): Promise<void> {
       } else if (Date.now() - lastVerifiedAt > 30_000) {
         await prepareGraph();
       }
-      const batch = await claimGraphEvents(25);
-      for (const row of batch) {
-        if (stopping) break;
-        try {
-          await projectGraphEvent(row);
-          await acknowledgeGraphEvent(row.id, row.claimToken);
-          markGraphAvailable();
-        } catch (error) {
-          const category = recordGraphFailure(error);
-          await failGraphEvent(row.id, row.claimToken, category).catch(() => false);
-          console.error(
-            JSON.stringify({ scope: 'graph-projector', event: 'projection_failed', category }),
-          );
-        }
-      }
+      await projectPendingGraphEvents();
     } catch (error) {
       const category = recordGraphFailure(error);
       schemaReady = false;
@@ -177,7 +201,9 @@ export async function graphHealth(): Promise<{
   lastErrorCategory: string | null;
   pendingCount: number;
   oldestPendingAt: string | null;
+  oldestPendingAgeMs: number | null;
   failureCount: number;
+  toolLatency: ReturnType<typeof graphToolMetrics>;
 }> {
   const [state, lag] = [getGraphStatus(), await graphOutboxLag()];
   return {
@@ -185,6 +211,10 @@ export async function graphHealth(): Promise<{
     lastErrorCategory: state.lastErrorCategory,
     pendingCount: lag.pendingCount,
     oldestPendingAt: lag.oldestPendingAt?.toISOString() ?? null,
+    oldestPendingAgeMs: lag.oldestPendingAt
+      ? Math.max(0, Date.now() - lag.oldestPendingAt.getTime())
+      : null,
     failureCount: state.failureCount,
+    toolLatency: graphToolMetrics(),
   };
 }
