@@ -13,7 +13,8 @@ type assertion; the field was removed. The eval harness test plants a numeric/st
 difference for one synthetic name and detects it; identical mocked outcomes produce no differences.
 Changing the pinned digest to 64 zeroes made the corpus checksum test fail; the original digest was
 restored. A stale-result assertion checks that 31 days is rejected. The final test run on the
-disposable `fairness_test` database passed 552 tests, with 13 existing skips.
+disposable `fairness_test` database passed 554 tests across 64 files, with 13 skipped. The result
+was measured with `pnpm test`; no suite entries were skipped or weakened by this branch.
 
 Live calls were not made. The model-driven name rule, native-reviewed language translations, and
 release thresholds have not been empirically verified against Anthropic output. The current
