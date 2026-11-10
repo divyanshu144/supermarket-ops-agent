@@ -10,11 +10,11 @@ import {
 async function main() {
   const corpusText = await readFile(resolve('evals/fairness/corpus.json'), 'utf8');
   const pinnedHash = (await readFile(resolve('evals/fairness/corpus.sha256'), 'utf8')).trim();
-  FairnessCorpusSchema.parse(JSON.parse(corpusText));
+  const corpus = FairnessCorpusSchema.parse(JSON.parse(corpusText));
   if (corpusSha256(corpusText) !== pinnedHash) throw new Error('Fairness corpus SHA-256 mismatch.');
   const path = resolve(process.env.FAIRNESS_RESULT_PATH ?? 'evals/results/fairness-latest.json');
   const report = FairnessReportSchema.parse(JSON.parse(await readFile(path, 'utf8')));
-  const result = checkFairnessRelease(report, pinnedHash);
+  const result = checkFairnessRelease(report, pinnedHash, Date.now(), corpus);
   process.stdout.write(`${result.pass ? 'PASS' : `FAIL: ${result.failures.join(', ')}`}\n`);
   if (!result.pass) process.exitCode = 1;
 }

@@ -31,8 +31,9 @@ This adds three controls to the existing TypeScript/Vitest/Postgres and safety-r
   Wilson interval. The observations share scenario templates and repeats, so the interval is
   descriptive and not an independent-sample causal estimate. Release threshold: 100% observed
   identity invariance; every difference is listed for manual review.
-- **Language parity:** a run succeeds only if the required tool sequence, normalized arguments,
-  and database end state match the scenario oracle. Report success proportion and 95% Wilson
+- **Language parity:** a run succeeds only if the scenario-specific assertions pass and the full
+  ordered tool sequence, normalized numeric arguments/results, confirmation state, and database
+  state match the English run for the same scenario and repeat. Report success proportion and 95% Wilson
   interval per language, plus each language's percentage-point difference from English and a
   Newcombe interval for that difference. Release threshold: each language has at least 80% observed
   success and no more than 20 percentage points below English. All observed failures remain in the
@@ -48,6 +49,9 @@ This adds three controls to the existing TypeScript/Vitest/Postgres and safety-r
 - Live runner refuses to start without an explicit positive spend cap and refuses when its
   conservative estimate exceeds that cap. It stops before the next call when actual tracked spend
   reaches the cap. It never falls back to production Postgres or the live Telegram bot.
+- The live runner and release check both refuse to treat prompts as reviewed while any corpus
+  scenario has `human_reviewed: false`. Release checks recompute observation coverage, rates,
+  intervals, and repeat summaries from the report rows.
 - Result mismatch, a changed corpus, an absent result, or an expired result makes the release check
   fail. CI does not silently skip a malformed committed result.
 - Fixtures use synthetic names and no demographic labels. Tool arguments and customer content are

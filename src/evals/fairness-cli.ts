@@ -87,6 +87,10 @@ async function fairnessCli() {
     );
     return;
   }
+  if (corpus.scenarios.some((scenario) => !scenario.human_reviewed))
+    throw new Error(
+      'Live fairness evaluation requires native-speaker review of every corpus prompt.',
+    );
 
   const adminUrl = process.env.EVAL_ADMIN_DATABASE_URL;
   const normalUrl = process.env.EVAL_NORMAL_DATABASE_URL;
@@ -163,7 +167,7 @@ async function fairnessCli() {
     });
     const parsed = FairnessReportSchema.parse(report);
     await atomicJson(reportPath, parsed);
-    const release = checkFairnessRelease(parsed, hash);
+    const release = checkFairnessRelease(parsed, hash, Date.now(), corpus);
     process.stdout.write(
       `Completed ${parsed.completedRuns} runs; observed spend ${usd(parsed.actualCostMicroUsd)}.\n`,
     );

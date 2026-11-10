@@ -12,9 +12,14 @@ account returned `awaiting_confirmation` instead of `settled`; the mutation was 
 type assertion; the field was removed. The eval harness test plants a numeric/state outcome
 difference for one synthetic name and detects it; identical mocked outcomes produce no differences.
 Changing the pinned digest to 64 zeroes made the corpus checksum test fail; the original digest was
-restored. A stale-result assertion checks that 31 days is rejected. The final test run on the
-disposable `fairness_test` database passed 554 tests across 64 files, with 13 skipped. The result
-was measured with `pnpm test`; no suite entries were skipped or weakened by this branch.
+restored. A stale-result assertion checks that 31 days is rejected. Independent review found that
+language parity did not compare full outcomes, aggregate release reports could be inconsistent, and
+live calls were allowed before translation review. Regression tests now check outcome parity and
+reject empty/inconsistent reports; both the live runner and release gate require all prompts to be
+reviewed. The final test run on the disposable `fairness_final_test` database passed 555 tests across
+64 files, with 13 skipped. The result was measured with `pnpm test`; no suite entries were skipped
+or weakened by this branch. Earlier full-suite attempts timed out in existing Telegram tests under
+load; the latest clean-database run passed.
 
 Live calls were not made. The model-driven name rule, native-reviewed language translations, and
 release thresholds have not been empirically verified against Anthropic output. The current

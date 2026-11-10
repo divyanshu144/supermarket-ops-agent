@@ -26,7 +26,7 @@ describe('fairness evaluation primitives', () => {
   });
 
   it('validates the committed NOT RUN report against the pinned corpus hash', async () => {
-    const { text } = await loadCorpus();
+    const { text, value } = await loadCorpus();
     const report = FairnessReportSchema.parse(
       JSON.parse(
         await readFile(
@@ -38,7 +38,7 @@ describe('fairness evaluation primitives', () => {
     expect(report.status).toBe('NOT RUN');
     expect(report.corpusSha256).toBe(corpusSha256(text));
     expect(report.reason).toMatch(/native-speaker review/);
-    expect(checkFairnessRelease(report, corpusSha256(text)).pass).toBe(false);
+    expect(checkFairnessRelease(report, corpusSha256(text), Date.now(), value).pass).toBe(false);
   });
 
   it('detects corpus edits through its SHA-256', async () => {
@@ -101,7 +101,7 @@ describe('fairness evaluation primitives', () => {
   });
 
   it('fails release check for a stale or wrong-corpus report', async () => {
-    const { text } = await loadCorpus();
+    const { text, value } = await loadCorpus();
     const okRate = { estimate: 1, lower: 0.8, upper: 1, successes: 30, total: 30, scenarios: 5 };
     const report = {
       version: 1,
@@ -109,6 +109,7 @@ describe('fairness evaluation primitives', () => {
       createdAt: new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString(),
       corpusSha256: corpusSha256(text),
       observations: [],
+      allPromptsReviewed: false,
       nameInvariant: {
         successes: 1,
         total: 1,
@@ -127,15 +128,25 @@ describe('fairness evaluation primitives', () => {
       actualCostMicroUsd: 1,
       completedRuns: 1,
     };
-    expect(checkFairnessRelease(report, corpusSha256(text)).failures).toContain('result-stale');
-    expect(checkFairnessRelease(report, '0'.repeat(64)).failures).toContain('corpus-hash-mismatch');
-    expect(() => checkFairnessRelease(undefined, corpusSha256(text))).toThrow();
+    expect(checkFairnessRelease(report, corpusSha256(text), Date.now(), value).failures).toEqual(
+      expect.arrayContaining([
+        'result-stale',
+        'incomplete-observation-coverage',
+        'prompts-unreviewed',
+      ]),
+    );
+    expect(checkFairnessRelease(report, '0'.repeat(64), Date.now(), value).failures).toContain(
+      'corpus-hash-mismatch',
+    );
+    expect(() => checkFairnessRelease(undefined, corpusSha256(text), Date.now(), value)).toThrow();
     const belowThreshold = structuredClone(report);
     belowThreshold.createdAt = new Date().toISOString();
     belowThreshold.nameInvariant.successes = 0;
     belowThreshold.language.rates.hi.estimate = 0.7;
     belowThreshold.language.intervals.hiVsEn.estimate = -0.3;
-    expect(checkFairnessRelease(belowThreshold, corpusSha256(text)).failures).toEqual(
+    expect(
+      checkFairnessRelease(belowThreshold, corpusSha256(text), Date.now(), value).failures,
+    ).toEqual(
       expect.arrayContaining([
         'name-invariance-threshold',
         'language-threshold-hi',
@@ -175,6 +186,41 @@ describe('fairness evaluation primitives', () => {
     expect(identical.nameInvariant.differences).toEqual([]);
     expect(JSON.stringify(planted)).not.toContain('Aarav');
     expect(JSON.stringify(planted)).not.toContain('Aisha');
+  });
+
+  it('counts language success only when the full normalized outcome matches English', async () => {
+    const { value } = await loadCorpus();
+    const report = await runFairnessEvaluation({
+      corpus: {
+        ...value,
+        names: value.names.slice(0, 1),
+        scenarios: value.scenarios.slice(0, 1),
+        repeats: 3,
+      },
+      corpusHash: 'c'.repeat(64),
+      capMicroUsd: 100,
+      estimatedRunMicroUsd: 1,
+      runner: {
+        async run(input) {
+          return {
+            taskSuccess: true,
+            costMicroUsd: 1,
+            outcome: {
+              tools: input.language === 'hi' ? ['find_khata', 'charge_khata'] : ['charge_khata'],
+              numericValues: [{ path: 'amount_paise', value: 10_000 }],
+              confirmation: false,
+              state: { accountBalancePaise: 10_000 },
+            },
+          };
+        },
+      },
+    });
+    expect(
+      report.observations.filter((row) => row.language === 'en').every((row) => row.pass),
+    ).toBe(true);
+    expect(
+      report.observations.filter((row) => row.language === 'hi').every((row) => !row.pass),
+    ).toBe(true);
   });
 
   it('refuses an estimate over cap before making any provider call and checkpoints each run', async () => {

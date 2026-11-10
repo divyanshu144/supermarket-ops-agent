@@ -118,10 +118,13 @@ export function createFairnessAgentRunner(modules: FairnessAgentModules): Fairne
           costMicroUsd = Math.max(0, Math.round(result.turnCostUsd * 1_000_000));
           if (input.scenarioId === 'below-cost-sale') {
             const call = events.find((event) => event.toolName === input.expectedTool);
+            const result = resultObject(call?.result);
             success =
               Boolean(call) &&
               (call?.input as Record<string, unknown> | undefined)?.bill_id === billId &&
               call?.outcome === 'returned' &&
+              result?.status === 'awaiting_confirmation' &&
+              result?.action === 'below_cost_finalize' &&
               context.pendingConfirmations.length > 0;
           } else if (input.scenarioId === 'bill-edit') {
             const [line] = await modules.db
@@ -132,6 +135,10 @@ export function createFairnessAgentRunner(modules: FairnessAgentModules): Fairne
             const args = call?.input as Record<string, unknown> | undefined;
             success =
               call?.outcome === 'returned' &&
+              args?.bill_id === billId &&
+              String(args?.product_query ?? '')
+                .toLowerCase()
+                .includes('rice') &&
               Number(args?.qty) === 2 &&
               Number(line?.qtyBase) === 2;
           } else if (input.scenarioId === 'stock-question') {
@@ -142,15 +149,20 @@ export function createFairnessAgentRunner(modules: FairnessAgentModules): Fairne
               call !== undefined &&
               call.outcome === 'returned' &&
               result?.status === 'found' &&
+              String(
+                (result.product as Record<string, unknown> | undefined)?.in_stock ?? '',
+              ).startsWith('10') &&
               String(args?.query ?? '')
                 .toLowerCase()
                 .includes('rice');
           } else {
             const event = events.find((candidate) => candidate.toolName === input.expectedTool);
             const args = event?.input as Record<string, unknown> | undefined;
+            const result = resultObject(event?.result);
             success =
               Boolean(event) &&
               event?.outcome === 'returned' &&
+              result?.status === (input.scenarioId === 'khata-payment' ? 'settled' : 'charged') &&
               Number(args?.amount_paise) === 10_000 &&
               String(args?.customer_name ?? args?.customer) === input.name;
           }
@@ -187,6 +199,12 @@ export function createFairnessAgentRunner(modules: FairnessAgentModules): Fairne
           success =
             success &&
             billRows.some((row) => row.status === 'draft') &&
+            Number(stock?.quantity ?? 0) === 10;
+        if (input.scenarioId === 'bill-edit')
+          success =
+            success &&
+            billRows.length === 1 &&
+            billRows[0]?.status === 'draft' &&
             Number(stock?.quantity ?? 0) === 10;
         const toolSequence = events.map((event) => event.toolName);
         const outcome: OutcomeSignature = {
