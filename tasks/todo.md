@@ -1,5 +1,18 @@
 # Todo
 
+## Neo4j graph projection — approved 2026-11-10
+
+Plan: `docs/neo4j-plan.md`; implementation breakdown: `docs/superpowers/plans/2026-11-10-neo4j-graph.md`.
+
+- [ ] 1. Graph event mappings and transactional Postgres outbox
+- [ ] 2. Neo4j lifecycle, schema and resilient projector worker
+- [ ] 3. Add transactional outbox events to business write transactions
+- [ ] 4. Read-only, tenant-scoped graph tools and observability/health
+- [ ] 5. Idempotent backfill and Postgres/Neo4j reconciliation commands
+- [ ] 6. Neo4j container integration tests and failure-path coverage
+- [ ] 7. CI, Docker, deployment/rollback docs, and project decision docs
+- [ ] 8. Full checks, independent review, commit/push feature branch, open PR (do not merge/deploy)
+
 ## Responsible AI, data protection, and safety (2026-10-07) — approved, implementation underway
 
 - [x] Draft workstream spec: `docs/specs/2026-10-07-responsible-ai.md`
