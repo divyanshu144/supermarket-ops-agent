@@ -8,6 +8,7 @@ import { claimUpdate, completeUpdate } from '../repositories/updates.js';
 import { recordUsage } from '../repositories/usage.js';
 import {
   newCommand,
+  healthCommand,
   privacyCommand,
   requestCustomerPseudonymisation,
   resetCommand,
@@ -115,6 +116,17 @@ export function createBot(token: string, botInfo?: UserFromGetMe): Bot {
     'help',
     guarded(async (ctx) => {
       await ctx.reply(WELCOME);
+    }),
+  );
+
+  bot.command(
+    'health',
+    guarded(async (ctx) => {
+      if (ctx.chat.type !== 'private' || !ctx.from) {
+        await ctx.reply(PRIVATE_MESSAGE);
+        return;
+      }
+      await ctx.reply(await healthCommand(BigInt(ctx.chat.id), BigInt(ctx.from.id)));
     }),
   );
 

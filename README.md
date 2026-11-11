@@ -9,6 +9,8 @@ close the day, and pull GST invoices and analysis decks — in plain terse Engli
 
 Deployed on Railway, one replica, long-polling. Deployment notes: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 The full reasoning behind everything below: [`docs/DESIGN.md`](docs/DESIGN.md).
+The Neo4j graph projection and failure behavior are documented in [`docs/neo4j-plan.md`](docs/neo4j-plan.md);
+deployment preparation and cost estimates are in [`docs/neo4j-deploy.md`](docs/neo4j-deploy.md).
 
 ## Privacy and AI use
 
@@ -34,10 +36,13 @@ agent quality.
 ```bash
 pnpm install
 cp .env.example .env          # add TELEGRAM_BOT_TOKEN and ANTHROPIC_API_KEY
-pnpm db:up                    # Postgres 16 in Docker
+docker compose up -d          # Postgres 16 and private Neo4j Community in Docker
 pnpm db:migrate
 pnpm dev
 ```
+
+Neo4j is a required runtime service. If it is unavailable, Postgres-backed store operations still
+work while graph tools and graph health report degraded status.
 
 Gate: `pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test`. Voice input needs
 `OPENAI_API_KEY`; without it the bot runs normally and text is unaffected. Two scripts hit the live
@@ -83,7 +88,7 @@ touches Telegram, so an invoice can be generated in a test with no bot running.
 ## Skill and tool design
 
 Six skills — inventory, billing, khata, analytics, documents, hindi — teach *how to run a shop*,
-not what a signature looks like. 25 tools across six families, shaped by two rules.
+not what a signature looks like. 25 business tools and two read-only graph tools, shaped by two rules.
 **Refusals are data, never exceptions:** `finalize_bill` returns `insufficient_stock` with the
 shortfalls, and the model relays it. **Ambiguity is data too:** `get_stock('atta')` returns
 candidates and the *model* decides to ask which one, because the brief is explicit that the
@@ -107,6 +112,7 @@ from the verified chat, so no prompt can address another shop.
 | Real artifacts | `pdfmake` invoices; `pptxgenjs` decks with native charts, asserted by a test | [more](docs/DESIGN.md#real-artifacts) |
 | Access, spend | Invite-only; per-run, per-store and per-chat limits | [more](docs/DESIGN.md#access-and-spend) |
 | Restarts | Conversations mirrored to Postgres; shutdown drains the turn in flight instead of confirming it | [more](docs/DESIGN.md#restarts-and-conversation-storage) |
+| Graph provenance | A transactional Postgres outbox projects bills, stock, khata and confirmed-action provenance to Neo4j; graph outage does not block business writes | [plan](docs/neo4j-plan.md) |
 
 ## What I didn't handle
 

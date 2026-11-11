@@ -105,7 +105,19 @@ pnpm fmt:check && pnpm lint && pnpm typecheck && pnpm test
 ```
 
 Secrets live in `.env` (gitignored). Required: `ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`,
-`DATABASE_URL`. `.env.example` is committed and must stay in sync.
+`DATABASE_URL`, `NEO4J_URI`, `NEO4J_USERNAME`, and `NEO4J_PASSWORD`. `.env.example` is committed and must stay in sync.
+
+### Neo4j graph projection
+
+Postgres remains the source of truth. Source transactions append graph events to `graph_outbox`; an
+in-process worker projects them to Neo4j idempotently. Neo4j outages must not fail Postgres-backed
+billing, stock, khata, or agent turns; graph tools report unavailable and health reports degraded.
+Graph tools are owner-only, read-only, tenant-scoped and use fixed parameterized Cypher. Never log
+credentials, event payloads or customer data. Community Edition has no roles, so use READ-mode
+sessions for the reader path and keep the projector's writer path separate in code. See
+[`docs/neo4j-plan.md`](docs/neo4j-plan.md), [`docs/neo4j-deploy.md`](docs/neo4j-deploy.md), and
+[`decisions.md`](decisions.md). Do not connect tests or scripts to production unless the operator
+specifically requests a production operation.
 
 ---
 
