@@ -16,9 +16,10 @@ import {
 import { closeGraphDrivers, configureGraph, configuredWriter, writerSession } from './driver.js';
 import type { GraphEvent } from './mapping.js';
 import { ensureGraphSchema } from './schema.js';
-import { projectGraphEvent, projectPendingGraphEvents } from './projector.js';
+import { graphHealth, projectGraphEvent, projectPendingGraphEvents } from './projector.js';
 import { backfillGraphHistory } from './backfill.js';
 import { readerSession } from './driver.js';
+import { explainStockChange } from './reader.js';
 
 const PASSWORD = 'neo4j-recovery-test-password';
 const STORE = 999200091n;
@@ -140,6 +141,18 @@ describe('Postgres outbox and Neo4j recovery integration', () => {
       claimToken: null,
       lastErrorCode: 'unavailable',
     });
+    expect(
+      await explainStockChange(STORE, {
+        productQuery: 'Recovery Rice',
+        from: new Date(Date.now() - 60_000),
+        to: new Date(Date.now() + 60_000),
+      }),
+    ).toEqual({ status: 'unavailable' });
+    const health = await graphHealth();
+    expect(health.available).toBe(false);
+    expect(health.pendingCount).toBeGreaterThan(0);
+    expect(health.oldestPendingAgeMs).toEqual(expect.any(Number));
+    expect(health.failureCount).toBeGreaterThan(0);
 
     await useAvailableGraph();
     expect(await projectPendingGraphEvents({ now: new Date(Date.now() + 3000) })).toBe(1);
