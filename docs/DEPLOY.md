@@ -19,6 +19,29 @@ long-polling is outbound-only — so the hosting choice is mostly a billing deci
 
 ## Environment
 
+## Fairness evaluation release gate
+
+Every pull request runs the deterministic name-invariance and corpus-integrity tests as part of
+the test suite. The live counterfactual run is not part of CI because it consumes provider credit.
+Before a release, first have a native Hindi/Hinglish speaker review the prompts (then update and
+re-hash the frozen corpus), set up a local disposable Postgres cluster for `EVAL_ADMIN_DATABASE_URL`
+and a distinct `EVAL_NORMAL_DATABASE_URL`. The admin must be a local superuser on a dedicated test
+cluster whose databases do not grant `CONNECT` to `PUBLIC`; this is checked by the existing sandbox
+provisioner. Use Docker Compose or a disposable Postgres test container, never a production URL.
+Set `FAIRNESS_BUDGET_USD` to an explicit positive
+cap. Run `pnpm eval:fairness` to see the estimate; it makes no provider or database connection.
+Only after reviewing the estimate, run `pnpm eval:fairness -- --run-live`. It refuses remote DB
+targets and creates an owned disposable database; no production database or Telegram connection is
+used. Results and resumable checkpoints are written below `evals/`. Run
+`pnpm fairness:release-check` before release. It fails if the result is missing, malformed, older
+than 30 days, bound to another corpus hash, or below the frozen thresholds. Do not treat the
+committed NOT RUN report as release evidence.
+
+At the default per-run application ceiling of $0.50, the 405 planned calls (24 names × 5 intents ×
+3 repeats, plus 3 languages × 5 intents × 3 repeats) have a conservative upper spend estimate of
+$202.50. The CLI recomputes this from the current run limit and corpus size before any call. Actual
+spend may be lower; no cost or behavior outcome is claimed until a run is made.
+
 | Variable | Required | Notes |
 |---|---|---|
 | `DATABASE_URL` | yes | Must be a valid URL; the process exits at boot if malformed. |

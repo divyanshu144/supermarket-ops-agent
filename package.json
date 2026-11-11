@@ -20,6 +20,8 @@
     "invite": "tsx src/scripts/invite.ts",
     "eval:compare": "tsx src/evals/compare-cli.ts",
     "eval:safety": "tsx src/evals/safety-replay-cli.ts",
+    "eval:fairness": "tsx src/evals/fairness-cli.ts",
+    "fairness:release-check": "tsx src/evals/fairness-release-cli.ts",
     "test:safe": "pnpm test",
     "eval:injection": "tsx src/evals/engineering-cli.ts attacks",
     "bench:cache": "tsx src/evals/engineering-cli.ts cache",

@@ -193,6 +193,70 @@ describe('model-free confirmed actions', () => {
     if (after.status === 'found') expect(after.account.balancePaise).toBe(-4_000);
   });
 
+  it('settles identical synthetic accounts with identical outcomes and balances regardless of name', async () => {
+    for (const name of ['Aarav Fixture', 'Sara Fixture']) {
+      await chargeAccount(STORE, { customerName: name, amountPaise: 5_000 });
+    }
+    const outcomes = [];
+    for (const [index, customer] of ['Aarav Fixture', 'Sara Fixture'].entries()) {
+      const context = newToolContext(STORE, UPDATE + BigInt(30 + index), undefined, OWNER);
+      const result = await toolContext.run(context, () =>
+        settleKhataTool.handler(
+          {
+            customer,
+            amount_paise: 2_000,
+            note: undefined,
+            allow_overpay: false,
+          },
+          {},
+        ),
+      );
+      outcomes.push(JSON.parse(resultText(result)) as Record<string, unknown>);
+    }
+    const [first, second] = outcomes;
+    expect(first!.status).toBe('settled');
+    expect(second!.status).toBe('settled');
+    expect(first!.amount).toBe(second!.amount);
+    expect(first!.new_balance).toBe(second!.new_balance);
+    expect((await findAccount(STORE, 'Aarav Fixture')).status).toBe('found');
+    expect((await findAccount(STORE, 'Sara Fixture')).status).toBe('found');
+    const aarav = await findAccount(STORE, 'Aarav Fixture');
+    const sara = await findAccount(STORE, 'Sara Fixture');
+    expect(
+      aarav.status === 'found' &&
+        sara.status === 'found' &&
+        aarav.account.balancePaise === sara.account.balancePaise,
+    ).toBe(true);
+    const overpayResults = [];
+    for (const [index, customer] of ['Aarav Fixture', 'Sara Fixture'].entries()) {
+      const context = newToolContext(STORE, UPDATE + BigInt(40 + index), undefined, OWNER);
+      const result = await toolContext.run(context, () =>
+        settleKhataTool.handler(
+          {
+            customer,
+            amount_paise: 4_000,
+            note: undefined,
+            allow_overpay: false,
+          },
+          {},
+        ),
+      );
+      overpayResults.push(JSON.parse(resultText(result)) as Record<string, unknown>);
+      expect(context.pendingConfirmations).toHaveLength(1);
+    }
+    expect(overpayResults.map((result) => result.status)).toEqual([
+      'awaiting_confirmation',
+      'awaiting_confirmation',
+    ]);
+    const aaravAfter = await findAccount(STORE, 'Aarav Fixture');
+    const saraAfter = await findAccount(STORE, 'Sara Fixture');
+    expect(
+      aaravAfter.status === 'found' &&
+        saraAfter.status === 'found' &&
+        aaravAfter.account.balancePaise === saraAfter.account.balancePaise,
+    ).toBe(true);
+  });
+
   it('finalizes a below-cost bill only after the owner callback and never twice', async () => {
     const billId = await draft(50);
     const action = await pending('finalize_bill', billId, {

@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "status": "NOT RUN",
+  "reason": "Live calls were intentionally not made during implementation; Hindi and Hinglish prompts also await native-speaker review.",
+  "createdAt": "2026-11-10T00:00:00.000Z",
+  "corpusSha256": "de86bdbad00a550e9775966b9af0df1ed84c6699693002701b9e2d4a97e9111f",
+  "evaluationKind": "full",
+  "allPromptsReviewed": false,
+  "sampleNameIds": [
+    "name_01",
+    "name_02",
+    "name_03",
+    "name_04",
+    "name_05",
+    "name_06",
+    "name_07",
+    "name_08",
+    "name_09",
+    "name_10",
+    "name_11",
+    "name_12",
+    "name_13",
+    "name_14",
+    "name_15",
+    "name_16",
+    "name_17",
+    "name_18",
+    "name_19",
+    "name_20",
+    "name_21",
+    "name_22",
+    "name_23",
+    "name_24"
+  ],
+  "cacheUsage": { "cacheReadInputTokens": 0, "cacheCreationInputTokens": 0 },
+  "observations": [],
+  "nameInvariant": {
+    "successes": 0,
+    "total": 0,
+    "differences": [],
+    "interval": null
+  },
+  "language": {
+    "rates": {
+      "en": { "estimate": 0, "lower": 0, "upper": 0, "successes": 0, "total": 0, "scenarios": 0 },
+      "hi": { "estimate": 0, "lower": 0, "upper": 0, "successes": 0, "total": 0, "scenarios": 0 },
+      "hinglish": {
+        "estimate": 0,
+        "lower": 0,
+        "upper": 0,
+        "successes": 0,
+        "total": 0,
+        "scenarios": 0
+      }
+    },
+    "intervals": {
+      "hiVsEn": { "estimate": 0, "lower": 0, "upper": 0 },
+      "hinglishVsEn": { "estimate": 0, "lower": 0, "upper": 0 }
+    }
+  },
+  "repeatVariability": [],
+  "estimatedCostMicroUsd": 202500000,
+  "actualCostMicroUsd": 0,
+  "completedRuns": 0
+}

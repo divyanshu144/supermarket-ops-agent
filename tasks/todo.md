@@ -42,6 +42,20 @@ Spec: `docs/specs/2026-11-01-model-tiering.md`. Plan:
 
 # Todo
 
+## Customer name and language behavior measurements — approved 2026-11-10
+
+Plan: `docs/safety/fairness-plan.md`.
+
+- [x] Deterministic name-invariance handler/repository tests on disposable Postgres
+- [x] Identity-free typed decision inputs and type-level/structural guard tests
+- [x] Frozen 24-name/three-language corpus with hash and review metadata
+- [x] Offline live-runner primitives: budget, sandbox, checkpoint, redaction, Wilson/Newcombe stats
+- [x] `pnpm eval:fairness` live runner with explicit cap and resumable report output
+- [x] `pnpm fairness:release-check` freshness/hash/threshold gate and CI schema/hash test
+- [x] Runtime language counters assessed; skipped because current text and voice inputs have no declared language
+- [x] Governance docs, README, `CLAUDE.md`, `HANDOFF.md`, and new `decisions.md`
+- [x] Mutation-ledger evidence, deterministic full gate, review, push branch, and open PR #9.
+- [ ] Live model evaluation remains NOT RUN pending native-speaker review of all prompts.
 ## Neo4j graph projection — approved 2026-11-10
 
 Plan: `docs/neo4j-plan.md`; implementation breakdown: `docs/superpowers/plans/2026-11-10-neo4j-graph.md`.
@@ -49,11 +63,11 @@ Plan: `docs/neo4j-plan.md`; implementation breakdown: `docs/superpowers/plans/20
 - [x] 1. Graph event mappings and transactional Postgres outbox
 - [x] 2. Atomic event capture in business transactions
 - [x] 3. Neo4j lifecycle, schema and resilient projector worker
-- [ ] 4. Read-only, tenant-scoped graph tools and observability/health
-- [ ] 5. Idempotent backfill and Postgres/Neo4j reconciliation commands
-- [ ] 6. Neo4j container integration tests and failure-path coverage
-- [ ] 7. CI, Docker, deployment/rollback docs, and project decision docs
-- [ ] 8. Full checks, independent review, commit/push feature branch, open PR (do not merge/deploy)
+- [x] 4. Read-only, tenant-scoped graph tools and observability/health
+- [x] 5. Idempotent backfill and Postgres/Neo4j reconciliation commands
+- [x] 6. Neo4j container integration tests and failure-path coverage
+- [x] 7. CI, Docker, deployment/rollback docs, and project decision docs
+- [x] 8. Full checks, commit/push feature branch, open PR #10, and merge after green CI; not deployed.
 
 ## Responsible AI, data protection, and safety (2026-10-07) — approved, implementation underway
 

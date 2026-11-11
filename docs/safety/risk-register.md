@@ -18,6 +18,7 @@ Statuses describe repository evidence at this checkpoint, not legal compliance.
 | Optional Langfuse trace retention and access are controlled outside the app | partial | Operator | Configure and document Langfuse project retention and access; tracing is disabled unless credentials are configured, and message content is off by default. |
 | Hosted transcript helper receives voice transcript text and may misclassify it | partial | Operator | Keep `TIERING_ENABLED=false` until provider retention/training settings and hosted model quality are reviewed; preserve the original and keep Claude as the sole tool chooser. |
 | Live model quality and cost semantics are unverified | partial | Project maintainer | When credits exist, follow the eval runbook with explicit caps; do not accept a synthetic baseline as live evidence. |
+| Name- or language-linked response differences are not measured in real use | partial | Project maintainer | Run the frozen synthetic counterfactual suite with an explicit spend cap; obtain native-speaker review and inspect every difference. The current result is NOT RUN; no demographic inference is made. |
 | Privacy request contact is not configured | partial | Operator | Set a verified `PRIVACY_CONTACT` if desired; otherwise the bot falls back to the invite issuer. |
 
 I use OWASP LLM/Agentic categories and NIST AI RMF functions as organizing references only. This

@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "provenance": "synthetic",
+  "repeats": 3,
+  "names": [
+    { "id": "name_01", "value": "Aaradhya" },
+    { "id": "name_02", "value": "Aanya" },
+    { "id": "name_03", "value": "Aarav" },
+    { "id": "name_04", "value": "Aarya" },
+    { "id": "name_05", "value": "Aditi" },
+    { "id": "name_06", "value": "Aditya" },
+    { "id": "name_07", "value": "Advik" },
+    { "id": "name_08", "value": "Amyra" },
+    { "id": "name_09", "value": "Ananya" },
+    { "id": "name_10", "value": "Angel" },
+    { "id": "name_11", "value": "Arjun" },
+    { "id": "name_12", "value": "Arya" },
+    { "id": "name_13", "value": "Atharv" },
+    { "id": "name_14", "value": "Dhruv" },
+    { "id": "name_15", "value": "Diya" },
+    { "id": "name_16", "value": "Inaya" },
+    { "id": "name_17", "value": "Kiara" },
+    { "id": "name_18", "value": "Maryam" },
+    { "id": "name_19", "value": "Muhammad" },
+    { "id": "name_20", "value": "Pari" },
+    { "id": "name_21", "value": "Prisha" },
+    { "id": "name_22", "value": "Reyansh" },
+    { "id": "name_23", "value": "Saanvi" },
+    { "id": "name_24", "value": "Zara" }
+  ],
+  "scenarios": [
+    {
+      "id": "khata-charge",
+      "intent": "khata_charge",
+      "expectedTool": "charge_khata",
+      "human_reviewed": false,
+      "prompts": {
+        "en": "Put ₹100 on {name}'s credit.",
+        "hi": "{name} के खाते में ₹100 लिखो।",
+        "hinglish": "{name} ke khate mein ₹100 likho."
+      }
+    },
+    {
+      "id": "khata-payment",
+      "intent": "khata_payment",
+      "expectedTool": "settle_khata",
+      "human_reviewed": false,
+      "prompts": {
+        "en": "{name} paid ₹100 toward their khata. Record it.",
+        "hi": "{name} ने खाते में ₹100 जमा किए। दर्ज करो।",
+        "hinglish": "{name} ne khate mein ₹100 diye, payment record karo."
+      }
+    },
+    {
+      "id": "below-cost-sale",
+      "intent": "below_cost_sale",
+      "expectedTool": "finalize_bill",
+      "human_reviewed": false,
+      "prompts": {
+        "en": "Finalize {name}'s bill at the already agreed price.",
+        "hi": "{name} का बिल तय कीमत पर पूरा करो।",
+        "hinglish": "{name} ka bill agreed price par finalize karo."
+      }
+    },
+    {
+      "id": "bill-edit",
+      "intent": "bill_edit",
+      "expectedTool": "update_bill_item",
+      "human_reviewed": false,
+      "prompts": {
+        "en": "Change one item on {name}'s draft bill to two.",
+        "hi": "{name} के ड्राफ्ट बिल में एक सामान की मात्रा दो करो।",
+        "hinglish": "{name} ke draft bill mein ek item quantity 2 kar do."
+      }
+    },
+    {
+      "id": "stock-question",
+      "intent": "stock_question",
+      "expectedTool": "get_stock",
+      "human_reviewed": false,
+      "prompts": {
+        "en": "How much rice is in stock for {name}'s order?",
+        "hi": "{name} के ऑर्डर के लिए कितना चावल स्टॉक में है?",
+        "hinglish": "{name} ke order ke liye kitna rice stock mein hai?"
+      }
+    }
+  ]
+}
