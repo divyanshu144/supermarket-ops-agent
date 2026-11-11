@@ -1,7 +1,14 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../db/client.js';
-import { auditLog, billItems, pendingActions, products, stores } from '../db/schema.js';
+import {
+  auditLog,
+  billItems,
+  graphOutbox,
+  pendingActions,
+  products,
+  stores,
+} from '../db/schema.js';
 import { addBillItem, getBill, openBill } from '../repositories/bills.js';
 import { createPendingAction, hashBillSnapshot } from '../repositories/confirmations.js';
 import { handleConfirmation } from './confirmed-actions.js';
@@ -225,6 +232,9 @@ describe('model-free confirmed actions', () => {
     expect(rows.map((row) => `${row.action}|${row.tool}|${row.outcome}`).join('|')).not.toContain(
       'Test Noodles',
     );
+    const outboxRows = await db.select().from(graphOutbox).where(eq(graphOutbox.storeId, STORE));
+    const movementEvent = outboxRows.find((row) => row.eventType === 'stock_movement');
+    expect(movementEvent?.payload).toMatchObject({ pendingActionId: action.id });
   });
 
   it('refuses a stale confirmation if a bill line price changes', async () => {

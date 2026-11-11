@@ -6,6 +6,7 @@ import { runMigrations } from './db/migrate.js';
 import { expireInFlightClaims } from './repositories/updates.js';
 import { beginDrain } from './telegram/drain.js';
 import { startRetentionScheduler } from './retention/worker.js';
+import { startGraphProjector, stopGraphProjector } from './graph/projector.js';
 import { flushLangfuse } from './observability/langfuse.js';
 
 // Fail fast before opening any connection or long-poll.
@@ -31,7 +32,9 @@ await acquireInstanceLock({
     console.error(
       JSON.stringify({ scope: 'instance-lock', warning: 'lock lost; draining and exiting' }),
     );
-    void beginDrain(env.SHUTDOWN_GRACE_MS)
+    void stopGraphProjector()
+      .catch(() => undefined)
+      .then(() => beginDrain(env.SHUTDOWN_GRACE_MS))
       .then(() => flushLangfuse(2500))
       .then(() => process.exit(1));
   },
@@ -47,10 +50,15 @@ if (expired > 0) console.log(`Expired ${expired} in-flight claim(s) from the pre
 // background so cleanup never delays Telegram polling or makes lock waiting look unhealthy.
 startRetentionScheduler(env.APP_DATA_RETENTION_DAYS);
 
+// Neo4j is a derived projection. Connection/schema failures are absorbed by the projector and
+// leave Postgres-backed business operations available while the outbox accumulates.
+await startGraphProjector(env);
+
 async function shutdown(signal: string): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
   console.log(`\n${signal} received, finishing the turn in flight…`);
+  await stopGraphProjector().catch(() => undefined);
   const outcome = await beginDrain(env.SHUTDOWN_GRACE_MS);
   await flushLangfuse(2500);
   console.log(

@@ -24,7 +24,9 @@
     "eval:injection": "tsx src/evals/engineering-cli.ts attacks",
     "bench:cache": "tsx src/evals/engineering-cli.ts cache",
     "report:usage": "tsx src/scripts/report-usage.ts",
-    "eval:tiering": "tsx src/evals/tiering.ts"
+    "eval:tiering": "tsx src/evals/tiering.ts",
+    "graph:backfill": "tsx src/scripts/graph-backfill.ts",
+    "graph:reconcile": "tsx src/scripts/graph-reconcile.ts"
   },
   "keywords": [],
   "author": "",
@@ -34,6 +36,7 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "grammy": "^1.45.1",
+    "neo4j-driver": "^6.3.0",
     "pdfmake": "^0.3.11",
     "pg": "^8.22.0",
     "pptxgenjs": "^4.0.1",
@@ -41,6 +44,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@testcontainers/neo4j": "^12.2.1",
     "@types/node": "^26.1.2",
     "@types/pdfmake": "^0.3.3",
     "@types/pg": "^8.20.0",

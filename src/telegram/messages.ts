@@ -7,6 +7,7 @@ export const WELCOME = [
   '"make a bill: 2kg sugar, 4 Maggi, UPI", "what\'s running out?"',
   '',
   '/new — fresh conversation (your stock, khata and preferences stay)',
+  '/health — graph projection health and outbox lag',
   '/reset — restore this shop to its starting state (asks you to confirm)',
   '',
   'AI notice: messages and relevant shop data may be processed by Anthropic. Voice audio goes to OpenAI for transcription. If the optional hosted voice helper is enabled, transcript text also goes to its configured provider. If enabled, pseudonymous usage metadata goes to Langfuse; message content is off by default.',

@@ -5,6 +5,9 @@ import { LangfuseTurn, flushLangfuse } from './langfuse.js';
 function env(capture = 'false') {
   return loadEnv({
     DATABASE_URL: 'postgres://test:test@localhost:5432/test',
+    NEO4J_URI: 'bolt://localhost:7687',
+    NEO4J_USERNAME: 'neo4j',
+    NEO4J_PASSWORD: 'test-password',
     TELEGRAM_BOT_TOKEN: 'test-token',
     ANTHROPIC_API_KEY: 'test-key',
     LANGFUSE_PUBLIC_KEY: 'public-test',
@@ -29,6 +32,9 @@ describe('Langfuse trace export', () => {
     vi.stubGlobal('fetch', fetchMock);
     const disabledEnv = loadEnv({
       DATABASE_URL: 'postgres://test:test@localhost:5432/test',
+      NEO4J_URI: 'bolt://localhost:7687',
+      NEO4J_USERNAME: 'neo4j',
+      NEO4J_PASSWORD: 'test-password',
       TELEGRAM_BOT_TOKEN: 'test-token',
       ANTHROPIC_API_KEY: 'test-key',
       NODE_ENV: 'test',

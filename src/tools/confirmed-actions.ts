@@ -11,6 +11,7 @@ import {
 } from '../repositories/confirmations.js';
 import { settleAccount } from '../repositories/khata.js';
 import { applyCustomerPseudonymisation, pseudonymiseCustomerArgsSchema } from './privacy.js';
+import { withGraphActionId } from '../graph/action-context.js';
 
 const FinalizeArgs = z
   .object({
@@ -139,14 +140,16 @@ export async function handleConfirmation(input: {
       });
       return { status: 'failed' };
     }
-    const result = await finalizeBill(input.storeId, {
-      billId: parsed.data.bill_id,
-      paymentMode: parsed.data.payment_mode,
-      paymentRef: parsed.data.payment_ref,
-      customerName: parsed.data.customer_name,
-      allowBelowCost: true,
-      expectedBillFingerprint: pending.billFingerprint ?? undefined,
-    });
+    const result = await withGraphActionId(pending.id, () =>
+      finalizeBill(input.storeId, {
+        billId: parsed.data.bill_id,
+        paymentMode: parsed.data.payment_mode,
+        paymentRef: parsed.data.payment_ref,
+        customerName: parsed.data.customer_name,
+        allowBelowCost: true,
+        expectedBillFingerprint: pending.billFingerprint ?? undefined,
+      }),
+    );
     outcome = result.status;
   } else if (pending.tool === 'void_bill') {
     const parsed = VoidArgs.safeParse(pending.arguments);
@@ -162,7 +165,9 @@ export async function handleConfirmation(input: {
       return { status: 'failed' };
     }
     outcome = (
-      await voidBill(input.storeId, parsed.data.bill_id, pending.billFingerprint ?? undefined)
+      await withGraphActionId(pending.id, () =>
+        voidBill(input.storeId, parsed.data.bill_id, pending.billFingerprint ?? undefined),
+      )
     ).status;
   } else if (pending.tool === 'settle_khata') {
     const parsed = SettleArgs.safeParse(pending.arguments);
@@ -177,13 +182,15 @@ export async function handleConfirmation(input: {
       });
       return { status: 'failed' };
     }
-    const result = await settleAccount(input.storeId, {
-      customerQuery: parsed.data.customer,
-      amountPaise: parsed.data.amount_paise,
-      note: parsed.data.note,
-      allowOverpay: true,
-      idempotencyKey: `pending-action:${pending.id}`,
-    });
+    const result = await withGraphActionId(pending.id, () =>
+      settleAccount(input.storeId, {
+        customerQuery: parsed.data.customer,
+        amountPaise: parsed.data.amount_paise,
+        note: parsed.data.note,
+        allowOverpay: true,
+        idempotencyKey: `pending-action:${pending.id}`,
+      }),
+    );
     outcome = result.status;
   } else if (pending.tool === 'pseudonymise_customer') {
     const parsed = pseudonymiseCustomerArgsSchema.safeParse(pending.arguments);

@@ -134,6 +134,18 @@ Written so a cold-start session can resume. Update at every checkpoint.
 **Branch:** `responsible-ai`, created from `eval-harness` at `c435f26`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
 
+### Neo4j graph work (feature branch, not deployed)
+
+The `feat/neo4j-graph` branch adds a transactional Postgres `graph_outbox` and a same-process
+Neo4j projector. Postgres remains authoritative; Neo4j failure must leave business writes working,
+retain pending outbox rows, degrade graph tools and health, and avoid crashing the bot. Graph
+queries are owner-only, use READ-mode sessions and tenant-scoped parameterized Cypher. Community
+Edition cannot enforce reader roles; deployment notes explain this limitation and the expected
+cost. No Railway project, production database, or live Telegram bot was changed. See
+[`docs/neo4j-plan.md`](docs/neo4j-plan.md), [`docs/neo4j-deploy.md`](docs/neo4j-deploy.md), and
+[`decisions.md`](decisions.md) in that branch. Implementation and real-container verification are
+complete; the feature branch is being prepared for review. It has not been merged or deployed.
+
 ---
 
 ## Current state

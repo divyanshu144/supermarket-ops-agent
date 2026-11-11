@@ -4,6 +4,7 @@ import { db, pool } from '../db/client.js';
 import {
   billItems,
   bills,
+  graphOutbox,
   khataAccounts,
   khataEntries,
   idempotencyKeys,
@@ -446,6 +447,15 @@ describe('finalizeBill', () => {
       .where(eq(stockMovements.billId, billId));
     expect(movements).toHaveLength(2);
     expect(movements.every((m) => m.kind === 'sale' && m.qtyBaseDelta < 0)).toBe(true);
+    const events = await db.select().from(graphOutbox).where(eq(graphOutbox.storeId, STORE));
+    expect(events.map((event) => event.eventType).sort()).toEqual([
+      'bill',
+      'bill_item',
+      'bill_item',
+      'stock_movement',
+      'stock_movement',
+    ]);
+    expect(events.every((event) => event.processedAt === null)).toBe(true);
   });
 
   it('stores the totals on the bill so the invoice of record cannot drift', async () => {

@@ -353,3 +353,30 @@ export const generatedArtifacts = pgTable(
   },
   (t) => [index('generated_artifacts_store_activity_idx').on(t.storeId, t.lastActivityAt)],
 );
+
+/** Transactional handoff from source-of-truth writes to the derived Neo4j graph. */
+export const graphOutbox = pgTable(
+  'graph_outbox',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    storeId: bigint('store_id', { mode: 'bigint' })
+      .notNull()
+      .references(() => stores.id, { onDelete: 'cascade' }),
+    eventType: text('event_type').notNull(),
+    entityId: text('entity_id').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    processedAt: timestamp('processed_at', { withTimezone: true }),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    claimToken: uuid('claim_token'),
+    attempts: integer('attempts').notNull().default(0),
+    nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }).notNull().defaultNow(),
+    lastErrorCode: text('last_error_code'),
+  },
+  (t) => [
+    index('graph_outbox_pending_idx')
+      .on(t.nextAttemptAt, t.createdAt)
+      .where(sql`${t.processedAt} IS NULL`),
+    index('graph_outbox_store_idx').on(t.storeId, t.createdAt),
+  ],
+);
