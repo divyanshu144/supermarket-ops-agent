@@ -1,3 +1,4 @@
+import { validateMoneyArguments } from '../security/arguments.js';
 import { z } from 'zod';
 import { getBill, finalizeBill, voidBill } from '../repositories/bills.js';
 import {
@@ -98,7 +99,35 @@ export async function handleConfirmation(input: {
   }
 
   let outcome: string;
-  if (pending.tool === 'finalize_bill') {
+  if (pending.tool.startsWith('guard:')) {
+    // Only an owner-bound, atomically claimed pending row reaches this path. The model
+    // cannot set a bypass flag; raw handlers are never registered with the SDK.
+    const { STORE_TOOLS } = await import('./index.js');
+    const { CONFIRM_TOOLS } = await import('../security/tools.js');
+    const { toolContext, newToolContext } = await import('./context.js');
+    const name = pending.tool.slice(6);
+    const definition = STORE_TOOLS.find((t) => t.name === name);
+    if (!CONFIRM_TOOLS.has(name) || !definition) return { status: 'failed' };
+    const args = z.object(definition.inputSchema).strict().safeParse(pending.arguments);
+    if (!args.success) return { status: 'failed' };
+    const refusal = await validateMoneyArguments(input.storeId, name, args.data);
+    if (refusal) {
+      await rejectPendingAction({
+        id: pending.id,
+        storeId: input.storeId,
+        updateId: input.updateId,
+        tool: pending.tool,
+        action: 'money_guard',
+        outcome: refusal,
+      });
+      return { status: 'failed' };
+    }
+    const context = newToolContext(input.storeId, input.updateId, undefined, input.ownerUserId);
+    const result = await toolContext.run(context, () => definition.handler(args.data as never, {}));
+    const text = result.content.find((block) => block.type === 'text');
+    const decoded = text && 'text' in text ? JSON.parse(String(text.text)) : {};
+    outcome = typeof decoded.status === 'string' ? decoded.status : 'completed';
+  } else if (pending.tool === 'finalize_bill') {
     const parsed = FinalizeArgs.safeParse(pending.arguments);
     if (!parsed.success) {
       await rejectPendingAction({

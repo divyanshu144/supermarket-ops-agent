@@ -1,0 +1,15 @@
+name: superops-engineering-evals
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: eval_admin
+      POSTGRES_PASSWORD: disposable_eval_only
+      POSTGRES_DB: eval_admin
+    ports: ['127.0.0.1:55441:5432']
+    tmpfs: ['/var/lib/postgresql/data']
+    volumes: ['./init.sql:/docker-entrypoint-initdb.d/init.sql:ro']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U eval_admin']
+      interval: 1s
+      retries: 30

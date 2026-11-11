@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { registerGeneratedArtifact } from '../repositories/artifacts.js';
 import type { ToolObserver } from './observe.js';
+import type { LangfuseTurn } from '../observability/langfuse.js';
 
 /**
  * Deterministic JSON. Object keys are sorted so that argument order never changes the hash,
@@ -69,6 +70,7 @@ export interface ToolContext {
   artifacts: ProducedArtifact[];
   /** Internal eval-only observation sink. Production contexts leave this unset. */
   observer?: ToolObserver;
+  trace?: LangfuseTurn;
   pendingConfirmations: Array<{ callbackId: string; action: string }>;
 }
 

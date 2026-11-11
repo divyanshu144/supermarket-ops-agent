@@ -6,6 +6,8 @@ CREATE TABLE "graph_outbox" (
 	"payload" jsonb NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"processed_at" timestamp with time zone,
+	"locked_until" timestamp with time zone,
+	"claim_token" uuid,
 	"attempts" integer DEFAULT 0 NOT NULL,
 	"next_attempt_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"last_error_code" text

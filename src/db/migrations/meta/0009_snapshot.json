@@ -1,6 +1,6 @@
 {
-  "id": "1d519238-74bc-429b-a892-7855cce2ec4c",
-  "prevId": "331d742b-6907-4902-9e0c-f2896bac3dcb",
+  "id": "3d261d8c-3400-4d5e-b3c3-f3353ecb135f",
+  "prevId": "d9436fdf-6273-4a9d-87eb-4ebf09fac357",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -490,6 +490,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "claim_token": {
+          "name": "claim_token",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "attempts": {
           "name": "attempts",
           "type": "integer",
@@ -604,6 +610,13 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "replay_count": {
+          "name": "replay_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "created_at": {
           "name": "created_at",
@@ -1648,6 +1661,34 @@
         },
         "turns": {
           "name": "turns",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "tool_calls": {
+          "name": "tool_calls",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "tool_errors": {
+          "name": "tool_errors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "cache_lookups": {
+          "name": "cache_lookups",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "cache_hits": {
+          "name": "cache_hits",
           "type": "integer",
           "primaryKey": false,
           "notNull": true,

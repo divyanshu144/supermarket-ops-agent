@@ -1,3 +1,45 @@
+# Semantic cache and injection evaluation — 2026-10-31
+
+- [x] Explore and obtain user plan confirmation.
+- [x] Create feature branch and isolated evaluation database launcher.
+- [x] Implement bounded TTL semantic cache, swappable real embeddings and safety gates.
+- [x] Measure retrieval on 120 questions at 0.85 / 0.90 / 0.95.
+- [x] Run 40 live baseline and 40 live hardened injection attacks; preserve raw evidence.
+- [x] Add tool argument/confirmation/data-boundary/output defences and tests.
+- [ ] Complete live cache baseline and threshold runs after Anthropic credit top-up.
+- [x] Complete final-source injection rerun after credit top-up (2026-11-03, `6cfda18`: 0/40 successful attacks, no inconclusive attempts, $2.7098315).
+- [ ] Publish full end-to-end latency and cost savings only after valid runs.
+
+After the second 2026-11-03 credit top-up, `pnpm bench:cache --resume` reached
+102/120 baseline questions ($8.40015775 cumulative successful-call cost).
+Question 103 failed after $0.09413175; provider check confirmed insufficient credit
+again. No threshold run has completed. Archive: `cache-failure-after-102.json`.
+Next run must subtract the failed call from the $40 allowance (see `HANDOFF.md`).
+The four older live prerequisites remain inconclusive from the earlier attempt;
+ignore the legacy cost/security probes' misleading success wording in that capture.
+
+## Langfuse and hosted open-model helper — 2026-11-01
+
+Spec: `docs/specs/2026-11-01-model-tiering.md`. Plan:
+`docs/plans/2026-11-01-langfuse-and-tiering.md`. Owner approved the work; all inference is hosted.
+
+- [x] Phase 1: implement fail-open Langfuse tracing and privacy disclosure.
+- [x] Phase 1: reconcile trace cost with usage table and add read-only usage report.
+- [x] Phase 1: verify the disposable-database gate (562 passed, 19 skipped) and commit a Phase 1-only
+      checkpoint as `1ebae8e` before starting Phase 2.
+- [x] Phase 2: implement optional hosted open-weight transcript helper; Claude remains the only
+      tool selector; flag defaults off.
+- [x] Phase 2: add bounded hosted evaluation command `pnpm eval:tiering`; test its dataset and
+      metric calculations without provider calls.
+- [ ] Phase 2: run a real hosted-provider evaluation. `TIERING_API_KEY`, `TIERING_BASE_URL` and
+      `TIERING_MODEL` are not configured; model quality, latency and confusion matrix remain
+      “not measured”. Mocked contract cases are not a model evaluation.
+- [x] Phase 2: update architecture memory, lessons and handoff; latest full safe gate passed
+      (570 passed, 19 skipped).
+- [ ] Phase 2: run the hosted provider evaluation. No endpoint/key/model configuration is present;
+      keep the feature disabled and do not treat mocked outputs as quality results.
+- [x] Commit the Phase 2 changes after final review.
+
 # Todo
 
 ## Neo4j graph projection — approved 2026-11-10
@@ -208,3 +250,6 @@ through `8536b3d` (PR #2) and `fa89f53` (PR #1).
       SDK cost semantics, finish/review the live runner, then use the runbook in
       `evals/results/task-5-to-8-synthetic.md`. Proposed future smoke cap there is $0.25.
 - [ ] Prepare each later phase separately, with its own spec, plan and approval
+- [x] `list_stock` tool (2026-10-09): one call lists every product, so "list all the stock" no longer
+      loops `get_stock` per product (live run: 16 turns, 14 `get_stock` calls, $0.27). Tests added;
+      gate 539 passed. Verify on Railway after deploy: one `list_stock` call and a lower cost.

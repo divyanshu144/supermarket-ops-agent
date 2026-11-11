@@ -15,6 +15,8 @@ Statuses describe repository evidence at this checkpoint, not legal compliance.
 | Telegram and Anthropic credentials were previously present in deployment logs | partial | Operator | Rotate `TELEGRAM_BOT_TOKEN` and `ANTHROPIC_API_KEY`, then verify the old credentials no longer work. Never paste the values into an issue or report. |
 | Telegram may interpret outgoing text if a parse mode is enabled | partial | Project maintainer | Keep parse mode unset for untrusted text; add broad tests if a send path starts using formatting. |
 | Provider retention and deletion are outside app controls | not done | Operator | Check the provider account settings and contractual terms; do not claim deletion until verified. |
+| Optional Langfuse trace retention and access are controlled outside the app | partial | Operator | Configure and document Langfuse project retention and access; tracing is disabled unless credentials are configured, and message content is off by default. |
+| Hosted transcript helper receives voice transcript text and may misclassify it | partial | Operator | Keep `TIERING_ENABLED=false` until provider retention/training settings and hosted model quality are reviewed; preserve the original and keep Claude as the sole tool chooser. |
 | Live model quality and cost semantics are unverified | partial | Project maintainer | When credits exist, follow the eval runbook with explicit caps; do not accept a synthetic baseline as live evidence. |
 | Privacy request contact is not configured | partial | Operator | Set a verified `PRIVACY_CONTACT` if desired; otherwise the bot falls back to the invite issuer. |
 
