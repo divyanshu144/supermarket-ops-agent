@@ -176,7 +176,17 @@ async function runProjector(): Promise<void> {
   }
 }
 
-export async function startGraphProjector(env: Env): Promise<void> {
+export async function startGraphProjector(
+  env: Pick<
+    Env,
+    | 'NEO4J_URI'
+    | 'NEO4J_USERNAME'
+    | 'NEO4J_PASSWORD'
+    | 'NEO4J_READER_USERNAME'
+    | 'NEO4J_READER_PASSWORD'
+    | 'NEO4J_DATABASE'
+  >,
+): Promise<void> {
   if (running) return;
   stopping = false;
   configureGraph(env);

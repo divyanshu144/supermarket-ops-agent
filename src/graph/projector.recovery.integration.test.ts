@@ -13,10 +13,22 @@ import {
   appendGraphEvent,
   claimGraphEvents,
 } from '../repositories/graph-outbox.js';
-import { closeGraphDrivers, configureGraph, configuredWriter, writerSession } from './driver.js';
+import {
+  closeGraphDrivers,
+  configureGraph,
+  configuredWriter,
+  getGraphStatus,
+  writerSession,
+} from './driver.js';
 import type { GraphEvent } from './mapping.js';
 import { ensureGraphSchema } from './schema.js';
-import { graphHealth, projectGraphEvent, projectPendingGraphEvents } from './projector.js';
+import {
+  graphHealth,
+  projectGraphEvent,
+  projectPendingGraphEvents,
+  startGraphProjector,
+  stopGraphProjector,
+} from './projector.js';
 import { backfillGraphHistory } from './backfill.js';
 import { readerSession } from './driver.js';
 import { explainStockChange } from './reader.js';
@@ -159,6 +171,17 @@ describe('Postgres outbox and Neo4j recovery integration', () => {
     const [completed] = await db.select().from(graphOutbox).where(eq(graphOutbox.storeId, STORE));
     expect(completed?.processedAt).toBeInstanceOf(Date);
   });
+
+  it('starts in degraded mode when Neo4j is unavailable at boot', async () => {
+    await closeGraphDrivers();
+    await expect(
+      startGraphProjector({ ...graphEnv, NEO4J_URI: 'bolt://127.0.0.1:1' }),
+    ).resolves.toBeUndefined();
+    expect(getGraphStatus().available).toBe(false);
+    expect(getGraphStatus().lastErrorCategory).toBe('unavailable');
+    await stopGraphProjector();
+    await useAvailableGraph();
+  }, 15_000);
 
   it('commits a finalized bill and its outbox rows while Neo4j is unreachable', async () => {
     await useUnavailableGraph();
