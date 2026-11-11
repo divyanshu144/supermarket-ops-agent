@@ -122,4 +122,16 @@ describe('graph reconciliation result', () => {
       }),
     ).toBe(true);
   });
+
+  it.each(['bills', 'billItems', 'stockMovements'] as const)(
+    'flags a %s count mismatch',
+    (kind) => {
+      expect(
+        reconciliationHasMismatch({
+          ...matching,
+          counts: { ...matching.counts, [kind]: { postgres: 2, neo4j: 1 } },
+        }),
+      ).toBe(true);
+    },
+  );
 });
