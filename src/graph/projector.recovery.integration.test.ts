@@ -164,6 +164,7 @@ describe('Postgres outbox and Neo4j recovery integration', () => {
   });
 
   it('backfills existing Postgres rows in a bounded resumable and idempotent pass', async () => {
+    await useAvailableGraph();
     const directory = await mkdtemp(join(tmpdir(), 'neo4j-source-backfill-'));
     const checkpoint = join(directory, 'state.json');
     const [product] = await db.select().from(products).where(eq(products.storeId, STORE));
