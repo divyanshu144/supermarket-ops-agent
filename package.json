@@ -19,7 +19,9 @@
     "db:migrate": "drizzle-kit migrate",
     "invite": "tsx src/scripts/invite.ts",
     "eval:compare": "tsx src/evals/compare-cli.ts",
-    "eval:safety": "tsx src/evals/safety-replay-cli.ts"
+    "eval:safety": "tsx src/evals/safety-replay-cli.ts",
+    "graph:backfill": "tsx src/scripts/graph-backfill.ts",
+    "graph:reconcile": "tsx src/scripts/graph-reconcile.ts"
   },
   "keywords": [],
   "author": "",
