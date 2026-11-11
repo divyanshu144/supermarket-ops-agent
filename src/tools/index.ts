@@ -5,6 +5,7 @@ import { DOCUMENT_TOOLS, DOCUMENT_TOOL_NAMES } from './documents.js';
 import { INVENTORY_TOOLS, INVENTORY_TOOL_NAMES } from './inventory.js';
 import { KHATA_TOOLS, KHATA_TOOL_NAMES } from './khata.js';
 import { PREFERENCE_TOOLS, PREFERENCE_TOOL_NAMES } from './preferences.js';
+import { GRAPH_TOOLS, GRAPH_TOOL_NAMES } from './graph.js';
 import { observeRegisteredTools } from './observe.js';
 
 export const STORE_SERVER_NAME = 'store';
@@ -17,6 +18,7 @@ export const STORE_TOOLS = [
   ...ANALYTICS_TOOLS,
   ...DOCUMENT_TOOLS,
   ...PREFERENCE_TOOLS,
+  ...GRAPH_TOOLS,
 ];
 
 export const STORE_TOOL_NAMES = [
@@ -26,6 +28,7 @@ export const STORE_TOOL_NAMES = [
   ...ANALYTICS_TOOL_NAMES,
   ...DOCUMENT_TOOL_NAMES,
   ...PREFERENCE_TOOL_NAMES,
+  ...GRAPH_TOOL_NAMES,
 ] as const;
 
 export const storeToolServer = createSdkMcpServer({

@@ -6,6 +6,7 @@ import { ensureGraphSchema } from './schema.js';
 import { projectGraphEvent } from './projector.js';
 import type { GraphEvent } from './mapping.js';
 import type { ClaimedGraphEvent } from '../repositories/graph-outbox.js';
+import { explainStockChange, frequentlyBoughtWith } from './reader.js';
 
 const PASSWORD = 'neo4j-integration-test-password';
 let container: StartedNeo4jContainer;
@@ -64,6 +65,7 @@ describe('Neo4j projector integration', () => {
     const storeId = '999000001';
     const otherStoreId = '999000002';
     const maliciousId = "p-1'}) DETACH DELETE (n) //";
+    const createdAt = new Date().toISOString();
     const events: GraphEvent[] = [
       {
         type: 'store',
@@ -72,7 +74,7 @@ describe('Neo4j projector integration', () => {
         name: 'Test store',
         gstin: '27AAAAA0000A1Z5',
         stateCode: '27',
-        createdAt: new Date().toISOString(),
+        createdAt,
       },
       {
         type: 'product',
@@ -88,14 +90,27 @@ describe('Neo4j projector integration', () => {
         mrpPaise: 100,
       },
       {
+        type: 'product',
+        storeId,
+        id: 'companion',
+        name: 'Companion',
+        brand: null,
+        packSize: null,
+        unit: 'packet',
+        isLoose: false,
+        hsnCode: '1006',
+        gstRateBps: 500,
+        mrpPaise: 100,
+      },
+      {
         type: 'bill',
         storeId,
         id: 'bill-1',
         status: 'finalized',
         invoiceNumber: 'INV-1',
-        totalPaise: 100,
-        createdAt: new Date().toISOString(),
-        finalizedAt: new Date().toISOString(),
+        totalPaise: 200,
+        createdAt,
+        finalizedAt: createdAt,
       },
       {
         type: 'bill_item',
@@ -108,6 +123,49 @@ describe('Neo4j projector integration', () => {
         unitPricePaise: 100,
         gstRateBps: 500,
         hsnCode: '1006',
+      },
+      {
+        type: 'bill_item',
+        storeId,
+        id: 'item-2',
+        billId: 'bill-1',
+        productId: 'companion',
+        lineNo: 2,
+        qtyBase: 1,
+        unitPricePaise: 100,
+        gstRateBps: 500,
+        hsnCode: '1006',
+      },
+      {
+        type: 'pending_action',
+        storeId,
+        id: 'action-1',
+        tool: 'adjust_stock',
+        status: 'confirmed',
+        outcome: 'adjusted',
+        createdAt,
+      },
+      {
+        type: 'audit_event',
+        storeId,
+        id: 'audit-1',
+        action: 'adjust_stock',
+        tool: 'adjust_stock',
+        outcome: 'adjusted',
+        updateId: '8001',
+        createdAt,
+        pendingActionId: 'action-1',
+      },
+      {
+        type: 'stock_movement',
+        storeId,
+        id: 'move-1',
+        productId: maliciousId,
+        kind: 'adjust',
+        qtyBaseDelta: -1,
+        billId: null,
+        pendingActionId: 'action-1',
+        createdAt,
       },
       {
         type: 'product',
@@ -154,6 +212,39 @@ describe('Neo4j projector integration', () => {
         lines: 1,
         visibleNames: ['Name "; MATCH (n) DETACH DELETE n //'],
       });
+
+      const from = new Date(Date.now() - 60_000);
+      const to = new Date(Date.now() + 60_000);
+      const explanation = await explainStockChange(BigInt(storeId), {
+        productQuery: 'Name "; MATCH (n) DETACH DELETE n //',
+        from,
+        to,
+        limit: 20,
+      });
+      expect(explanation).toMatchObject({
+        status: 'ok',
+        movements: [
+          { cause: { kind: 'PendingAction', id: 'action-1' }, audit: { action: 'adjust_stock' } },
+        ],
+      });
+      const coOccurrences = await frequentlyBoughtWith(BigInt(storeId), {
+        productQuery: 'Name',
+        from,
+        to,
+        limit: 20,
+      });
+      expect(coOccurrences).toMatchObject({
+        status: 'ok',
+        products: [{ productName: 'Companion', bills: 1 }],
+      });
+      expect(
+        await frequentlyBoughtWith(BigInt(storeId), {
+          productQuery: 'Private other store',
+          from,
+          to,
+          limit: 20,
+        }),
+      ).toEqual({ status: 'ok', products: [] });
     } finally {
       await session.close();
     }

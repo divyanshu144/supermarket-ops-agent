@@ -9,6 +9,12 @@ export interface GraphStatus {
   failureCount: number;
 }
 
+export function graphErrorIdentifier(error: unknown): string | null {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
+  return /^[A-Za-z0-9_.-]{1,100}$/.test(code) ? code : null;
+}
+
 const status: GraphStatus = { available: false, lastErrorCategory: null, failureCount: 0 };
 let writer: Driver | null = null;
 let reader: Driver | null = null;

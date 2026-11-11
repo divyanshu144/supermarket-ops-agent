@@ -5,6 +5,7 @@ import { DOCUMENT_TOOL_NAMES } from '../tools/documents.js';
 import { INVENTORY_TOOL_NAMES } from '../tools/inventory.js';
 import { KHATA_TOOL_NAMES } from '../tools/khata.js';
 import { PREFERENCE_TOOL_NAMES } from '../tools/preferences.js';
+import { GRAPH_TOOL_NAMES } from '../tools/graph.js';
 import { EVAL_TOOL_NAMES } from './tool-names.js';
 
 describe('eval tool-name registry', () => {
@@ -16,6 +17,7 @@ describe('eval tool-name registry', () => {
       ...ANALYTICS_TOOL_NAMES,
       ...DOCUMENT_TOOL_NAMES,
       ...PREFERENCE_TOOL_NAMES,
+      ...GRAPH_TOOL_NAMES,
     ];
     expect(EVAL_TOOL_NAMES).toEqual(productionNames);
   });
