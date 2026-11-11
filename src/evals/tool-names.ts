@@ -5,6 +5,7 @@ export const EVAL_TOOL_NAMES = [
   'add_product',
   'adjust_stock',
   'low_stock_report',
+  'list_stock',
   'open_bill',
   'add_bill_item',
   'update_bill_item',
@@ -25,4 +26,6 @@ export const EVAL_TOOL_NAMES = [
   'generate_analysis_deck',
   'get_preferences',
   'set_preference',
+  'explain_stock_change',
+  'frequently_bought_with',
 ] as const;

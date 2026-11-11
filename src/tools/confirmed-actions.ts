@@ -1,3 +1,4 @@
+import { validateMoneyArguments } from '../security/arguments.js';
 import { z } from 'zod';
 import { getBill, finalizeBill, voidBill } from '../repositories/bills.js';
 import {
@@ -10,6 +11,7 @@ import {
 } from '../repositories/confirmations.js';
 import { settleAccount } from '../repositories/khata.js';
 import { applyCustomerPseudonymisation, pseudonymiseCustomerArgsSchema } from './privacy.js';
+import { withGraphActionId } from '../graph/action-context.js';
 
 const FinalizeArgs = z
   .object({
@@ -97,7 +99,35 @@ export async function handleConfirmation(input: {
   }
 
   let outcome: string;
-  if (pending.tool === 'finalize_bill') {
+  if (pending.tool.startsWith('guard:')) {
+    // Only an owner-bound, atomically claimed pending row reaches this path. The model
+    // cannot set a bypass flag; raw handlers are never registered with the SDK.
+    const { STORE_TOOLS } = await import('./index.js');
+    const { CONFIRM_TOOLS } = await import('../security/tools.js');
+    const { toolContext, newToolContext } = await import('./context.js');
+    const name = pending.tool.slice(6);
+    const definition = STORE_TOOLS.find((t) => t.name === name);
+    if (!CONFIRM_TOOLS.has(name) || !definition) return { status: 'failed' };
+    const args = z.object(definition.inputSchema).strict().safeParse(pending.arguments);
+    if (!args.success) return { status: 'failed' };
+    const refusal = await validateMoneyArguments(input.storeId, name, args.data);
+    if (refusal) {
+      await rejectPendingAction({
+        id: pending.id,
+        storeId: input.storeId,
+        updateId: input.updateId,
+        tool: pending.tool,
+        action: 'money_guard',
+        outcome: refusal,
+      });
+      return { status: 'failed' };
+    }
+    const context = newToolContext(input.storeId, input.updateId, undefined, input.ownerUserId);
+    const result = await toolContext.run(context, () => definition.handler(args.data as never, {}));
+    const text = result.content.find((block) => block.type === 'text');
+    const decoded = text && 'text' in text ? JSON.parse(String(text.text)) : {};
+    outcome = typeof decoded.status === 'string' ? decoded.status : 'completed';
+  } else if (pending.tool === 'finalize_bill') {
     const parsed = FinalizeArgs.safeParse(pending.arguments);
     if (!parsed.success) {
       await rejectPendingAction({
@@ -110,14 +140,16 @@ export async function handleConfirmation(input: {
       });
       return { status: 'failed' };
     }
-    const result = await finalizeBill(input.storeId, {
-      billId: parsed.data.bill_id,
-      paymentMode: parsed.data.payment_mode,
-      paymentRef: parsed.data.payment_ref,
-      customerName: parsed.data.customer_name,
-      allowBelowCost: true,
-      expectedBillFingerprint: pending.billFingerprint ?? undefined,
-    });
+    const result = await withGraphActionId(pending.id, () =>
+      finalizeBill(input.storeId, {
+        billId: parsed.data.bill_id,
+        paymentMode: parsed.data.payment_mode,
+        paymentRef: parsed.data.payment_ref,
+        customerName: parsed.data.customer_name,
+        allowBelowCost: true,
+        expectedBillFingerprint: pending.billFingerprint ?? undefined,
+      }),
+    );
     outcome = result.status;
   } else if (pending.tool === 'void_bill') {
     const parsed = VoidArgs.safeParse(pending.arguments);
@@ -133,7 +165,9 @@ export async function handleConfirmation(input: {
       return { status: 'failed' };
     }
     outcome = (
-      await voidBill(input.storeId, parsed.data.bill_id, pending.billFingerprint ?? undefined)
+      await withGraphActionId(pending.id, () =>
+        voidBill(input.storeId, parsed.data.bill_id, pending.billFingerprint ?? undefined),
+      )
     ).status;
   } else if (pending.tool === 'settle_khata') {
     const parsed = SettleArgs.safeParse(pending.arguments);
@@ -148,13 +182,15 @@ export async function handleConfirmation(input: {
       });
       return { status: 'failed' };
     }
-    const result = await settleAccount(input.storeId, {
-      customerQuery: parsed.data.customer,
-      amountPaise: parsed.data.amount_paise,
-      note: parsed.data.note,
-      allowOverpay: true,
-      idempotencyKey: `pending-action:${pending.id}`,
-    });
+    const result = await withGraphActionId(pending.id, () =>
+      settleAccount(input.storeId, {
+        customerQuery: parsed.data.customer,
+        amountPaise: parsed.data.amount_paise,
+        note: parsed.data.note,
+        allowOverpay: true,
+        idempotencyKey: `pending-action:${pending.id}`,
+      }),
+    );
     outcome = result.status;
   } else if (pending.tool === 'pseudonymise_customer') {
     const parsed = pseudonymiseCustomerArgsSchema.safeParse(pending.arguments);

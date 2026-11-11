@@ -57,6 +57,20 @@
       "when": 1791406490212,
       "tag": "0007_jazzy_reaper",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793527851275,
+      "tag": "0008_milky_kabuki",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794408280549,
+      "tag": "0009_zippy_boomerang",
+      "breakpoints": true
     }
   ]
 }

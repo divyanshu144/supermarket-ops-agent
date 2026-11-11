@@ -11,6 +11,9 @@ import {
 
 const base = {
   DATABASE_URL: 'postgres://u:p@localhost:5432/db',
+  NEO4J_URI: 'bolt://localhost:7687',
+  NEO4J_USERNAME: 'neo4j',
+  NEO4J_PASSWORD: 'test-password',
   TELEGRAM_BOT_TOKEN: 't',
   ANTHROPIC_API_KEY: 'k',
   NODE_ENV: 'test',

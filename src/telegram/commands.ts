@@ -3,6 +3,7 @@ import { createPendingAction } from '../repositories/confirmations.js';
 import { previewCustomerPseudonymisation } from '../tools/privacy.js';
 import { clearSession } from '../repositories/updates.js';
 import { reseedStore } from '../seed/index.js';
+import { graphHealth } from '../graph/projector.js';
 import {
   INVALID_CODE,
   PRIVATE_MESSAGE,
@@ -36,6 +37,27 @@ export async function newCommand(chatId: bigint): Promise<string> {
 
 export function privacyCommand(contact?: string, retentionDays = 30): string {
   return privacyMessage(contact, retentionDays);
+}
+
+export async function healthCommand(chatId: bigint, ownerUserId: bigint): Promise<string> {
+  if (!(await isAuthorizedOwner(chatId, ownerUserId))) return PRIVATE_MESSAGE;
+  const health = await graphHealth();
+  const oldest =
+    health.oldestPendingAgeMs === null
+      ? 'none'
+      : `${Math.round(health.oldestPendingAgeMs / 1000)}s (since ${health.oldestPendingAt})`;
+  const latency = Object.entries(health.toolLatency)
+    .map(
+      ([name, metric]) =>
+        `${name}: ${metric.calls ? Math.round(metric.totalLatencyMs / metric.calls) : 0}ms avg`,
+    )
+    .join('; ');
+  return [
+    `Graph: ${health.available ? 'available' : 'degraded'}`,
+    `Outbox pending: ${health.pendingCount}; oldest: ${oldest}`,
+    `Projection failures: ${health.failureCount}; last error: ${health.lastErrorCategory ?? 'none'}`,
+    `Graph tool latency: ${latency}`,
+  ].join('\n');
 }
 
 export type CustomerPseudonymisationRequest =

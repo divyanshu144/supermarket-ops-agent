@@ -4,8 +4,10 @@ import { db, pool } from '../db/client.js';
 import {
   billItems,
   bills,
+  graphOutbox,
   khataAccounts,
   khataEntries,
+  idempotencyKeys,
   products,
   stockMovements,
   stores,
@@ -128,6 +130,12 @@ describe('openBill / getBill', () => {
     const second = await openBill(STORE, { customerName: 'Ramesh', idempotencyKey: key });
 
     expect(second.billId).toBe(first.billId);
+    const replayRows = await db
+      .select({ replayCount: idempotencyKeys.replayCount })
+      .from(idempotencyKeys)
+      .where(eq(idempotencyKeys.storeId, STORE));
+    expect(replayRows).toHaveLength(1);
+    expect(replayRows[0]!.replayCount).toBe(1);
 
     // Assert the total count, not a filter on a unique primary key — filtering by id can only
     // ever be 0 or 1 regardless of whether a second draft was created, so it proves nothing.
@@ -439,6 +447,15 @@ describe('finalizeBill', () => {
       .where(eq(stockMovements.billId, billId));
     expect(movements).toHaveLength(2);
     expect(movements.every((m) => m.kind === 'sale' && m.qtyBaseDelta < 0)).toBe(true);
+    const events = await db.select().from(graphOutbox).where(eq(graphOutbox.storeId, STORE));
+    expect(events.map((event) => event.eventType).sort()).toEqual([
+      'bill',
+      'bill_item',
+      'bill_item',
+      'stock_movement',
+      'stock_movement',
+    ]);
+    expect(events.every((event) => event.processedAt === null)).toBe(true);
   });
 
   it('stores the totals on the bill so the invoice of record cannot drift', async () => {

@@ -8,6 +8,12 @@ description: Use when the owner talks about stock arriving, new products, what i
 **Never state a price or a quantity you have not read from a tool.** If the shop does not stock
 something, say so plainly. An invented price ends up on a real bill.
 
+## Looking things up
+
+For "list all the stock", "what do we have" or "show the inventory", call `list_stock` **once**. It
+returns every product. Never loop `get_stock` over the catalogue. Use `get_stock` only when the
+owner names a product.
+
 ## Receiving
 
 "50 packets of Maggi came in, cost ₹12, MRP ₹14" is one `receive_stock` call. Cost and MRP are

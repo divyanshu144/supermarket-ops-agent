@@ -11,7 +11,9 @@ Supermarket Ops Agent is a TypeScript Telegram bot for one invited kirana-store 
 Claude Agent SDK with a fixed tool allow-list, skills and PostgreSQL-backed tools. The configured
 default model name in code is `claude-opus-5`; the deployment may override it through
 `AGENT_MODEL`. The system also supports a configured fallback model. The runtime does not route to
-another provider. Voice notes are sent to OpenAI for transcription when enabled.
+another provider for tool choice. Voice notes are sent to OpenAI for transcription when enabled.
+An optional hosted open-weight helper can remove a small set of speech fillers; it is off by
+default, has no tools or database access, and always preserves the original transcript for Claude.
 
 ## Intended use
 
@@ -53,5 +55,8 @@ so no language detector or runtime language counters were added.
 
 See the [data inventory](../privacy/data-inventory.md) for storage, retention and processor paths,
 and the [incident runbook](incident-runbook.md) for containment actions. The project maintainer owns
-technical follow-up. Legal review remains open for the proposed retention period and customer
-record treatment.
+technical follow-up. Optional Langfuse Cloud tracing exports pseudonymous usage metadata and
+operational events when configured; content capture is off by default. Langfuse retention is
+controlled outside this application. When the hosted voice helper is enabled, transcript text is
+sent to the operator-configured provider; its retention was not verified. Legal review remains open for the proposed retention period
+and customer record treatment.

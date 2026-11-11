@@ -4,6 +4,7 @@ import {
   addProduct,
   adjustStock,
   findStock,
+  listProducts,
   lowStockReport,
   receiveStock,
   type StockResult,
@@ -84,6 +85,34 @@ export const getStockTool = tool(
   },
 );
 
+/** Exported separately from the tool wrapper so it is testable without the SDK. */
+export async function handleListStock() {
+  const { storeId } = requireContext();
+  const rows = await listProducts(storeId);
+  // Same field policy as presentStockResult: no cost price, no ids, no base-unit integers.
+  return {
+    count: rows.length,
+    items: rows.map((p) => ({
+      name: p.name,
+      brand: p.brand,
+      pack_size: p.packSize,
+      in_stock: formatQuantity(p.quantityBase, p.unit as Unit),
+      reorder_level: formatQuantity(p.reorderLevelBase, p.unit as Unit),
+      below_reorder_level: p.quantityBase <= p.reorderLevelBase,
+      price: formatPaise(p.mrpPaise),
+    })),
+  };
+}
+
+export const listStockTool = tool(
+  'list_stock',
+  'List every product in the shop with how much is in stock — answers "list all the stock", ' +
+    '"what do we have?", "show the inventory". One call returns everything, so never call ' +
+    'get_stock once per product. Use get_stock only to look up a product the owner named.',
+  {},
+  async () => toolResult(await handleListStock()),
+);
+
 export const receiveStockTool = tool(
   'receive_stock',
   'Book stock in when a delivery arrives, e.g. "50 packets of Maggi came in, cost ₹12, MRP ₹14". ' +
@@ -131,7 +160,9 @@ export const addProductTool = tool(
     unit: z.enum(['kg', 'g', 'litre', 'ml', 'packet', 'dozen', 'piece']),
     is_loose: z.boolean().optional(),
     hsn_code: z.string().min(4).describe('HSN code for the GST slab.'),
-    gst_rate_bps: z.number().int().describe('Basis points: 0, 500, 1200 or 1800.'),
+    gst_rate_bps: z
+      .union([z.literal(0), z.literal(500), z.literal(1200), z.literal(1800)])
+      .describe('Supported catalogue slabs, in basis points.'),
     cost_price_paise: z.number().int().nonnegative(),
     mrp_paise: z.number().int().positive(),
     opening_qty: z.number().nonnegative().optional(),
@@ -203,6 +234,7 @@ export const INVENTORY_TOOLS = [
   addProductTool,
   adjustStockTool,
   lowStockReportTool,
+  listStockTool,
 ];
 
 export const INVENTORY_TOOL_NAMES = [
@@ -211,4 +243,5 @@ export const INVENTORY_TOOL_NAMES = [
   'add_product',
   'adjust_stock',
   'low_stock_report',
+  'list_stock',
 ] as const;

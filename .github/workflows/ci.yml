@@ -18,9 +18,8 @@ jobs:
     timeout-minutes: 15
 
     services:
-      # The repository tests run against a real Postgres rather than a mock — row locks,
-      # CHECK constraints and ON CONFLICT are the things under test, and none of them exist
-      # in a fake. Matches the local docker-compose service.
+      # The test script starts a disposable Postgres cluster for the suite. This service is
+      # migrated separately for the offline safety replay below.
       postgres:
         image: postgres:16-alpine
         env:
@@ -33,9 +32,22 @@ jobs:
           --health-interval 3s
           --health-timeout 5s
           --health-retries 20
+      neo4j:
+        image: neo4j:5-community
+        env:
+          NEO4J_AUTH: neo4j/test-password
+        ports: ['7687:7687']
+        options: >-
+          --health-cmd "cypher-shell -u neo4j -p test-password 'RETURN 1'"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 20
 
     env:
       DATABASE_URL: postgres://kirana:kirana@localhost:5432/kirana
+      NEO4J_URI: bolt://localhost:7687
+      NEO4J_USERNAME: neo4j
+      NEO4J_PASSWORD: test-password
       EVAL_SAFETY_TEST_DATABASE_URL: postgres://kirana:kirana@localhost:5432/kirana
       # The tool layer is exercised directly, so no live model call is made and no real key is
       # needed. Config validation is fail-fast at import, so these must be present and non-empty.
@@ -72,9 +84,8 @@ jobs:
         run: pnpm typecheck
 
       - name: Test
-        # vitest.config.ts sets fileParallelism: false. The invariant suite installs a DDL
-        # trigger on khata_entries to prove the khata write is inside the finalize transaction,
-        # and while it exists any parallel file inserting there fails.
+        # This runs in a separately-created disposable database; fileParallelism is false because
+        # invariant tests install a temporary DDL trigger on khata_entries.
         run: pnpm test
 
       - name: Offline safety replay

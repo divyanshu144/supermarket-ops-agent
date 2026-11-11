@@ -11,5 +11,21 @@ services:
       test: ['CMD-SHELL', 'pg_isready -U kirana']
       interval: 3s
       retries: 10
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-local-only-change-me}
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 256m
+    mem_limit: 1g
+    volumes: ['kirana-neo4j:/data']
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'cypher-shell -u neo4j -p "$${NEO4J_AUTH#neo4j/}" "RETURN 1" >/dev/null 2>&1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
 volumes:
   kirana-pg:
+  kirana-neo4j:

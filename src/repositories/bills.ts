@@ -15,6 +15,7 @@ import { formatPaise, roundToNearestRupee } from '../domain/money.js';
 import { formatQuantity, toBaseUnits, type Unit } from '../domain/units.js';
 import { findStock, type ProductSummary } from './products.js';
 import { hashBillSnapshot } from './confirmations.js';
+import { appendGraphEvent } from './graph-outbox.js';
 
 /** The transaction handle Drizzle hands to `db.transaction`. */
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -319,6 +320,12 @@ export async function openBill(
       .returning({ key: idempotencyKeys.key });
 
     if (claimed.length === 0) {
+      await tx
+        .update(idempotencyKeys)
+        .set({ replayCount: sql`${idempotencyKeys.replayCount} + 1` })
+        .where(
+          and(eq(idempotencyKeys.storeId, storeId), eq(idempotencyKeys.key, input.idempotencyKey!)),
+        );
       const [existing] = await tx
         .select({ result: idempotencyKeys.result })
         .from(idempotencyKeys)
@@ -547,6 +554,15 @@ export async function addBillItem(
         .returning({ key: idempotencyKeys.key });
 
       if (claimed.length === 0) {
+        await tx
+          .update(idempotencyKeys)
+          .set({ replayCount: sql`${idempotencyKeys.replayCount} + 1` })
+          .where(
+            and(
+              eq(idempotencyKeys.storeId, storeId),
+              eq(idempotencyKeys.key, input.idempotencyKey),
+            ),
+          );
         const [existing] = await tx
           .select({ result: idempotencyKeys.result })
           .from(idempotencyKeys)
@@ -983,7 +999,7 @@ export async function finalizeBill(
     // 11. Invoice number, under the store lock.
     const invoiceNumber = await nextInvoiceNumber(tx, storeId);
 
-    await tx
+    const [finalizedBill] = await tx
       .update(bills)
       .set({
         status: 'finalized',
@@ -998,19 +1014,59 @@ export async function finalizeBill(
         invoiceNumber,
         finalizedAt: new Date(),
       })
-      .where(eq(bills.id, billId));
+      .where(eq(bills.id, billId))
+      .returning();
 
     // 12. Audit trail, one movement per line so the bill can be reconstructed from it.
-    await tx.insert(stockMovements).values(
-      lines.map((line) => ({
-        storeId,
-        productId: line.productId,
-        kind: 'sale' as const,
-        qtyBaseDelta: -line.qtyBase,
+    const movements = await tx
+      .insert(stockMovements)
+      .values(
+        lines.map((line) => ({
+          storeId,
+          productId: line.productId,
+          kind: 'sale' as const,
+          qtyBaseDelta: -line.qtyBase,
+          billId,
+          unitCostPaise: locked.get(line.productId)!.costPricePaise,
+        })),
+      )
+      .returning();
+    await appendGraphEvent(tx, {
+      type: 'bill',
+      storeId: String(storeId),
+      id: finalizedBill!.id,
+      status: finalizedBill!.status,
+      invoiceNumber: finalizedBill!.invoiceNumber,
+      totalPaise: finalizedBill!.totalPaise,
+      createdAt: finalizedBill!.createdAt.toISOString(),
+      finalizedAt: finalizedBill!.finalizedAt!.toISOString(),
+    });
+    for (const line of lines) {
+      await appendGraphEvent(tx, {
+        type: 'bill_item',
+        storeId: String(storeId),
+        id: line.itemId,
         billId,
-        unitCostPaise: locked.get(line.productId)!.costPricePaise,
-      })),
-    );
+        productId: line.productId,
+        lineNo: line.lineNo,
+        qtyBase: line.qtyBase,
+        unitPricePaise: line.unitPricePaise,
+        gstRateBps: line.gstRateBps,
+        hsnCode: line.hsnCode,
+      });
+    }
+    for (const movement of movements) {
+      await appendGraphEvent(tx, {
+        type: 'stock_movement',
+        storeId: String(storeId),
+        id: movement.id,
+        productId: movement.productId,
+        kind: movement.kind,
+        qtyBaseDelta: movement.qtyBaseDelta,
+        billId: movement.billId,
+        createdAt: movement.createdAt.toISOString(),
+      });
+    }
 
     // 13. Credit, in this same transaction.
     if (input.paymentMode === 'khata') {
@@ -1038,7 +1094,19 @@ async function chargeKhata(
 ): Promise<void> {
   // The unique index is on lower(customer_name), so the insert is the lookup: whoever loses the
   // race does nothing and then reads the winner's row.
-  await tx.insert(khataAccounts).values({ storeId, customerName }).onConflictDoNothing();
+  const createdAccounts = await tx
+    .insert(khataAccounts)
+    .values({ storeId, customerName })
+    .onConflictDoNothing()
+    .returning();
+  if (createdAccounts[0]) {
+    await appendGraphEvent(tx, {
+      type: 'khata_account',
+      storeId: String(storeId),
+      id: createdAccounts[0].id,
+      createdAt: createdAccounts[0].createdAt.toISOString(),
+    });
+  }
 
   const [account] = await tx
     .select({ id: khataAccounts.id })
@@ -1058,12 +1126,25 @@ async function chargeKhata(
     .set({ balancePaise: sql`${khataAccounts.balancePaise} + ${amountPaise}` })
     .where(eq(khataAccounts.id, account.id));
 
-  await tx.insert(khataEntries).values({
+  const [entry] = await tx
+    .insert(khataEntries)
+    .values({
+      accountId: account.id,
+      kind: 'charge',
+      amountPaise,
+      billId,
+      note: `Bill ${invoiceNumber}`,
+    })
+    .returning();
+  await appendGraphEvent(tx, {
+    type: 'khata_entry',
+    storeId: String(storeId),
+    id: entry!.id,
     accountId: account.id,
-    kind: 'charge',
-    amountPaise,
-    billId,
-    note: `Bill ${invoiceNumber}`,
+    kind: entry!.kind,
+    amountPaise: entry!.amountPaise,
+    billId: entry!.billId,
+    createdAt: entry!.createdAt.toISOString(),
   });
 }
 
@@ -1114,7 +1195,21 @@ export async function voidBill(
 
     // A draft never moved any stock, so voiding one is just closing it.
     if (bill.status === 'draft') {
-      await tx.update(bills).set({ status: 'void' }).where(eq(bills.id, billId));
+      const [voidedBill] = await tx
+        .update(bills)
+        .set({ status: 'void' })
+        .where(eq(bills.id, billId))
+        .returning();
+      await appendGraphEvent(tx, {
+        type: 'bill',
+        storeId: String(storeId),
+        id: voidedBill!.id,
+        status: voidedBill!.status,
+        invoiceNumber: voidedBill!.invoiceNumber,
+        totalPaise: voidedBill!.totalPaise,
+        createdAt: voidedBill!.createdAt.toISOString(),
+        finalizedAt: voidedBill!.finalizedAt?.toISOString() ?? null,
+      });
       return {
         status: 'voided',
         billId,
@@ -1135,16 +1230,31 @@ export async function voidBill(
     }
 
     if (lines.length > 0) {
-      await tx.insert(stockMovements).values(
-        lines.map((line) => ({
-          storeId,
-          productId: line.productId,
-          kind: 'reversal' as const,
-          qtyBaseDelta: line.qtyBase,
-          billId,
-          unitCostPaise: locked.get(line.productId)!.costPricePaise,
-        })),
-      );
+      const movements = await tx
+        .insert(stockMovements)
+        .values(
+          lines.map((line) => ({
+            storeId,
+            productId: line.productId,
+            kind: 'reversal' as const,
+            qtyBaseDelta: line.qtyBase,
+            billId,
+            unitCostPaise: locked.get(line.productId)!.costPricePaise,
+          })),
+        )
+        .returning();
+      for (const movement of movements) {
+        await appendGraphEvent(tx, {
+          type: 'stock_movement',
+          storeId: String(storeId),
+          id: movement.id,
+          productId: movement.productId,
+          kind: movement.kind,
+          qtyBaseDelta: movement.qtyBaseDelta,
+          billId: movement.billId,
+          createdAt: movement.createdAt.toISOString(),
+        });
+      }
     }
 
     let khataReversedPaise = 0;
@@ -1159,7 +1269,21 @@ export async function voidBill(
       );
     }
 
-    await tx.update(bills).set({ status: 'void' }).where(eq(bills.id, billId));
+    const [voidedBill] = await tx
+      .update(bills)
+      .set({ status: 'void' })
+      .where(eq(bills.id, billId))
+      .returning();
+    await appendGraphEvent(tx, {
+      type: 'bill',
+      storeId: String(storeId),
+      id: voidedBill!.id,
+      status: voidedBill!.status,
+      invoiceNumber: voidedBill!.invoiceNumber,
+      totalPaise: voidedBill!.totalPaise,
+      createdAt: voidedBill!.createdAt.toISOString(),
+      finalizedAt: voidedBill!.finalizedAt?.toISOString() ?? null,
+    });
 
     return {
       status: 'voided',
@@ -1207,12 +1331,25 @@ async function reverseKhata(
     .set({ balancePaise: sql`${khataAccounts.balancePaise} - ${amountPaise}` })
     .where(eq(khataAccounts.id, account.id));
 
-  await tx.insert(khataEntries).values({
+  const [entry] = await tx
+    .insert(khataEntries)
+    .values({
+      accountId: account.id,
+      kind: 'adjustment',
+      amountPaise: -amountPaise,
+      billId,
+      note: `Reversal of ${invoiceNumber ?? 'bill'}`,
+    })
+    .returning();
+  await appendGraphEvent(tx, {
+    type: 'khata_entry',
+    storeId: String(storeId),
+    id: entry!.id,
     accountId: account.id,
-    kind: 'adjustment',
-    amountPaise: -amountPaise,
-    billId,
-    note: `Reversal of ${invoiceNumber ?? 'bill'}`,
+    kind: entry!.kind,
+    amountPaise: entry!.amountPaise,
+    billId: entry!.billId,
+    createdAt: entry!.createdAt.toISOString(),
   });
 
   return amountPaise;

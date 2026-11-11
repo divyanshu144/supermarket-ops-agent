@@ -10,6 +10,8 @@ export interface ToolObservation {
   input: unknown;
   startOrder: number;
   endOrder: number;
+  startedAtMs: number;
+  endedAtMs: number;
   durationMs: number;
   outcome: 'returned' | 'threw';
   result?: unknown;
@@ -84,6 +86,7 @@ export function observeRegisteredTools<Tools extends readonly unknown[]>(
         const startOrder = ++order;
         const started = performance.now();
         let event: ToolObservation;
+        const startedAtMs = Date.now();
         try {
           const result = await definition.handler(input, extra);
           event = {
@@ -93,6 +96,8 @@ export function observeRegisteredTools<Tools extends readonly unknown[]>(
             input: redact(input),
             startOrder,
             endOrder: ++order,
+            startedAtMs,
+            endedAtMs: Date.now(),
             durationMs: Math.max(0, performance.now() - started),
             outcome: 'returned',
             result: redact(result),
@@ -113,6 +118,8 @@ export function observeRegisteredTools<Tools extends readonly unknown[]>(
             input: redact(input),
             startOrder,
             endOrder: ++order,
+            startedAtMs,
+            endedAtMs: Date.now(),
             durationMs: Math.max(0, performance.now() - started),
             outcome: 'threw',
             refusalCode: null,

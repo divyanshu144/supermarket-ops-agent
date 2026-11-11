@@ -1,3 +1,4 @@
+import { secureTools } from '../security/tools.js';
 import { createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk';
 import { ANALYTICS_TOOLS, ANALYTICS_TOOL_NAMES } from './analytics.js';
 import { BILLING_TOOLS, BILLING_TOOL_NAMES } from './billing.js';
@@ -5,6 +6,7 @@ import { DOCUMENT_TOOLS, DOCUMENT_TOOL_NAMES } from './documents.js';
 import { INVENTORY_TOOLS, INVENTORY_TOOL_NAMES } from './inventory.js';
 import { KHATA_TOOLS, KHATA_TOOL_NAMES } from './khata.js';
 import { PREFERENCE_TOOLS, PREFERENCE_TOOL_NAMES } from './preferences.js';
+import { GRAPH_TOOLS, GRAPH_TOOL_NAMES } from './graph.js';
 import { observeRegisteredTools } from './observe.js';
 
 export const STORE_SERVER_NAME = 'store';
@@ -17,6 +19,7 @@ export const STORE_TOOLS = [
   ...ANALYTICS_TOOLS,
   ...DOCUMENT_TOOLS,
   ...PREFERENCE_TOOLS,
+  ...GRAPH_TOOLS,
 ];
 
 export const STORE_TOOL_NAMES = [
@@ -26,13 +29,14 @@ export const STORE_TOOL_NAMES = [
   ...ANALYTICS_TOOL_NAMES,
   ...DOCUMENT_TOOL_NAMES,
   ...PREFERENCE_TOOL_NAMES,
+  ...GRAPH_TOOL_NAMES,
 ] as const;
 
 export const storeToolServer = createSdkMcpServer({
   name: STORE_SERVER_NAME,
   version: '0.1.0',
   // The wrappers emit nothing unless an eval-only ToolContext sink is explicitly present.
-  tools: observeRegisteredTools(STORE_TOOLS),
+  tools: observeRegisteredTools(secureTools(STORE_TOOLS)),
   // Without this the SDK defers these tools behind ToolSearch, which fires an extra model
   // round-trip before nearly every call. The set is small and entirely relevant to every turn,
   // so there is nothing to search. Costs a blocking connect at startup, capped at 5s.

@@ -226,6 +226,7 @@ export const idempotencyKeys = pgTable(
     key: text('key').notNull(),
     operation: text('operation').notNull(),
     result: jsonb('result').notNull(),
+    replayCount: integer('replay_count').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.storeId, t.key] })],
@@ -301,6 +302,10 @@ export const usage = pgTable(
     day: date('day').notNull(),
     costMicroUsd: bigint('cost_micro_usd', { mode: 'number' }).notNull().default(0),
     turns: integer('turns').notNull().default(0),
+    toolCalls: integer('tool_calls').notNull().default(0),
+    toolErrors: integer('tool_errors').notNull().default(0),
+    cacheLookups: integer('cache_lookups').notNull().default(0),
+    cacheHits: integer('cache_hits').notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.storeId, t.day] })],
 );
@@ -347,4 +352,31 @@ export const generatedArtifacts = pgTable(
     lastActivityAt: timestamp('last_activity_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('generated_artifacts_store_activity_idx').on(t.storeId, t.lastActivityAt)],
+);
+
+/** Transactional handoff from source-of-truth writes to the derived Neo4j graph. */
+export const graphOutbox = pgTable(
+  'graph_outbox',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    storeId: bigint('store_id', { mode: 'bigint' })
+      .notNull()
+      .references(() => stores.id, { onDelete: 'cascade' }),
+    eventType: text('event_type').notNull(),
+    entityId: text('entity_id').notNull(),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    processedAt: timestamp('processed_at', { withTimezone: true }),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    claimToken: uuid('claim_token'),
+    attempts: integer('attempts').notNull().default(0),
+    nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }).notNull().defaultNow(),
+    lastErrorCode: text('last_error_code'),
+  },
+  (t) => [
+    index('graph_outbox_pending_idx')
+      .on(t.nextAttemptAt, t.createdAt)
+      .where(sql`${t.processedAt} IS NULL`),
+    index('graph_outbox_store_idx').on(t.storeId, t.createdAt),
+  ],
 );

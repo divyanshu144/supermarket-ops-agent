@@ -3,6 +3,9 @@ import { loadEnv, shouldLogMessageText } from './env.js';
 
 const valid = {
   DATABASE_URL: 'postgres://u:p@localhost:5432/db',
+  NEO4J_URI: 'bolt://localhost:7687',
+  NEO4J_USERNAME: 'neo4j',
+  NEO4J_PASSWORD: 'test-password',
   TELEGRAM_BOT_TOKEN: 'token',
   ANTHROPIC_API_KEY: 'key',
   AGENT_EFFORT: 'medium',

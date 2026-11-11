@@ -1,3 +1,98 @@
+# Latest cache retry — 2026-11-03, second top-up
+
+`pnpm bench:cache --resume` completed questions 52–102, leaving 102/120
+successful baseline rows and no completed threshold runs. Cumulative successful
+baseline cost: $8.40015775. Question 103 failed after $0.09413175 and two
+`find_bills` calls. The bounded provider check again confirmed insufficient
+credit. Failure evidence is archived in
+`evals/engineering/results/cache-failure-after-102.json` so a later retry cannot
+overwrite it. Additional cost in this retry: $4.2686255 including the failed call.
+
+The runner's resume calculation omits failed-call spend. To retain the original
+$40 cache benchmark allowance, next resume with
+`EVAL_MAX_COST_USD=39.90586825 pnpm bench:cache --resume` (subtract this archived
+failed call from the runner's cap). Do not raise the total allowance implicitly.
+Further failures or incomplete threshold runs must also be accounted for before
+another resume. No cost/latency savings can yet be claimed. Previous final-source
+security evaluation is complete and must not be repeated unnecessarily.
+
+The user was asked for further credit, with a rough $25–35 remaining-work estimate
+based on the observed ~$0.082/successful baseline question. This is an estimate,
+not a billing guarantee. Cost/session/e2e probes were not retried during this pass.
+Langfuse and hosted-helper credential presence was checked (names/booleans only):
+all six required integration settings remain absent. No application code changed.
+
+---
+
+# Live measurement checkpoint — 2026-11-03 after credit top-up
+
+Verification after publishing the evidence: formatting, lint and typecheck passed;
+`pnpm test:safe` passed (570 tests, 19 skipped). No application source was changed.
+
+User authorized finishing cache/security and the other credit-dependent checks.
+`pnpm eval:injection after` completed at `6cfda18`: 40/40 blocked, 0 successful
+attacks, 0 inconclusive, $2.7098315 reported cost. Corpus hash matches baseline;
+all outcomes are `ok`. This is final-source coverage, not an improvement over the
+already-zero baseline. Evidence: `evals/engineering/results/injection-after.json`.
+
+`pnpm bench:cache --resume` advanced from 10 to 51/120 successful baseline rows
+($4.225664 accumulated, including earlier rows). Question 52 failed with zero
+usage. `node --import tsx src/evals/provider-check.ts` confirmed insufficient
+credit again. No threshold run completed; no overall savings can be reported.
+
+Protected cost/session/e2e/filesystem-security probes also encountered exhausted
+credit. All are inconclusive. The old cost probe prints Q1/Q3 interpretations and
+the filesystem probe prints PASS despite provider errors; DO NOT accept those
+labels. Sanitized capture and assessment:
+`evals/engineering/results/live-prerequisites-2026-11-03.json`. Failed cost turn
+reported $0.000587. The temporary protected launcher is ignored under
+`artifacts/engineering/run-live-probes.mts`; each run used an owned disposable DB
+and completed cleanup. No production changes, commits or pushes.
+
+Next: add further Anthropic credit, resume cache within its existing $40 total
+cap, and rerun prerequisite probes with provider-error outcomes rejected. The
+legacy e2e harness also lacks owner-confirmation handling and needs review before
+its mutation assertions can validate the current flow. Hosted helper/Langfuse
+credentials are separate from Anthropic credit. The user was asked asynchronously
+for additional credit after this second exhaustion.
+
+---
+
+# Measurement retry — 2026-11-03
+
+The user requested completion of cache and security measurements. Ran
+`pnpm bench:cache --resume` on `6cfda18` using the disposable evaluation database.
+The first resumed question failed with zero tokens and SDK-reported $0 cost;
+`evals/engineering/results/cache-failures.json` records this new attempt. The ten
+successful baseline rows remain intact; no threshold measurement completed.
+A separate one-token diagnostic request to Anthropic returned HTTP 400
+`invalid_request_error`: the configured account's credit balance is too low.
+No key was printed. The full security rerun was not started because it uses the
+same blocked provider. Existing completed and incomplete security evidence is preserved.
+Next: add credits to the account associated with the configured API key, then run
+`pnpm bench:cache --resume` and `pnpm eval:injection after`. No savings or new
+security pass rate can be claimed. No production configuration/data changed.
+
+# Engineering additions checkpoint — 2026-10-31
+
+Branch: `feat/semantic-cache-injection-evals`. User approved implementation and small commits.
+Semantic cache and security defences are implemented; see `evals/engineering/README.md`.
+Real local 120-question retrieval benchmark: 0.90 threshold, 40/120 hits (33.3%), zero false hits,
+zero live/action hits, 29.8 ms mean lookup. Provider is installed macOS 300-dimensional word
+embeddings with mean pooling, no dependency/download. Both completed live injection runs scored
+0/40 successes: baseline `99800a4` and hardened `22025cf`. This is not an improvement claim.
+
+UNFINISHED: Anthropic reported insufficient credit after ten successful live cache baseline
+questions. The final pasted-document wrapper (`253d45c`) rerun has three inconclusive provider
+errors, not a completed after result. No full latency/cost-saving metric exists. User was asked
+asynchronously to top up or defer live metrics; no answer has arrived at this checkpoint.
+Next: after top-up, run `pnpm bench:cache --resume` and `pnpm eval:injection after`, then update
+results tables. Aggregate benchmark cost cap defaults to $40; do not disguise provider failures.
+Full verification: 552 tests passed, 19 existing optional tests skipped; lint/typecheck passed.
+Production config/data/deployment untouched. New local test cluster uses port 55441.
+
+---
+
 # HANDOFF
 
 ## Fairness checks branch checkpoint (2026-11-10)
@@ -18,12 +113,56 @@ Live evaluation was not run; no Anthropic credit was used. Before running it, re
 maximum estimate (default: 405 planned attempts × $0.50 per-run ceiling = $202.50), obtain a native
 speaker review, and set an explicit `FAIRNESS_BUDGET_USD`. No main branch, production data, Railway
 project, or live Telegram bot has been touched.
+## 2026-11-01 — Langfuse and hosted helper checkpoint
+
+Current branch: `feat/langfuse-checkpointed-from-semantic-evals`. It is based on
+`feat/semantic-cache-injection-evals`. The Phase 1-only checkpoint is `1ebae8e`.
+The user clarified “everything hosted”:
+Claude Agent SDK remains the sole SuperOps tool chooser; the optional open-weight helper uses a
+hosted OpenAI-compatible endpoint only for voice filler cleanup and is disabled by default.
+Phase 1 Langfuse tracing and read-only local usage reporting are implemented. Phase 2 hosted voice
+helper is implemented with tests and privacy disclosure. Latest `pnpm test` disposable-database gate:
+570 passed, 19
+skipped; formatting, lint, typecheck and diff check passed. Thirty synthetic action/injection
+cases were tested against mocked triage refusals; this is adapter contract coverage, not hosted
+model quality evidence. No live Langfuse/provider/Claude call,
+production data/config read, Railway action or push occurred. Hosted model quality, latency,
+retention and cost savings are not measured. Helper remains off by default. The user-provided
+`tasks/langfuse-and-tiering-agent-prompt.md` remains untracked and was excluded from the commit.
+Mutation check: temporarily replacing the transcript-preservation predicate with `return true`
+made its focused test fail on a removed product term. Temporarily removing the `TIERING_ENABLED`
+check made the disabled-path integration test fail because the hosted helper was called. Both
+guards were restored immediately. Removing the malformed-Langfuse-URL validation made the
+no-export test fail when it attempted a fetch; that validation was restored.
+
+**Next action:** `pnpm eval:tiering` runs 45 synthetic transcript cases against the configured
+hosted endpoint and reports its confusion matrix, critical-field preservation, correction
+usefulness, fallback rate and latency. It refuses to send requests if credentials are absent and
+does not call Claude. Hosted credentials are still absent, so real provider quality, confusion
+matrix and latency remain unmeasured. The command was verified with empty settings and sent no
+request. Phase 1 was committed separately before Phase 2 on this branch. The earlier implementation
+branch is preserved locally and still has the mixed initial commit; use this checkpointed branch
+for review. The isolated Phase 1 checkpoint itself passed format, lint, typecheck and
+`pnpm test:safe` with 562 passed and 19 skipped. `pnpm test` now invokes the same isolated runner;
+CI keeps its separately migrated database for the offline safety replay.
 
 Written so a cold-start session can resume. Update at every checkpoint.
 
-**Last updated:** 2026-10-09 (live cost probe run, `SDK_COST_IS_CUMULATIVE=false`); previously 2026-10-07, W3 correction committed as `8d34362`; W6 verified and ready for local commit
+**Last updated:** 2026-10-09 (added `list_stock` tool; live cost probe run, `SDK_COST_IS_CUMULATIVE=false`); previously 2026-10-07, W3 correction committed as `8d34362`; W6 verified and ready for local commit
 **Branch:** `responsible-ai`, created from `eval-harness` at `c435f26`.
 **Bot:** [@divagentBot](https://t.me/divagentBot), deployed on Railway, one replica, long-polling
+
+### Neo4j graph work (feature branch, not deployed)
+
+The `feat/neo4j-graph` branch adds a transactional Postgres `graph_outbox` and a same-process
+Neo4j projector. Postgres remains authoritative; Neo4j failure must leave business writes working,
+retain pending outbox rows, degrade graph tools and health, and avoid crashing the bot. Graph
+queries are owner-only, use READ-mode sessions and tenant-scoped parameterized Cypher. Community
+Edition cannot enforce reader roles; deployment notes explain this limitation and the expected
+cost. No Railway project, production database, or live Telegram bot was changed. See
+[`docs/neo4j-plan.md`](docs/neo4j-plan.md), [`docs/neo4j-deploy.md`](docs/neo4j-deploy.md), and
+[`decisions.md`](decisions.md) in that branch. Implementation and real-container verification are
+complete; the feature branch is being prepared for review. It has not been merged or deployed.
 
 ---
 
