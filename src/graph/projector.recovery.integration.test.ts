@@ -1,5 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { Neo4jContainer, type StartedNeo4jContainer } from '@testcontainers/neo4j';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { eq } from 'drizzle-orm';
 import type { Env } from '../config/env.js';
 import { db, pool } from '../db/client.js';
@@ -14,6 +17,8 @@ import { closeGraphDrivers, configureGraph, configuredWriter, writerSession } fr
 import type { GraphEvent } from './mapping.js';
 import { ensureGraphSchema } from './schema.js';
 import { projectGraphEvent, projectPendingGraphEvents } from './projector.js';
+import { backfillGraphHistory } from './backfill.js';
+import { readerSession } from './driver.js';
 
 const PASSWORD = 'neo4j-recovery-test-password';
 const STORE = 999200091n;
@@ -157,4 +162,33 @@ describe('Postgres outbox and Neo4j recovery integration', () => {
       await db.select().from(graphOutbox).where(eq(graphOutbox.storeId, STORE)),
     ).not.toHaveLength(0);
   });
+
+  it('backfills existing Postgres rows in a bounded resumable and idempotent pass', async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'neo4j-source-backfill-'));
+    const checkpoint = join(directory, 'state.json');
+    const [product] = await db.select().from(products).where(eq(products.storeId, STORE));
+    expect(product).toBeDefined();
+    try {
+      expect(
+        await backfillGraphHistory((text, values) => pool.query(text, values), checkpoint),
+      ).toBeGreaterThan(0);
+      expect(
+        await backfillGraphHistory((text, values) => pool.query(text, values), checkpoint),
+      ).toBe(0);
+      const session = readerSession();
+      try {
+        const result = await session.executeRead((tx) =>
+          tx.run(
+            'MATCH (p:Product {storeId: $storeId, sourceId: $sourceId}) RETURN count(p) AS count',
+            { storeId: String(STORE), sourceId: product!.id },
+          ),
+        );
+        expect(result.records[0]!.get('count').toNumber()).toBe(1);
+      } finally {
+        await session.close();
+      }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  }, 30_000);
 });
