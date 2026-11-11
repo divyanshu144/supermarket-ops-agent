@@ -206,13 +206,14 @@ export async function graphHealth(): Promise<{
   toolLatency: ReturnType<typeof graphToolMetrics>;
 }> {
   const [state, lag] = [getGraphStatus(), await graphOutboxLag()];
+  const oldestPendingAt = lag.oldestPendingAt ? new Date(lag.oldestPendingAt) : null;
   return {
     available: state.available,
     lastErrorCategory: state.lastErrorCategory,
     pendingCount: lag.pendingCount,
-    oldestPendingAt: lag.oldestPendingAt?.toISOString() ?? null,
-    oldestPendingAgeMs: lag.oldestPendingAt
-      ? Math.max(0, Date.now() - lag.oldestPendingAt.getTime())
+    oldestPendingAt: oldestPendingAt?.toISOString() ?? null,
+    oldestPendingAgeMs: oldestPendingAt
+      ? Math.max(0, Date.now() - oldestPendingAt.getTime())
       : null,
     failureCount: state.failureCount,
     toolLatency: graphToolMetrics(),
